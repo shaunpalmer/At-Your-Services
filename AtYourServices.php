@@ -1,11 +1,11 @@
  <?php
 /*
 Plugin Name: At Your Services
-Plugin URI:https://Project-studios.co.nz
+Plugin URI:https://Projectstudios.co.nz
 Description:Services Custom Post Type & taxonomies that adds custom post types
 Version: 0.1.6
 Author: shaun palmer
-Author URI: shaun@roject-studios.co.nz
+Author URI: shaun@rojectstudios.co.nz
 Text Domain: http://supercleanchchnz.com
 *Tested up to: 5.1
  * License: GPL v3 or later - http://www.gnu.org/licenses/gpl-3.0.html
@@ -73,13 +73,14 @@ function SP_PS_register_AtYourServices() {
 		"show_in_menu" => true,
 		"show_in_nav_menus" => true,
 		"exclude_from_search" => false,
-		"capability_type" => "page",
+		'capability_type' => 'page','post',
 		"map_meta_cap" => true,
 		"hierarchical" => true,
 		"rewrite" => array( "slug" => "services",
 		'show_in_rest' => true,
 		"with_front" => true ),
 		"query_var" => true,
+    'can_export' => true,
 		"menu_position" => 5,
     'show_in_rest' => true,
 		"menu_icon" => "dashicons-admin-users",
@@ -95,8 +96,13 @@ function SP_PS_register_AtYourServices() {
               'singular_name' => __( 'Team', 'At-Your-Services' )
           ),
           'public' => true,
+          'show_in_rest' => true,
           'featured_image'=>true,
           'has_archive' => true,
+          'show_in_menu' => true,
+          'can_export' => true,
+          "set_featured_image" => __( "Set Featured Image of the Our-teams", "" ),
+          "rewrite" => array( "slug" => "our-teams",
           'menu_icon' => 'dashicons-groups', //  The url to the icon to be used for this menu or the name of the icon from the iconfont
           'supports' => array('title', 'thumbnail', 'author', 'page-attributes'),
       )
@@ -110,10 +116,18 @@ function SP_PS_register_AtYourServices() {
               'singular_name' => __( 'FAQ', 'At-Your-Services' )
           ),
           'public' => true,
+          'show_in_rest' => true,
           'featured_image'=>true,
           'has_archive' => true,
+          "show_in_nav_menus" => true,
+          'show_in_menu' => true,
+          'show_in_admin_bar' => true,
+          'capability_type' => 'page','post',
+          'show_in_rest' => true,
+          'can_export' => true,
           'menu_icon' => 'dashicons-format-status', //  The url to the icon to be used for this menu or the name of the icon from the iconfont
           'supports' => array('title', 'editor', 'page-attributes'),
+          'taxonomies' =>  array('' ,'', );
       )
   );
 
@@ -152,6 +166,7 @@ function SP_PS_register_AtYourServices() {
       		'exclude_from_search' => false,
       		'capability_type' => 'page','post',
           'show_in_rest' => true,
+          'can_export' => true,
           'menu_icon' => 'dashicons-format-chat', //  The url to the icon to be used for this menu or the name of the icon from the iconfont
           'supports' => array("title", "editor", "thumbnail", "excerpt", "custom-fields", "revisions", "page-attributes","post-formats"),
       )
@@ -218,14 +233,14 @@ function SP_PS_register_AtYourServices_taxonomies() {
     );
 
     $args = array(
-        'hierarchical'      => true,
-        'labels'            => $labels,
-        'show_ui'           => true,
-        'show_admin_column' => true,
+    'hierarchical'      => true,
+    'labels'            => $labels,
+    'show_ui'           => true,
+    'show_admin_column' => true,
 		"show_in_menu" 		=> true,
 		"show_in_nav_menus" => true,
-        'query_var'         => true,
-        'rewrite'           => array( 'slug' => 'prices' ),
+    'query_var'         => true,
+    'rewrite'           => array( 'slug' => 'prices' ),
 		'show_in_rest'		=> true
     );
 
@@ -244,7 +259,7 @@ SP_PS_register_AtYourServices_Price();
 flush_rewrite_rules();
  }
 add_action( 'after_switch_theme', 'SP_PS_rewrite_flush' );
-
+/*
 //For the Plugin Flush rewrite rules to add "Services" as a permalink slug
       //function SP_PS_rewrite_flush() {
      //SP_PS_register_AtYourServices();
