@@ -82,8 +82,7 @@ function SP_PS_register_AtYourServices() {
 		"query_var" => true,
     'can_export' => true,
 		"menu_position" => 5,
-    'show_in_rest' => true,
-		"menu_icon" => "dashicons-admin-users",
+    "menu_icon" => "dashicons-admin-users",
 		"supports" => array( "title", "editor", "thumbnail", "excerpt", "custom-fields", "revisions", "page-attributes","post-formats" ),
 		"taxonomies" => array( "category", "post_tag", "attachment_category", "attachment_tag", "Type of Services", "location", "price" ),
 	);
@@ -93,7 +92,7 @@ function SP_PS_register_AtYourServices() {
       array(
           'labels' => array(
               'name' => __( 'Teams' , 'At-Your-Services'),
-              'singular_name' => __( 'Team', 'At-Your-Services' )
+              'singular_name' => __( 'Team', 'At-Your-Services' ),
           ),
           'public' => true,
           'show_in_rest' => true,
@@ -102,10 +101,10 @@ function SP_PS_register_AtYourServices() {
           'show_in_menu' => true,
           'can_export' => true,
           "set_featured_image" => __( "Set Featured Image of the Our-teams", "" ),
-          "rewrite" => array( "slug" => "our-teams",
+          "rewrite" => array( "slug" => "our-teams"),
           'menu_icon' => 'dashicons-groups', //  The url to the icon to be used for this menu or the name of the icon from the iconfont
           'supports' => array('title', 'thumbnail', 'author', 'page-attributes'),
-      )
+        ),
   );
 
   // FAQ Custome type
@@ -116,8 +115,7 @@ function SP_PS_register_AtYourServices() {
               'singular_name' => __( 'FAQ', 'At-Your-Services' )
           ),
           'public' => true,
-          'show_in_rest' => true,
-          'featured_image'=>true,
+           'featured_image'=>true,
           'has_archive' => true,
           "show_in_nav_menus" => true,
           'show_in_menu' => true,
@@ -251,24 +249,21 @@ add_action( 'init', 'SP_PS_register_AtYourServices_Price' );
 
 
 
-/*For the theme: Flush rewrite rules to add "Services" as a permalink slug
+//For the theme: Flush rewrite rules to add "Services" as a permalink slug
 function SP_PS_rewrite_flush() {
  SP_PS_register_AtYourServices();
 SP_PS_register_AtYourServices_taxonomies();
 SP_PS_register_AtYourServices_Price();
-flush_rewrite_rules();
  }
 add_action( 'after_switch_theme', 'SP_PS_rewrite_flush' );
-/*
+
 //For the Plugin Flush rewrite rules to add "Services" as a permalink slug
-      //function SP_PS_rewrite_flush() {
-     //SP_PS_register_AtYourServices();
-	//SP_PS_register_AtYourServices_taxonomies();
-   //SP_PS_register_AtYourServices_Price();
-  //flush_rewrite_rules();
- //}
-//register_activation_hook( __FILE__, 'SP_PS_rewrite_flush' );
-*/
+function SP_PS_register_flush(){
+     SP_PS_rewrite_flush()   
+     flush_rewrite_rules();
+ }
+register_activation_hook( __FILE__, 'SP_PS_rewrite_flush' );
+
 
 
 
