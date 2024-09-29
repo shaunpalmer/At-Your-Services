@@ -1,6 +1,9 @@
 # At Your Service WordPress Plugin
 
-A feature-rich, scalable, and customizable plugin designed specifically for service-based businesses like Services Pro cleaning, gardeners, plumbers, and similar industries. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
+A feature-rich, scalable, and customizable plugin designed specifically for service-based businesses like Services Pro cleaning, industries. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
+
+At Your Service is a flexible WordPress plugin designed for service-based businesses like cleaning, gardeners, plumbers, and more. It offers lead generation, job management, invoicing, and custom post types. With Gutenberg service blocks and shortcode support, users can easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes dynamic pricing calculations, making it perfect for instant quotes. The architecture is extensible, allowing for easy integration of additional features like CRM and subscription services. It is optimized for mobile and supports internationalization with built-in translation files. At Your Service is the go-to solution for businesses looking to streamline operations and enhance customer management within WordPress.
+
 
 ## Contents
 
