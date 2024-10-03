@@ -57,7 +57,7 @@ class Ays_CPT_FAQ {
             'menu_position'         => 5,
             'menu_icon'             => 'dashicons-paperclip',
             "supports" => array( "title", "editor", "thumbnail", "excerpt", "custom-fields", "revisions", "page-attributes","post-formats" ),
-            'taxonomies'            => array( 'category', 'post_tag', 'service_type', 'price_range', 'location' ),
+            'taxonomies'            => array( 'category', 'post_tag', 'service_type', 'location' ),
             'rewrite'               => array( 'slug' => 'faq', 'with_front' => true ),
             'hierarchical'          => true,
             'exclude_from_search'   => false,

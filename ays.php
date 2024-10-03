@@ -41,10 +41,11 @@ if(!defined('ABSPATH')){
 if ( ! defined( 'AYS_PLUGIN_PATH' ) ) {
     define( 'AYS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 }
-
+// Include the enqueue.php file
+require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
 // Include Custom Post Type Classes.
 require_once AYS_PLUGIN_PATH . '/includes/post-types/ays-cpt-service.php';
-// Initialize CPT classes.  Ays_CPT_Service
+#  Initialize CPT classes.  Ays_CPT_Service 
 require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-service-type.php';
 require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-price-range.php';
 require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-neighbourhood.php';
@@ -52,17 +53,19 @@ require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-team.php';
 require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-faq.php';
 require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-review.php';
 require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-location.php';
-/**  
- *  Captain's We've engage Custom post type!” 🖖
- *  Initialize the CPT.
+require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
+
+/* 
+# *  Captain's We've engage Custom post type!” 🖖
+# *  Initialize the CPT.
  */
 new Ays_CPT_Service(); // ays-cpt-service.php  
 new Ays_CPT_Team();
 new Ays_CPT_Review();
 new Ays_CPT_Location();
 new Ays_CPT_FAQ();
-/**  
- *  Captain's We've engage taxonomies!” 🖖
+/*  
+# *  Captain's We've engage taxonomies!” 🖖
  */
 // Initialize the class.
 new Ays_Taxonomy_Service_Type();
@@ -75,7 +78,8 @@ new Ays_Taxonomy_Price_Range();
  */
 
 
-// Include Taxonomy Classes.
+// Include the enqueue.php file
+#include_once AYS_PLUGIN_PATH  . 'admin/enqueue.php';
 
 
 #require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-neighbourhood.php';
