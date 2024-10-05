@@ -44,6 +44,7 @@ class Ays_Autoloader {
 
 // Register the autoloader for Ays_ classes
 Ays_Autoloader::register();
+
 // After the class definition
 #var_dump(Ays_Autoloader::$classes_map);
 
