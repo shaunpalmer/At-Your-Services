@@ -10,10 +10,8 @@ Here’s how we can break this down:
 1. Encapsulating Complex Logic in Classes:
    You can create classes for more complex functionality, like custom post types (CPT), taxonomies, or custom business logic. For example, a class for registering a custom post type (Ays_CPT_Service) will encapsulate all related methods and properties.
 
-Example:
-
 php
-Copy code
+
 class Ays_CPT_Service {
 public function \_\_construct() {
 add_action('init', [$this, 'register_cpt']);
@@ -53,7 +51,7 @@ This is simple, effective, and familiar to WordPress developers.
 Example:
 
 php
-Copy code
+
 class Ays_Enqueue {
 public function \_\_construct() {
 add_action('wp_enqueue_scripts', [$this, 'enqueue_styles']);
@@ -73,7 +71,7 @@ In this example, we encapsulate the enqueuing logic into a class, but we’re st
 Example of Autoloading with Class Instantiation:
 
 php
-Copy code
+
 spl*autoload_register(function ($class_name) {
 $file = AYS_PLUGIN_PATH . 'includes/classes/' . str_replace('*', '-', strtolower($class_name)) . '.php';
     if (file_exists($file)) {

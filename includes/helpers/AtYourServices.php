@@ -1,11 +1,4 @@
 <?php
-/**
- * Plugin Name: At Your Service
- * Description: A feature-rich, scalable, and customizable plugin designed for service-based businesses.
- * Version: 1.0.0
- * Author: Your Name
- * License: GPL2
- */
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
