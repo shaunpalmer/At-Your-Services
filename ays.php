@@ -85,14 +85,16 @@ try {
 
 //  Include the enqueue.php file
 require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
-//  Include Custom Post Type Classes.
+//  Include Custom Post Type Classes. Yet to be included in the autoloader
  require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-service-type.php';
  require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-price-range.php';
 require_once AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-neighbourhood.php';
+# **the following classes are being handled by autoloader**
 // require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-team.php';
 // require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-faq.php';
 // require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-review.php';
 // require_once AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-location.php';
+//Yet to be included in the autoloader
 require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
 
 /* 
