@@ -68,30 +68,23 @@ This shortcode is designed to be mobile-optimized, ensuring it looks great acros
 - **Internationalization Ready**: Built-in support for translations with a `.pot` file included.
 - **Mobile-Optimized**: Focused on performance for mobile users, ensuring the plugin is SEO-friendly.
 
-## Installation
+##Installation Steps for Regular Users:
 
-### For Regular Users
-
-1. **Upload via WordPress Dashboard**:
-<<<<<<< Updated upstream
-   <<<<<<< Updated upstream - Download the plugin zip file. - Navigate to the 'Plugins' screen in your WordPress dashboard. - Click 'Add New', then 'Upload Plugin'. - Select the plugin zip file, upload it, and activate it.
-
-2. # **Begin Configuration**: - Go to the plugin settings to configure lead generation forms, job tracking, invoicing, and other features.
-=======
->>>>>>> Stashed changes
-
-   - Download the plugin zip file.
-   - Navigate to the 'Plugins' screen in your WordPress dashboard.
-   - Click 'Add New', then 'Upload Plugin'.
-   - Select the plugin zip file, upload it, and activate it.
+Upload via WordPress Dashboard:
+Download the plugin ZIP file from the source (e.g., WordPress.org or your preferred marketplace).
+Unzip the downloaded file. You’ll find a folder named “At Your Service.”
+Log in to your WordPress admin dashboard.
+Navigate to the “Plugins” section.
+Click on “Add New” and then select “Upload Plugin.”
+Choose the unzipped “At Your Service” folder and upload it.
+Activate the plugin through the ‘Plugins’ menu in WordPress.
+Begin Configuration:
+After activation, go to the plugin settings. You’ll likely find a new menu item related to “At Your Service.”
+Configure the plugin settings according to your requirements. This might include setting up lead generation forms, job tracking, invoicing, and other features.
 
 3. **Begin Configuration**:
    - Go to the plugin settings to configure lead generation forms, job tracking, invoicing, and other features.
-<<<<<<< Updated upstream
-     > > > > > > > Stashed changes
 =======
->>>>>>> Stashed changes
-
 ### For Developers
 
 1. **Using Git and WP-CLI**:
