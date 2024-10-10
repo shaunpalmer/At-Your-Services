@@ -1,4 +1,5 @@
 <?php 
+#This is required if remove fatal error will occur
 if ( ! defined( 'AYS_PLUGIN_PATH' ) ) {
     define( 'AYS_PLUGIN_PATH', wp_normalize_path( plugin_dir_path( __FILE__ ) ) );
 }
