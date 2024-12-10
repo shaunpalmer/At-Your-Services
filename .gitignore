@@ -1,0 +1,70 @@
+# Ignore system files and personal directories
+# System Files and Directories
+NTUSER.*
+*.log
+*.tmp
+*.lock
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal Directories
+AppData/
+.cache/
+.atom/
+.vscode/
+.aws/
+.npm/
+.node_repl_history
+.quokka/
+.ssh/
+.lesshst
+.nuget/
+.openjfx/
+.gnupg/
+.ipython/
+.jupyter/
+
+# Chocolatey, Docker, and Development Environments
+.chocolatey/
+.docker/
+.dotnet/
+
+# Node.js and Dependency Files
+node_modules/
+package-lock.json
+yarn.lock
+
+# Logs and Temporary Files
+*.swp
+*.swo
+*.bak
+*.old
+*.backup
+
+# IDE and Editor Files
+.idea/
+.vscode/
+*.sublime-*
+*.iml
+
+# PHPStorm, VSCode Specific
+.phpstorm.meta.php
+
+# Backup Files
+*.~*
+*.bak
+*.tmp
+
+# Ignore Specific Application Files
+Bootstrap Studio Backups/
+Creative Cloud Files/
+
+# Ignore Compiled Binary Files
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+

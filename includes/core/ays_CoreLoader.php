@@ -4,25 +4,24 @@ namespace ays\includes\core;
 
 class AYS_CoreLoader
 {
-  public static function load($className)
+  public static function load($config)
   {
-    // Ensure it only loads relevant classes
-    if (strpos($className, 'ays\\includes\\helpers') === 0) {
-      $baseDir = AYS_PLUGIN_PATH . 'includes/helpers/';
-      // Get the relative class name
-      $relativeClass = str_replace('ays\\includes\\helpers\\', '', $className);
-      // Replace namespace separators with directory separators
-      $file = $baseDir . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
+    if (is_array($config) && isset($config['path'])) {
+      $namespace = 'ays\\includes\\core';
+      $path = $config['path'];
 
-      if (file_exists($file)) {
-        require_once $file;
-        error_log("Autoloaded class: $className from file: $file");
+      // Ensure $path is a string
+      if (is_string($path) && strpos($path, $namespace) !== false) {
+        // Continue with the loading process
+        error_log("AYS_CoreLoader: Path and namespace are valid. Loading process initiated.");
       } else {
-        error_log("Autoloader could not find file: $file for class: $className");
+        error_log('AYS_CoreLoader: Invalid path or namespace mismatch.');
       }
+    } else {
+      error_log('AYS_CoreLoader: Invalid configuration passed to load().');
     }
   }
 }
 
 // Register the autoloader function properly as a static method
-spl_autoload_register(['\ays\includes\core\AYS_CoreLoader', 'load']);
+spl_autoload_register(['\\ays\\includes\\core\\AYS_CoreLoader', 'load']);

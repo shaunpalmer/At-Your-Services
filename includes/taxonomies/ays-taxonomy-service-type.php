@@ -1,5 +1,9 @@
 <?php
-
+namespace ays\includes\taxonomies;
+ //Exit if accessed directly: Check for bugs and past
+if(!defined('ABSPATH')){
+	exit;
+}
 /**
  * Class Ays_Taxonomy_Service_Type
  *

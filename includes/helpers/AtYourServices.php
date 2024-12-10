@@ -1,21 +1,23 @@
 <?php
+namespace ays\includes\helpers;
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Define constants
-define( 'AYS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
+// Define a custom constant for the directory separator to enhance code readability
+define('AYS_DS', DIRECTORY_SEPARATOR);
 
 // Include necessary files
-require_once AYS_PLUGIN_DIR . 'includes/post-types/ays-cpt-service.php';
-require_once AYS_PLUGIN_DIR . 'includes/post-types/ays-cpt-team.php';
-require_once AYS_PLUGIN_DIR . 'includes/post-types/ays-cpt-faq.php';
-require_once AYS_PLUGIN_DIR . 'includes/post-types/ays-cpt-review.php';
-require_once AYS_PLUGIN_DIR . 'includes/post-types/ays-cpt-location.php';
-require_once AYS_PLUGIN_DIR . 'includes/taxonomies/ays-taxonomy-service-type.php';
-require_once AYS_PLUGIN_DIR . 'includes/taxonomies/ays-taxonomy-price-range.php';
+require_once AYS_DS . 'includes/posttypes/ays-cpt-service.php';
+require_once AYS_DS . 'includes/posttypes/ays-cpt-team.php';
+require_once AYS_DS . 'includes/posttypes/ays-cpt-faq.php';
+require_once AYS_DS . 'includes/posttypes/ays-cpt-review.php';
+require_once AYS_DS . 'includes/posttypes/ays-cpt-location.php';
+require_once AYS_DS . 'includes/taxonomies/ays-taxonomy-service-type.php';
+require_once AYS_DS . 'includes/taxonomies/ays-taxonomy-price-range.php';
 
 // Activation hook
 function ays_activate() {

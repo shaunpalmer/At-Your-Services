@@ -1,0 +1,30 @@
+{
+  "name": "ays",
+  "version": "1.2.3",
+  "dependencies": {
+    "@wordpress/block-editor": "^12.0.0",
+    "@wordpress/components": "^12.0.0",
+    "@wordpress/hooks": "^4.11.0",
+    "bootstrap": "^5.3.3"
+  },
+  "devDependencies": {
+    "babel-loader": "^8.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "start": "webpack --watch"
+  },
+  "description": "A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.",
+  "main": "C:\\xampp\\htdocs\\WordPressdev\\wp-content\\plugins\\ays\\src\\index.js",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "Service"
+  ],
+  "author": "shaun palmer",
+  "license": "MIT"
+}

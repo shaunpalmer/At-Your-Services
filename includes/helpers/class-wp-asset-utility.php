@@ -1,5 +1,5 @@
 <?php
-
+namespace ays\includes\helpers;
 /*
 WordPress Path Discovery Utility Class
 To use this utility, you would initialize it in your plugin's main file like this:

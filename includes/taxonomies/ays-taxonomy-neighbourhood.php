@@ -1,4 +1,9 @@
 <?php
+namespace ays\includes\taxonomies;
+ //Exit if accessed directly: Check for bugs and past
+if(!defined('ABSPATH')){
+	exit;
+}
 /**
  * Taxonomy: Neighbourhood
  * 
