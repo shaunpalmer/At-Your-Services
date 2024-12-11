@@ -2,8 +2,7 @@
 
 A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
 At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
 
 # **Minimum Requirements**
@@ -17,8 +16,6 @@ At Your Service is a flexible WordPress plugin specifically designed for service
 At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
 
 **Minimum Requirements**
->>>>>>> Stashed changes
-
 **WordPress 5.0 or greater**
 **PHP version 7.0 or greater**
 
@@ -40,8 +37,7 @@ The At Your Service Plugin includes the following files and features:
   - **Service Pitch Section**: A text section to deliver your pitch, limited to 6 lines with CSS's clamp feature to keep the message concise and impactful.
   - **Lead Capture Form**: The right column features a fully functional form, with inputs for name, email, phone, and checkboxes for selecting services . The form is styled for accessibility and ease of use.
   - **Call to Action**: Includes a prominent "Book In" button for easy user engagement. It also features a checkbox to confirm the user is "Not a Robot" and a fallback option to call your business directly if needed, with a dynamic phone number.
-<<<<<<< Updated upstream
-    <<<<<<< Updated upstream
+
 
 This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
 
@@ -138,8 +134,6 @@ We use **npm scripts** for automating common tasks such as building the project,
 `  npx husky add .husky/pre-commit "npm run lint"
       git add .husky/pre-commit
  `
-
-> > > > > > > Stashed changes
 =======
    - Clone the repository to your WordPress plugins directory:
      ```bash
@@ -195,8 +189,6 @@ To streamline the development process, we’ve incorporated several tools using 
 ### 1. Initialize the Project
 
 If you haven’t initialized your project yet, start by running:
->>>>>>> Stashed changes
-
 ```bash
 npm init -y
 ```
@@ -220,11 +212,9 @@ npm init -y
 | Service Type   | Categorizes services by type (e.g., Cleaning, Plumbing). | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
 | Price Range    | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range` | `includes/taxonomies/ays-taxonomy-price-range.php` |
 
-<<<<<<< Updated upstream
 
-> > > > > > > Stashed changes
 =======
->>>>>>> Stashed changes
+
 
 ### Project Structure
 
@@ -237,9 +227,8 @@ npm init -y
   <<<<<<< Updated upstream
   =======
 
-> > > > > > > changes
 =======
->>>>>>> Stashed changes
+
 
 ```bash
 /ays/
@@ -311,11 +300,9 @@ Planned features for upcoming versions:
 ## Credits
 
 At Your Service is developed and maintained by **Shaun Palmer** of **Project Studios Web Agency**, evolving with input from the service-based business community.
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
 =======
 
 > > > > > > >
 =======
->>>>>>> Stashed changes
+
