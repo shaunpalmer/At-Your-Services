@@ -1,4 +1,6 @@
-# At Your Service WordPress Plugin
+# At Your Service WordPress Plugin  
+
+**this is still an active in development not ready for the main stage yet has been launched so use at your own risk**
 
 A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
 
@@ -82,8 +84,8 @@ Configure the plugin settings according to your requirements. This might include
 ### For Developers
 
 1. **Using Git and WP-CLI**:
-<<<<<<< Updated upstream
-   <<<<<<< Updated upstream - Clone the repository to your WordPress plugins directory:
+
+   ## Clone the repository to your WordPress plugins directory:
    `bash
 git clone https://github.com/shaunpalmer/At-Your-Services wp-content/plugins/atyourservice
 ` - Navigate to the plugin folder and activate the plugin via WP-CLI:
@@ -145,7 +147,7 @@ We use **npm scripts** for automating common tasks such as building the project,
 ## Task Automation with NPM
 
 We use **npm scripts** for automating common tasks such as building the project, running linters, and managing git hooks. Below is a step-by-step guide for setting up automation for your project.
->>>>>>> Stashed changes
+
 
 2. **Using NPM and WP-Scripts**:
 
@@ -172,8 +174,7 @@ We use **npm scripts** for automating common tasks such as building the project,
 
 To streamline the development process, we’ve incorporated several tools using **NPM** for task automation, linting, and building packages. This section explains how to set up and use these tools in your project.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
 
 ### 1. Initialize the Project
 
@@ -181,8 +182,7 @@ To streamline the development process, we’ve incorporated several tools using 
 
 ### 1. Initialize the Project
 
-> > > > > > > Stashed changes
-> > > > > > > If you haven’t initialized your project yet, start by running:
+## If you haven’t initialized your project yet, start by running:
 =======
 ### 1. Initialize the Project
 
