@@ -201,47 +201,25 @@ If you haven’t initialized your project yet, start by running:
 npm init -y
 ```
 
-## Custom Post Types and Taxonomies
+## Post Types and Taxonomies
 
-This plugin includes several **Custom Post Types** and **Taxonomies** to enhance the functionality of your WordPress site. Below is a list of the custom post types and taxonomies included, along with their purposes and locations within the project structure.
+### Post Types
 
-### Custom Post Types
-<<<<<<< Updated upstream
-
-<<<<<<< Updated upstream
-| Post Type | Description | Class Name | File Location |
-| ------------ | --------------------------------------------------- | ------------------ | -------------------------------------------- |
-| **Services** | Different kinds of services offered by the business. | `Ays_CPT_Service` | `includes/post-types/ays-cpt-service.php` |
-| **Teams** | Teams within the organization. | `Ays_CPT_Team` | `includes/post-types/ays-cpt-team.php` |
-| **FAQs** | Frequently Asked Questions related to services. | `Ays_CPT_FAQ` | `includes/post-types/ays-cpt-faq.php` |
-| **Reviews** | Customer reviews and testimonials. | `Ays_CPT_Review` | `includes/post-types/ays-cpt-review.php` |
-| **Locations**| Business or service locations. | `Ays_CPT_Location` | `includes/post-types/ays-cpt-location.php` |
+| Post Type   | Description                                       | Class Name           | File Location                                 |
+|-------------|---------------------------------------------------|----------------------|-----------------------------------------------|
+| Services    | Different kinds of services offered by the business. | `Ays_CPT_Service`   | `includes/post-types/ays-cpt-service.php`    |
+| Teams       | Teams within the organization.                   | `Ays_CPT_Team`      | `includes/post-types/ays-cpt-team.php`       |
+| FAQs        | Frequently Asked Questions related to services.  | `Ays_CPT_FAQ`       | `includes/post-types/ays-cpt-faq.php`        |
+| Reviews     | Customer reviews and testimonials.               | `Ays_CPT_Review`    | `includes/post-types/ays-cpt-review.php`     |
+| Locations   | Business or service locations.                   | `Ays_CPT_Location`  | `includes/post-types/ays-cpt-location.php`   |
 
 ### Taxonomies
 
-| Taxonomy         | Description                                                          | Class Name                  | File Location                                       |
-| ---------------- | -------------------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
-| **Service Type** | Categorizes services by type (e.g., Cleaning, Plumbing, etc.).       | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
-| **Price Range**  | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range`  | `includes/taxonomies/ays-taxonomy-price-range.php`  |
+| Taxonomy       | Description                                              | Class Name               | File Location                                      |
+|----------------|----------------------------------------------------------|--------------------------|--------------------------------------------------|
+| Service Type   | Categorizes services by type (e.g., Cleaning, Plumbing). | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
+| Price Range    | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range` | `includes/taxonomies/ays-taxonomy-price-range.php` |
 
-=======
-=======
->>>>>>> Stashed changes
-
-| Post Type     | Description                                          | Class Name         | File Location                              |
-| ------------- | ---------------------------------------------------- | ------------------ | ------------------------------------------ |
-| **Services**  | Different kinds of services offered by the business. | `Ays_CPT_Service`  | `includes/post-types/ays-cpt-service.php`  |
-| **Teams**     | Teams within the organization.                       | `Ays_CPT_Team`     | `includes/post-types/ays-cpt-team.php`     |
-| **FAQs**      | Frequently Asked Questions related to services.      | `Ays_CPT_FAQ`      | `includes/post-types/ays-cpt-faq.php`      |
-| **Reviews**   | Customer reviews and testimonials.                   | `Ays_CPT_Review`   | `includes/post-types/ays-cpt-review.php`   |
-| **Locations** | Business or service locations.                       | `Ays_CPT_Location` | `includes/post-types/ays-cpt-location.php` |
-
-### Taxonomies
-
-| Taxonomy         | Description                                                          | Class Name                  | File Location                                       |
-| ---------------- | -------------------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
-| **Service Type** | Categorizes services by type (e.g., Cleaning, Plumbing, etc.).       | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
-| **Price Range**  | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range`  | `includes/taxonomies/ays-taxonomy-price-range.php`  |
 <<<<<<< Updated upstream
 
 > > > > > > > Stashed changes
