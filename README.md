@@ -10,9 +10,7 @@ At Your Service is a flexible WordPress plugin specifically designed for service
 At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
 
 **Minimum Requirements**
-
-> > > > > > > Stashed changes
-=======
+```
 At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
 
 **Minimum Requirements**
@@ -20,7 +18,7 @@ At Your Service is a flexible WordPress plugin specifically designed for service
 **PHP version 7.0 or greater**
 
 At Your Service is the go-to solution for businesses looking to streamline operations and enhance customer management within WordPress.
-
+```
 ## Contents
 
 The At Your Service Plugin includes the following files and features:
@@ -45,11 +43,11 @@ This shortcode is designed to be mobile-optimized, ensuring it looks great acros
 
 This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
 
-> > > > > > > changes
+
 =======
 
 This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
->>>>>>> Stashed changes
+
 
 ## Features
 
