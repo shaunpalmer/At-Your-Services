@@ -134,7 +134,7 @@ We use **npm scripts** for automating common tasks such as building the project,
 `  npx husky add .husky/pre-commit "npm run lint"
       git add .husky/pre-commit
  `
-=======
+
    - Clone the repository to your WordPress plugins directory:
      ```bash
      git clone https://github.com/shaunpalmer/At-Your-Services wp-content/plugins/atyourservice
@@ -178,7 +178,7 @@ To streamline the development process, we’ve incorporated several tools using 
 
 ### 1. Initialize the Project
 
-=======
+
 
 ### 1. Initialize the Project
 
@@ -211,7 +211,6 @@ npm init -y
 | Price Range    | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range` | `includes/taxonomies/ays-taxonomy-price-range.php` |
 
 
-=======
 
 
 ### Project Structure
@@ -221,11 +220,7 @@ npm init -y
 - **/public**: Public-facing features, including front-end form logic.
 - **/assets**: Stylesheets, JavaScript, and other assets.
 - **/templates**: Custom templates for lead generation forms and job management.
-<<<<<<< Updated upstream
-  <<<<<<< Updated upstream
-  =======
 
-=======
 
 
 ```bash
@@ -248,13 +243,6 @@ npm init -y
 ├── ays.php                           # Main plugin file
 ```
 
-<<<<<<< Updated upstream
-# <<<<<<< Updated upstream
-
-> > > > > > > Stashed changes
-
-=======
->>>>>>> Stashed changes
 ## Customization
 
 To tailor the plugin to your business needs:
@@ -263,15 +251,8 @@ To tailor the plugin to your business needs:
 - Customize pricing models for services like **Service Professionals** or similar service-related classes.
 - Modify form layouts and styles by editing the form templates located in **/templates/form.php**.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
-=======
 
-> > > > > > >
-
-=======
->>>>>>> Stashed changes
 ## WordPress.org Preparation
 
 Project Studios is planning to submit the plugin to WordPress.org. Please ensure the repository adheres to [WordPress plugin directory guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/).
@@ -298,9 +279,4 @@ Planned features for upcoming versions:
 ## Credits
 
 At Your Service is developed and maintained by **Shaun Palmer** of **Project Studios Web Agency**, evolving with input from the service-based business community.
-
-=======
-
-> > > > > > >
-=======
 
