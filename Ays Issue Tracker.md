@@ -196,10 +196,6 @@ Main Plugin File:
 Initializes the plugin via the bootstrapper.
 Includes additional files for admin settings, enqueueing assets, and shortcodes.
 
-```
-
-```
-
 # Debugging and Refactoring Report for AYS Plugin
 
 ---
@@ -307,3 +303,65 @@ The goal of this debugging session was to refine the cascade structure of the AY
 1. **Validation is Key**: Adding checks for data types and configurations prevents runtime errors.
 2. **Separation of Responsibilities**: Clearly defining each class's purpose avoids duplication and confusion.
 3. **Error Logging**: Detailed logging helps identify and resolve issues efficiently.
+
+## fixing the WP_Error_Handler
+
+```
+To address the recurring errors and improve the plugin’s reliability, consider verifying that all required files, like WP_Error_Handler.php, are correctly referenced and available. Double-check any class loading mechanisms to ensure they only process expected data types. Keep an eye on where arrays are passed as parameters when a string is needed, and ensure logic pathways are clean and well-documented. Additionally, review autoloading configuration and directory paths to eliminate discrepancies between expected locations and actual file placement. 😊
+
+```
+
+## Possible Issues Table
+
+| **Possible Problem**                  | **Possible Facts**                           | **Description**                                                                             |
+| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Missing File (`WP_Error_Handler.php`) | File not located at the specified path       | Verify the file’s existence and confirm file paths in both plugin code and autoloader rules |
+| Invalid Data Type                     | Receiving arrays where strings are expected  | Review all parameters passed to classes and functions to ensure correct data type usage     |
+| Autoloader Configuration Issue        | Files not loading in the intended order      | Examine autoloader settings to confirm that classes load predictably before they’re called  |
+| Logic Path Errors                     | Conditions may skip essential initialization | Check conditional statements to ensure all necessary logic runs before the class instances  |
+
+```
+
+```
+
+## Temporary Debugging Notes
+
+---
+
+### Added a Temporary Debugging Hook in `initialize`
+
+#### Hooked into `admin_init` for Admin-Area Debugging
+
+- **Included Files for Validation**:
+  1. `core/ays_CoreLoader.php`
+  2. `helpers/WP_Error_Handler.php`
+  3. `helpers/autoloader.php`
+
+---
+
+### **Purpose**
+
+- Verify the existence and correct inclusion of these files.
+- Confirm that their namespaces and paths are properly aligned.
+
+---
+
+### **Follow-up**
+
+- Remove the temporary debugging logic once issues are resolved.
+- Restore original implementation or refactor as necessary.
+- Ensure all files integrate seamlessly into the plugin lifecycle.
+
+---
+
+### **Refactoring Table**
+
+| **Section**                  | **Current Debug Code**                         | **Original Implementation**                       | **Reason for Debugging**                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------------- | -------------------------------------------- |
+| **CoreLoader Include**       | `include_once 'core/ays_CoreLoader.php';`      | Proper instantiation in `initialize_core_loader`  | To ensure file exists and loads correctly.   |
+| **WP_Error_Handler Include** | `include_once 'helpers/WP_Error_Handler.php';` | Full integration in `initialize_error_handler`    | To verify file path and namespace alignment. |
+| **Autoloader Include**       | `include_once 'helpers/autoloader.php';`       | Full integration in `register_general_autoloader` | To validate autoloader setup.                |
+
+```
+
+```
