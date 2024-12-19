@@ -10,7 +10,7 @@ These instructions emphasize logical thinking and structured problem-solving for
   Before writing any code, break down the problem into smaller, well-defined sub-problems. This involves identifying inputs, expected outputs, and the steps required to transform the inputs into the outputs.
 
 - **Step-by-Step Reasoning:**  
-  Explicitly outline the logical steps involved in solving each sub-problem. This can be done through comments, pseudo-code, or a structured chain of thought within the response.
+  Explicitly outline the logical steps involved in solving each sub-problem. This can be done through comments, pseudo-code, or a structured Thought process within the response.
 
 - **Code Clarity and Readability:**  
   Prioritize clean, well-commented code that is easy to understand and maintain. Use meaningful variable and function names. Follow WordPress coding standards where applicable.
@@ -38,7 +38,7 @@ These instructions emphasize logical thinking and structured problem-solving for
 - **Code Comments:**  
   Use clear and concise comments to explain the purpose and functionality of code blocks. Explain the _why_, not just the _what_.
 
-- **Chain of Thought:**  
+- **Thought process:**  
   Demonstrate the thought process by including comments or a structured explanation that shows how the solution was derived. This might include:
   - Identifying the problem.
   - Breaking the problem into sub-problems.
@@ -46,7 +46,7 @@ These instructions emphasize logical thinking and structured problem-solving for
   - Justifying the use of specific functions or techniques.
   - Considering potential edge cases or error conditions.
 
-## Example of Chain of Thought within a Response
+## Example of Thought process within a Response
 
 **Task: Creating a shortcode that displays the current date**
 
@@ -94,7 +94,7 @@ Key improvements in this version:
 
 *   **Clearer Structure:** The instructions are organized with headings and bullet points for better readability.
 *   **Emphasis on "Why":** It stresses explaining the *reasoning* behind code choices, not just the code itself.
-*   **Detailed Example:** The example demonstrates the "Chain of Thought" in action, showing how to break down a problem and explain the logic.
+*   **Detailed Example:** The example demonstrates the "Thought process" in action, showing how to break down a problem and explain the logic.
 *   **Focus on WordPress Best Practices:** The instructions explicitly mention WordPress coding standards, security, and the use of WordPress APIs.
 *   **Concise and Actionable:** The language is more direct and provides clear guidance for the LLM.
 
@@ -183,23 +183,50 @@ Debugging is an essential part of development. Here are some techniques tailored
 1. **Test Your Autoloader:**  
    If using Composer or a custom autoloader, confirm it loads all required classes. Add `error_log` statements immediately after the autoloader to verify functionality.
 
-2. **Class Existence Checks:**  
+## plugins_loaded
+
+```
+add_action( 'plugins_loaded', array( 'wpdocs_class_name', 'instance' ) );
+
+class wpdocs_class_name {
+private function \_\_construct() {
+self::init();
+}
+public static function instance() {
+static $instance = null;
+
+    	if ( is_null( $instance ) ) {
+    		$instance = new class_name;
+    	}
+
+    	return $instance;
+    }
+
+    public function init() {
+    	//Some code here
+    }
+
+}
+
+```
+
+2. **Class Existence Checks:**
    Use temporary checks like `if (!class_exists('Your\Namespace\ClassName')) { error_log('ClassName not found'); }` to identify missing classes.
 
 ### 🎛 Plugin Activation & Dependencies
 
-1. **Confirm Plugin Activation:**  
+1. **Confirm Plugin Activation:**
    Verify the plugin is activated. Sometimes issues arise from attempting to use inactive or deactivated code.
 
-2. **Dependent Plugins or APIs:**  
+2. **Dependent Plugins or APIs:**
    Ensure all dependencies, such as third-party plugins or external APIs, are loaded and functional before relying on them.
 
 ### 🛠 Testing Simplifications
 
-1. **Isolate the Code:**  
+1. **Isolate the Code:**
    Temporarily reduce complexity. Replace functionality with a simple test, such as `error_log('Plugin initialization reached.');`.
 
-2. **Direct File Testing:**  
+2. **Direct File Testing:**
    Test critical logic outside the WordPress context to ensure basic functionality before integration.
 
 ---
@@ -214,3 +241,11 @@ By combining logical thinking, structured problem-solving, and adherence to best
 - Use debugging and design patterns thoughtfully to address issues and optimize solutions.
 
 🔗 **Ready for Implementation?** Feel free to request further examples or dive into specifics for a current project!
+
+```
+
+```
+
+```
+
+```
