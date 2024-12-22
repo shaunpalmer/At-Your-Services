@@ -245,7 +245,3 @@ By combining logical thinking, structured problem-solving, and adherence to best
 ```
 
 ```
-
-```
-
-```

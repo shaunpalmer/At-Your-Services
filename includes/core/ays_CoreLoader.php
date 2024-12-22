@@ -6,40 +6,157 @@ class AYS_CoreLoader
 {
   public static function load($class)
   {
-    // This condition was added to validate that $class is a string to prevent array-to-string conversion warnings.
+    // Validate that $class is a string to prevent array-to-string conversion warnings.
     if (!is_string($class)) {
       error_log("AYS_CoreLoader: Invalid class type. Expected string, got " . gettype($class));
       return;
     }
 
     // Base namespace for the plugin
-    $namespace = 'ays\includes\core';
-    $base_dir = __DIR__;
+    $base_namespace = 'ays\\includes\\core'; // Adjusted to target core-specific classes only.
+    $base_dir = __DIR__ . '/core';
 
-    if (strpos($class, $namespace) === 0) {
-      $class_file = str_replace([$namespace, '\\'], ['', DIRECTORY_SEPARATOR], $class) . '.php';
-      $file = $base_dir . DIRECTORY_SEPARATOR . $class_file;
+    // Normalize the class name to handle case insensitivity
+    $class = strtolower($class);
+    $base_namespace = strtolower($base_namespace);
 
-      // This check ensures that the file for the given class exists before attempting to include it, avoiding runtime errors.
+    // Check if the class belongs to the plugin namespace
+    if (strpos($class, $base_namespace) === 0) {
+      // Resolve the class to a file path
+      $class_path = str_replace(['\\', $base_namespace], [DIRECTORY_SEPARATOR, ''], $class);
+      $file = $base_dir . $class_path . '.php';
+
+      // Ensure the file exists before requiring it
       if (file_exists($file)) {
         require_once $file;
-        error_log("AYS_CoreLoader: Successfully loaded class $class from $file. This log entry confirms successful file loading. Review the surrounding logic to ensure similar success for all expected classes.");
+        error_log("AYS_CoreLoader: Successfully loaded class $class from $file.");
       } else {
         error_log("AYS_CoreLoader: Failed to load class $class. Expected file $file does not exist.");
       }
-    } elseif ($class === 'ays\\includes\\core\\AYS_Core') {
-      // This fallback ensures that core files are explicitly loaded. Confirm that the core file is correctly named and located to avoid this error.
-      $core_file = $base_dir . DIRECTORY_SEPARATOR . 'ays_core.php';
-      if (file_exists($core_file)) {
-        require_once $core_file;
-        error_log("AYS_CoreLoader: Fallback to load core file from $core_file.");
-      } else {
-        error_log("AYS_CoreLoader: Core file not found at $core_file.");
-      }
     } else {
-      error_log("AYS_CoreLoader: Class $class does not match the namespace $namespace.");
+      // Log for unmatched classes
+      error_log("AYS_CoreLoader: Class $class does not belong to namespace $base_namespace.");
     }
   }
 }
 
+// Register the autoloader
 spl_autoload_register(['\\ays\\includes\\core\\AYS_CoreLoader', 'load']);
+
+
+
+
+
+namespace ays\includes\helpers;
+
+class HelpersLoader
+{
+  public static function load($class)
+  {
+    if (!is_string($class)) {
+      error_log("HelpersLoader: Invalid class type. Expected string, got " . gettype($class));
+      return;
+    }
+
+    $namespace = 'ays\\includes\\helpers';
+    $base_dir = __DIR__;
+
+    if (strpos($class, $namespace) === 0) {
+      $class_path = str_replace([$namespace, '\\'], ['', DIRECTORY_SEPARATOR], $class);
+      $file = $base_dir . DIRECTORY_SEPARATOR . $class_path . '.php';
+
+      if (file_exists($file)) {
+        require_once $file;
+        error_log("HelpersLoader: Successfully loaded $class from $file.");
+      } else {
+        error_log("HelpersLoader: File $file for class $class not found.");
+      }
+    }
+  }
+}
+
+spl_autoload_register(['\\ays\\includes\\helpers\\HelpersLoader', 'load']);
+
+// --- Post Types Loader ---
+
+namespace ays\includes\posttypes;
+
+class PostTypesLoader
+{
+  public static function load($class)
+  {
+    if (!is_string($class)) {
+      error_log("PostTypesLoader: Invalid class type. Expected string, got " . gettype($class));
+      return;
+    }
+
+    $namespace = 'ays\\includes\\posttypes';
+    $base_dir = __DIR__;
+
+    if (strpos($class, $namespace) === 0) {
+      $class_path = str_replace([$namespace, '\\'], ['', DIRECTORY_SEPARATOR], $class);
+      $file = $base_dir . DIRECTORY_SEPARATOR . $class_path . '.php';
+
+      if (file_exists($file)) {
+        require_once $file;
+        error_log("PostTypesLoader: Successfully loaded $class from $file.");
+      } else {
+        error_log("PostTypesLoader: File $file for class $class not found.");
+      }
+    }
+  }
+}
+
+spl_autoload_register(['\\ays\\includes\\posttypes\\PostTypesLoader', 'load']);
+
+// --- Taxonomies Loader ---
+
+namespace ays\includes\taxonomies;
+
+class TaxonomiesLoader
+{
+  public static function load($class)
+  {
+    if (!is_string($class)) {
+      error_log("TaxonomiesLoader: Invalid class type. Expected string, got " . gettype($class));
+      return;
+    }
+
+    $namespace = 'ays\\includes\\taxonomies';
+    $base_dir = __DIR__;
+
+    if (strpos($class, $namespace) === 0) {
+      $class_path = str_replace([$namespace, '\\'], ['', DIRECTORY_SEPARATOR], $class);
+      $file = $base_dir . DIRECTORY_SEPARATOR . $class_path . '.php';
+
+      if (file_exists($file)) {
+        require_once $file;
+        error_log("TaxonomiesLoader: Successfully loaded $class from $file.");
+      } else {
+        error_log("TaxonomiesLoader: File $file for class $class not found.");
+      }
+    }
+  }
+}
+
+spl_autoload_register(['\\ays\\includes\\taxonomies\\TaxonomiesLoader', 'load']);
+
+/**
+ * Cascade Notes:
+ *
+ * 1. **Purpose of AYS_CoreLoader**:
+ *    - Specifically designed to load classes within the `ays\includes\core` namespace.
+ *    - Targets core functionality and avoids interference with helper or custom post type classes.
+ *
+ * 2. **Loading Strategy**:
+ *    - The `AYS_CoreLoader` focuses solely on `core` classes, ensuring isolation of responsibilities.
+ *    - General autoloading for other namespaces is handled by a separate loader or manually included.
+ *
+ * 3. **Directory and Namespace Scope**:
+ *    - Maps directly to `includes/core/`.
+ *    - Any classes outside this directory are not handled by this loader.
+ *
+ * 4. **Future Considerations**:
+ *    - Additional loaders may be required for other namespaces (`helpers`, `post-types`, etc.).
+ *    - Maintain separation of concerns to avoid cascading issues.
+ */

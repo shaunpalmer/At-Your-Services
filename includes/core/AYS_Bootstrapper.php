@@ -20,6 +20,8 @@ class AYS_Bootstrapper
         try {
             $instance = new self();
             $instance->initialize();
+            error_log('Bootstrapper initialized successfully');
+
         } catch (Exception $e) {
             error_log('AYS Plugin: Initialization error - ' . $e->getMessage());
             add_action('admin_notices', function () use ($e) {
