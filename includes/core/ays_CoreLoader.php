@@ -43,11 +43,7 @@ class AYS_CoreLoader
 // Register the autoloader
 spl_autoload_register(['\\ays\\includes\\core\\AYS_CoreLoader', 'load']);
 
-
-
-
-
-namespace ays\includes\helpers; // Are we supposed to 'use' OR NEW  the word use here
+namespace ays\includes\helpers;
 
 class HelpersLoader
 {
@@ -77,9 +73,7 @@ class HelpersLoader
 
 spl_autoload_register(['\\ays\\includes\\helpers\\HelpersLoader', 'load']);
 
-// --- Post Types Loader ---
-
-namespace ays\includes\posttypes; // Are we supposed to 'use' OR NEW  the word use here
+namespace ays\includes\posttypes;
 
 class PostTypesLoader
 {
@@ -109,9 +103,7 @@ class PostTypesLoader
 
 spl_autoload_register(['\\ays\\includes\\posttypes\\PostTypesLoader', 'load']);
 
-// --- Taxonomies Loader ---
-
-namespace ays\includes\taxonomies; // Are we supposed to 'Use' OR NEW  the word use here
+namespace ays\includes\taxonomies;
 
 class TaxonomiesLoader
 {
@@ -140,23 +132,3 @@ class TaxonomiesLoader
 }
 
 spl_autoload_register(['\\ays\\includes\\taxonomies\\TaxonomiesLoader', 'load']);
-
-/**
- * Cascade Notes:
- *
- * 1. **Purpose of AYS_CoreLoader**:
- *    - Specifically designed to load classes within the `ays\includes\core` namespace.
- *    - Targets core functionality and avoids interference with helper or custom post type classes.
- *
- * 2. **Loading Strategy**:
- *    - The `AYS_CoreLoader` focuses solely on `core` classes, ensuring isolation of responsibilities.
- *    - General autoloading for other namespaces is handled by a separate loader or manually included.
- *
- * 3. **Directory and Namespace Scope**:
- *    - Maps directly to `includes/core/`.
- *    - Any classes outside this directory are not handled by this loader.
- *
- * 4. **Future Considerations**:
- *    - Additional loaders may be required for other namespaces (`helpers`, `post-types`, etc.).
- *    - Maintain separation of concerns to avoid cascading issues.
- */
