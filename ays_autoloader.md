@@ -117,3 +117,62 @@ Your documentation highlights the following loaders:
 
 - **Taxonomies Loader**  
   Responsible for `ays\includes\taxonomies`.
+
+# Bootstrapper Initialization
+
+The `AYS_Bootstrapper` initialized successfully, meaning the foundational setup for the plugin is intact and running as expected. That’s a major milestone!
+
+---
+
+## Core Loader Execution
+
+The `AYS_CoreLoader` is loading and attempting to resolve classes. Although there are issues, such as:
+
+- **Unexpected array type**
+- **Namespace mismatch**
+
+The loader is functional, which marks a step forward.
+
+---
+
+## General Autoloader Registered
+
+The general-purpose autoloader registration completed successfully. This indicates:
+
+- Classes outside the core loader are now accessible.
+- Other plugin components can operate correctly.
+
+---
+
+## Namespace Issue Identified
+
+The log identifies a specific issue:
+
+- `ays\includes\helpers\error_handler` is being loaded into `ays\includes\core`.
+
+This traceability ensures targeted debugging, saving time and effort.
+
+---
+
+## Suggestions for Next Steps
+
+### 1. Fix the Type Mismatch
+
+- Check where the `AYS_CoreLoader` expects a string but receives an array.
+- Validate inputs before passing them to the loader.
+
+### 2. Namespace Corrections
+
+- Ensure `error_handler` is correctly categorized under the `helpers` namespace.
+- Verify the loader for `ays\includes\helpers` is functioning properly.
+
+### 3. Enhanced Logging
+
+- Improve logging to include additional context, such as:
+  - The source of the unexpected array type.
+
+This will simplify identifying and resolving issues.
+
+---
+
+**You’re making steady progress, Shaun!** Small wins like these build momentum for the bigger picture. Keep it up, and let me know how I can assist further! 🚀

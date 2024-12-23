@@ -47,7 +47,7 @@ spl_autoload_register(['\\ays\\includes\\core\\AYS_CoreLoader', 'load']);
 
 
 
-namespace ays\includes\helpers;
+namespace ays\includes\helpers; // Are we supposed to 'use' OR NEW  the word use here
 
 class HelpersLoader
 {
@@ -79,7 +79,7 @@ spl_autoload_register(['\\ays\\includes\\helpers\\HelpersLoader', 'load']);
 
 // --- Post Types Loader ---
 
-namespace ays\includes\posttypes;
+namespace ays\includes\posttypes; // Are we supposed to 'use' OR NEW  the word use here
 
 class PostTypesLoader
 {
@@ -111,7 +111,7 @@ spl_autoload_register(['\\ays\\includes\\posttypes\\PostTypesLoader', 'load']);
 
 // --- Taxonomies Loader ---
 
-namespace ays\includes\taxonomies;
+namespace ays\includes\taxonomies; // Are we supposed to 'Use' OR NEW  the word use here
 
 class TaxonomiesLoader
 {
