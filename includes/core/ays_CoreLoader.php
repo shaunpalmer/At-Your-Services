@@ -43,6 +43,9 @@ class AYS_CoreLoader
 // Register the autoloader
 spl_autoload_register(['\\ays\\includes\\core\\AYS_CoreLoader', 'load']);
 
+
+use ays\includes\helpers\WP_Error_Handler;
+
 namespace ays\includes\helpers;
 
 class HelpersLoader

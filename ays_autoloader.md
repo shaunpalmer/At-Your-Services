@@ -33,6 +33,34 @@ The `AYS_CoreLoader` originally served as the central mechanism to load all clas
 
 ---
 
+## 👸🏻: Observations
+
+I agree—the `WP_Error_Handler` class seems the most likely suspect. Since it’s handling `debug_backtrace` (which returns an array), we’ll want to confirm that none of that data is accidentally passed to the autoloader.
+
+---
+
+## 😊: Systematic Approach
+
+### 1. Comment Out the `WP_Error_Handler`
+
+- Temporarily comment out the `WP_Error_Handler` references:
+  - Both the `get_instance()` call.
+  - The filter replacing `wp_die`.
+
+If the “Invalid class type” error disappears, it confirms the error handler is the trigger.
+
+---
+
+### 2. Enhance the Logs
+
+Inside `log_error()`, right after the line checking for `WP_DEBUG`, add something like:
+
+```
+
+```
+
+error_log("[DEBUG] About to log debug_backtrace array to file. Here is the array: " . print_r($trace, true), 3, self::$log_file);
+
 #### **Cascade Strategy**
 
 1. **Initialization Order**:
@@ -69,17 +97,14 @@ The `AYS_CoreLoader` originally served as the central mechanism to load all clas
 #### **File Structure**
 
 ```
+
 /includes/
-    /core/
-        - AYS_CoreLoader.php
-    /helpers/
-        - HelpersLoader.php
-    /posttypes/
-        - PostTypesLoader.php
-    /taxonomies/
-        - TaxonomiesLoader.php
-    /autoloader/
-        - AYS_ClassAutoloader.php
+/core/ - AYS_CoreLoader.php
+/helpers/ - HelpersLoader.php
+/posttypes/ - PostTypesLoader.php
+/taxonomies/ - TaxonomiesLoader.php
+/autoloader/ - AYS_ClassAutoloader.php
+
 ```
 
 ---
@@ -106,16 +131,16 @@ From the information contained in your `ays_autoloader.md` file and related proj
 
 Your documentation highlights the following loaders:
 
-- **Core Loader**  
+- **Core Loader**
   Handles `ays\includes\core`.
 
-- **Helpers Loader**  
+- **Helpers Loader**
   Manages `ays\includes\helpers`.
 
-- **Post Types Loader**  
+- **Post Types Loader**
   Deals with `ays\includes\posttypes`.
 
-- **Taxonomies Loader**  
+- **Taxonomies Loader**
   Responsible for `ays\includes\taxonomies`.
 
 # Bootstrapper Initialization
@@ -176,3 +201,7 @@ This will simplify identifying and resolving issues.
 ---
 
 **You’re making steady progress, Shaun!** Small wins like these build momentum for the bigger picture. Keep it up, and let me know how I can assist further! 🚀
+
+```
+
+```
