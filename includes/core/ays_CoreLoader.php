@@ -9,6 +9,8 @@ class AYS_CoreLoader
     // Validate that $class is a string to prevent array-to-string conversion warnings.
     if (!is_string($class)) {
       error_log("AYS_CoreLoader: Invalid class type. Expected string, got " . gettype($class));
+      error_log('AYS_CoreLoader [DEBUG]: load() received an array: ' . print_r($class, true));
+      error_log('AYS_CoreLoader [DEBUG]: Trace => ' . print_r(debug_backtrace(), true));
       return;
     }
 
@@ -74,7 +76,7 @@ class HelpersLoader
   }
 }
 
-spl_autoload_register(['\\ays\\includes\\helpers\\HelpersLoader', 'load']);
+//spl_autoload_register(['\\ays\\includes\\helpers\\HelpersLoader', 'load']);
 
 namespace ays\includes\posttypes;
 

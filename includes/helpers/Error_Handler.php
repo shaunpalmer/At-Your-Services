@@ -40,23 +40,14 @@ class WP_Error_Handler
      */
     public function add_debug_notice($message, $type = 'error')
     {
-        // Log the message
         $this->log_error($message);
 
-        // Check if the `display_admin_notice` method exists and is callable
-        if (method_exists($this, 'display_admin_notice')) {
-            if (is_callable([$this, 'display_admin_notice'])) {
-                $this->display_admin_notice($message, $type);
-            } else {
-                // Log a warning if the method exists but is not callable
-                $this->log_error("Method 'display_admin_notice' exists but is not callable.");
-            }
+        if (method_exists($this, 'display_admin_notice') && is_callable([$this, 'display_admin_notice'])) {
+            $this->display_admin_notice($message, $type);
         } else {
-            // Log a warning if the method does not exist
-            $this->log_error("Method 'display_admin_notice' does not exist.");
+            $this->log_error("Method 'display_admin_notice' is not callable or does not exist.");
         }
     }
-
 
     /**
      * Log errors to a file.
@@ -91,9 +82,11 @@ class WP_Error_Handler
      */
     public static function display_admin_notices()
     {
-        $log_contents = @file_get_contents(self::$log_file);
-        if ($log_contents) {
-            echo '<div class="notice notice-error"><p>AYS Plugin Errors:<pre>' . esc_html($log_contents) . '</pre></p></div>';
+        if (file_exists(self::$log_file)) {
+            $log_contents = @file_get_contents(self::$log_file);
+            if ($log_contents) {
+                echo '<div class="notice notice-error"><p>AYS Plugin Errors:<pre>' . esc_html($log_contents) . '</pre></p></div>';
+            }
         }
     }
 
@@ -107,6 +100,7 @@ class WP_Error_Handler
     public function handle_wp_die($message, $title = '', $args = [])
     {
         $this->log_error('WP Die called with message: ' . print_r($message, true));
+
         if (is_admin()) {
             echo '<div class="error"><p>' . esc_html($message) . '</p></div>';
         } else {
