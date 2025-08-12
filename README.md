@@ -2,22 +2,9 @@
 
 A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
 
-# **Minimum Requirements**
-
-At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
-
-**Minimum Requirements**
-
-> > > > > > > Stashed changes
-=======
-At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
-
-**Minimum Requirements**
->>>>>>> Stashed changes
+## Minimum Requirements
 
 **WordPress 5.0 or greater**
 **PHP version 7.0 or greater**
@@ -31,29 +18,17 @@ The At Your Service Plugin includes the following files and features:
 - `.gitignore`: Files excluded from the repository.
 - `README.md`: The document you're currently reading, detailing the plugin setup and usage.
 - `CHANGELOG.md`: A log of changes and updates made to the plugin.
-- `ays/` directory: The main directory containing the plugin's source code. This includes class definitions for custom post types and taxonomies, JavaScript and CSS assets, template files for forms, and additional components such as hooks and utilities that power the plugin’s functionality.
+- `ays/` directory: The main directory containing the plugin's source code. This includes class definitions for custom post types and taxonomies, JavaScript and CSS assets, template files for forms, and additional components such as hooks and utilities that power the plugin's functionality.
 - **Shortcodes for Non-Gutenberg Users**: We provide powerful shortcodes for integrating lead generation forms into any part of your site, optimized for responsive design. The landing page layout is crafted for high conversions and includes:
 
   - **Two-Column Responsive Layout**: A fully responsive two-column design, perfect for showcasing your business with a combination of visual content and lead capture forms.
   - **Dynamic Headline and Subheadline**: Easily customizable headline (H1) and subheadline (H2) sections that can dynamically display your city or service.
-  - **Engaging Visual Content**: The left column includes space for images or videos that help convey your service’s value visually, optimized for different screen sizes with a flexible image layout.
+  - **Engaging Visual Content**: The left column includes space for images or videos that help convey your service's value visually, optimized for different screen sizes with a flexible image layout.
   - **Service Pitch Section**: A text section to deliver your pitch, limited to 6 lines with CSS's clamp feature to keep the message concise and impactful.
   - **Lead Capture Form**: The right column features a fully functional form, with inputs for name, email, phone, and checkboxes for selecting services . The form is styled for accessibility and ease of use.
   - **Call to Action**: Includes a prominent "Book In" button for easy user engagement. It also features a checkbox to confirm the user is "Not a Robot" and a fallback option to call your business directly if needed, with a dynamic phone number.
-<<<<<<< Updated upstream
-    <<<<<<< Updated upstream
 
 This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
-
-=======
-
-This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
-
-> > > > > > > changes
-=======
-
-This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
->>>>>>> Stashed changes
 
 ## Features
 
@@ -73,81 +48,17 @@ This shortcode is designed to be mobile-optimized, ensuring it looks great acros
 ### For Regular Users
 
 1. **Upload via WordPress Dashboard**:
-<<<<<<< Updated upstream
-   <<<<<<< Updated upstream - Download the plugin zip file. - Navigate to the 'Plugins' screen in your WordPress dashboard. - Click 'Add New', then 'Upload Plugin'. - Select the plugin zip file, upload it, and activate it.
-
-2. # **Begin Configuration**: - Go to the plugin settings to configure lead generation forms, job tracking, invoicing, and other features.
-=======
->>>>>>> Stashed changes
-
    - Download the plugin zip file.
    - Navigate to the 'Plugins' screen in your WordPress dashboard.
    - Click 'Add New', then 'Upload Plugin'.
    - Select the plugin zip file, upload it, and activate it.
 
-3. **Begin Configuration**:
+2. **Begin Configuration**:
    - Go to the plugin settings to configure lead generation forms, job tracking, invoicing, and other features.
-<<<<<<< Updated upstream
-     > > > > > > > Stashed changes
-=======
->>>>>>> Stashed changes
 
 ### For Developers
 
 1. **Using Git and WP-CLI**:
-<<<<<<< Updated upstream
-   <<<<<<< Updated upstream - Clone the repository to your WordPress plugins directory:
-   `bash
-git clone https://github.com/shaunpalmer/At-Your-Services wp-content/plugins/atyourservice
-` - Navigate to the plugin folder and activate the plugin via WP-CLI:
-   `bash
-wp plugin activate atyourservice
-`
-
-## Task Automation with NPM
-
-We use **npm scripts** for automating common tasks such as building the project, running linters, and managing git hooks. Below is a step-by-step guide for setting up automation for your project. 2. **Using NPM and WP-Scripts**: - Install dependencies:
-`##bash
-      npm install
-     ` - Build the plugin using the official WordPress scripts:
-`bash
-      npm run build  
-      ` - For development mode:
-`bash
-      npm run start
-      `
-`   npx husky add .husky/pre-commit "npm run lint"
-      git add .husky/pre-commit
-  `
-=======
-
-- Clone the repository to your WordPress plugins directory:
-  ```bash
-  git clone https://github.com/shaunpalmer/At-Your-Services wp-content/plugins/atyourservice
-  ```
-- Navigate to the plugin folder and activate the plugin via WP-CLI:
-  ```bash
-  wp plugin activate atyourservice
-  ```
-
-## Task Automation with NPM
-
-We use **npm scripts** for automating common tasks such as building the project, running linters, and managing git hooks. Below is a step-by-step guide for setting up automation for your project. 2. **Using NPM and WP-Scripts**: - Install dependencies:
-`##bash
-      npm install
-     ` - Build the plugin using the official WordPress scripts:
-`bash
-      npm run build  
-      ` - For development mode:
-`bash
-      npm run start
-      `
-`  npx husky add .husky/pre-commit "npm run lint"
-      git add .husky/pre-commit
- `
-
-> > > > > > > Stashed changes
-=======
    - Clone the repository to your WordPress plugins directory:
      ```bash
      git clone https://github.com/shaunpalmer/At-Your-Services wp-content/plugins/atyourservice
@@ -157,13 +68,7 @@ We use **npm scripts** for automating common tasks such as building the project,
      wp plugin activate atyourservice
      ```
 
-## Task Automation with NPM
-
-We use **npm scripts** for automating common tasks such as building the project, running linters, and managing git hooks. Below is a step-by-step guide for setting up automation for your project.
->>>>>>> Stashed changes
-
 2. **Using NPM and WP-Scripts**:
-
    - Install dependencies:
      ```bash
      npm install
@@ -173,39 +78,27 @@ We use **npm scripts** for automating common tasks such as building the project,
      npm run build
      ```
    - For development mode:
-
      ```bash
      npm run start
      ```
 
-     ```
-     npx husky add .husky/pre-commit "npm run lint"
-     git add .husky/pre-commit
-     ```
+## Task Automation with NPM
 
-     # NPM Automation and Build Setup
-
-To streamline the development process, we’ve incorporated several tools using **NPM** for task automation, linting, and building packages. This section explains how to set up and use these tools in your project.
-
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+We use **npm scripts** for automating common tasks such as building the project, running linters, and managing git hooks. Below is a step-by-step guide for setting up automation for your project.
 
 ### 1. Initialize the Project
 
-=======
-
-### 1. Initialize the Project
-
-> > > > > > > Stashed changes
-> > > > > > > If you haven’t initialized your project yet, start by running:
-=======
-### 1. Initialize the Project
-
-If you haven’t initialized your project yet, start by running:
->>>>>>> Stashed changes
+If you haven't initialized your project yet, start by running:
 
 ```bash
 npm init -y
+```
+
+### 2. Set up Pre-commit Hooks
+
+```bash
+npx husky add .husky/pre-commit "npm run lint"
+git add .husky/pre-commit
 ```
 
 ## Custom Post Types and Taxonomies
@@ -213,27 +106,6 @@ npm init -y
 This plugin includes several **Custom Post Types** and **Taxonomies** to enhance the functionality of your WordPress site. Below is a list of the custom post types and taxonomies included, along with their purposes and locations within the project structure.
 
 ### Custom Post Types
-<<<<<<< Updated upstream
-
-<<<<<<< Updated upstream
-| Post Type | Description | Class Name | File Location |
-| ------------ | --------------------------------------------------- | ------------------ | -------------------------------------------- |
-| **Services** | Different kinds of services offered by the business. | `Ays_CPT_Service` | `includes/post-types/ays-cpt-service.php` |
-| **Teams** | Teams within the organization. | `Ays_CPT_Team` | `includes/post-types/ays-cpt-team.php` |
-| **FAQs** | Frequently Asked Questions related to services. | `Ays_CPT_FAQ` | `includes/post-types/ays-cpt-faq.php` |
-| **Reviews** | Customer reviews and testimonials. | `Ays_CPT_Review` | `includes/post-types/ays-cpt-review.php` |
-| **Locations**| Business or service locations. | `Ays_CPT_Location` | `includes/post-types/ays-cpt-location.php` |
-
-### Taxonomies
-
-| Taxonomy         | Description                                                          | Class Name                  | File Location                                       |
-| ---------------- | -------------------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
-| **Service Type** | Categorizes services by type (e.g., Cleaning, Plumbing, etc.).       | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
-| **Price Range**  | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range`  | `includes/taxonomies/ays-taxonomy-price-range.php`  |
-
-=======
-=======
->>>>>>> Stashed changes
 
 | Post Type     | Description                                          | Class Name         | File Location                              |
 | ------------- | ---------------------------------------------------- | ------------------ | ------------------------------------------ |
@@ -249,11 +121,6 @@ This plugin includes several **Custom Post Types** and **Taxonomies** to enhance
 | ---------------- | -------------------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
 | **Service Type** | Categorizes services by type (e.g., Cleaning, Plumbing, etc.).       | `Ays_Taxonomy_Service_Type` | `includes/taxonomies/ays-taxonomy-service-type.php` |
 | **Price Range**  | Categorizes services based on pricing tiers (e.g., Budget, Premium). | `Ays_Taxonomy_Price_Range`  | `includes/taxonomies/ays-taxonomy-price-range.php`  |
-<<<<<<< Updated upstream
-
-> > > > > > > Stashed changes
-=======
->>>>>>> Stashed changes
 
 ### Project Structure
 
@@ -262,16 +129,9 @@ This plugin includes several **Custom Post Types** and **Taxonomies** to enhance
 - **/public**: Public-facing features, including front-end form logic.
 - **/assets**: Stylesheets, JavaScript, and other assets.
 - **/templates**: Custom templates for lead generation forms and job management.
-<<<<<<< Updated upstream
-  <<<<<<< Updated upstream
-  =======
-
-> > > > > > > changes
-=======
->>>>>>> Stashed changes
 
 ```bash
-/ays/
+./ays/
 ├── includes/
 │   ├── post-types/
 │   │   ├── ays-cpt-service.php      # Custom post type for services
@@ -290,13 +150,6 @@ This plugin includes several **Custom Post Types** and **Taxonomies** to enhance
 ├── ays.php                           # Main plugin file
 ```
 
-<<<<<<< Updated upstream
-# <<<<<<< Updated upstream
-
-> > > > > > > Stashed changes
-
-=======
->>>>>>> Stashed changes
 ## Customization
 
 To tailor the plugin to your business needs:
@@ -305,15 +158,6 @@ To tailor the plugin to your business needs:
 - Customize pricing models for services like **Service Professionals** or similar service-related classes.
 - Modify form layouts and styles by editing the form templates located in **/templates/form.php**.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
-
-> > > > > > >
-
-=======
->>>>>>> Stashed changes
 ## WordPress.org Preparation
 
 Project Studios is planning to submit the plugin to WordPress.org. Please ensure the repository adheres to [WordPress plugin directory guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/).
@@ -340,11 +184,3 @@ Planned features for upcoming versions:
 ## Credits
 
 At Your Service is developed and maintained by **Shaun Palmer** of **Project Studios Web Agency**, evolving with input from the service-based business community.
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
-
-> > > > > > >
-=======
->>>>>>> Stashed changes

@@ -1,8 +1,8 @@
 <?php
 // Template File
 
-{% comment %} get_header(); {% endcomment %}
+// get_header();
 
 // Custom content goes here
 
-{% comment %} get_footer(); {% endcomment %}
+// get_footer();

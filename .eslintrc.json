@@ -1,0 +1,19 @@
+{
+  "extends": ["@wordpress/eslint-plugin/recommended"],
+  "env": {
+    "browser": true,
+    "jquery": true,
+    "es6": true
+  },
+  "globals": {
+    "wp": "readonly",
+    "lodash": "readonly",
+    "_": "readonly",
+    "jQuery": "readonly",
+    "$": "readonly"
+  },
+  "rules": {
+    "no-console": "warn",
+    "no-unused-vars": "error"
+  }
+}

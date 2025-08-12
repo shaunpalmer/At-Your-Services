@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards for At Your Service Plugin">
+	<description>Custom phpcs ruleset for At Your Service plugin</description>
+
+	<!-- Show progress and sniff codes in all reports -->
+	<arg value="ps"/>
+
+	<!-- Check up to 8 files simultaneously -->
+	<arg name="parallel" value="8"/>
+
+	<!-- What to scan -->
+	<file>.</file>
+	
+	<!-- Exclude patterns -->
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/.git/*</exclude-pattern>
+	<exclude-pattern>/assets/vendor/*</exclude-pattern>
+
+	<!-- How to scan -->
+	<!-- Usage instructions: https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage -->
+	<!-- Annotated ruleset: https://github.com/squizlabs/PHP_CodeSniffer/wiki/Annotated-ruleset.xml -->
+	<arg value="sp"/> <!-- Show sniff and progress -->
+	<arg name="basepath" value="./"/><!-- Strip the file paths down to the relevant bit -->
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+
+	<!-- Use WordPress Coding Standards -->
+	<rule ref="WordPress">
+		<!-- Allow . in hook names -->
+		<exclude name="WordPress.NamingConventions.ValidHookName.UseUnderscores"/>
+		
+		<!-- Allow short array syntax -->
+		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+		
+		<!-- Allow missing file header comments in some files -->
+		<exclude name="Squiz.Commenting.FileComment.Missing"/>
+	</rule>
+
+	<!-- Use WordPress-Extra rule set -->
+	<rule ref="WordPress-Extra">
+		<!-- Allow . in hook names -->
+		<exclude name="WordPress.NamingConventions.ValidHookName.UseUnderscores"/>
+	</rule>
+
+	<!-- Add in some extra rules from other standards -->
+	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+	<rule ref="Generic.Commenting.Todo"/>
+
+	<!-- Check for PHP cross-version compatibility -->
+	<config name="testVersion" value="7.2-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- WordPress VIP Go rules -->
+	<rule ref="WordPress-VIP-Go">
+		<!-- Allow filesystem operations for plugin activation -->
+		<exclude name="WordPress.WP.AlternativeFunctions.file_system_read_fopen"/>
+		<exclude name="WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents"/>
+	</rule>
+
+	<!-- Set minimum supported WordPress version -->
+	<config name="minimum_supported_wp_version" value="5.0"/>
+
+	<!-- Verify that the text_domain is set to the desired text-domain -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array" value="atyourservice"/>
+		</properties>
+	</rule>
+
+	<!-- Allow for theme specific exceptions to the file name rules based on the theme hierarchy -->
+	<rule ref="WordPress.Files.FileName">
+		<properties>
+			<property name="is_theme" value="false"/>
+		</properties>
+	</rule>
+
+	<!-- Set the minimum supported WordPress version for all sniffs which use it -->
+	<config name="minimum_supported_wp_version" value="5.0"/>
+
+	<!-- Verify that everything in the global namespace is prefixed with a theme specific prefix -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array" value="ays,Ays,AYS"/>
+		</properties>
+	</rule>
+</ruleset>

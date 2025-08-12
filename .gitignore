@@ -1,0 +1,74 @@
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/blogs.dir/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/cache/
+wp-content/cache/supercache/
+
+# WP-CLI
+wp-cli.local.yml
+
+# Node modules and build files
+node_modules/
+npm-debug.log
+yarn-error.log
+/build/
+/dist/
+
+# Composer
+/vendor/
+composer.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# PHP Storm
+.phpstorm.meta.php
+
+# WordPress debug logs
+debug.log
+error_log
+
+# Plugin specific
+*.zip
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Assets source maps
+*.map
