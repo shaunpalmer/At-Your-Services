@@ -1,4 +1,70 @@
 /**
- * All of the CSS for your public-facing functionality should be
- * included in this file.
+ * Lead form public styles
  */
+
+.ays-lead-form input[type=text],
+.ays-lead-form input[type=email],
+.ays-lead-form input[type=tel],
+.ays-lead-form textarea {
+	width: 100%;
+	border: 1px solid #c9ced4; /* neutral light grey */
+	background: #fff;
+	color: #111;
+	padding: 10px 12px;
+	border-radius: 4px;
+	font-size: 15px;
+	line-height: 1.4;
+	box-shadow: 0 0 0 0 rgba(0,0,0,0);
+	transition: border-color .15s ease, box-shadow .15s ease, background-color .2s;
+}
+
+.ays-lead-form input::placeholder,
+.ays-lead-form textarea::placeholder {
+	color: #6b737b; /* medium neutral for contrast */
+	opacity: 1; /* ensure consistent across browsers */
+}
+
+.ays-lead-form input:focus,
+.ays-lead-form textarea:focus {
+	outline: none;
+	border-color: #2271b1; /* WP blue */
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.ays-lead-form .form-label {
+	font-weight: 600;
+	margin-bottom: 4px;
+	color: #222;
+}
+
+.ays-lead-form button[type=submit] {
+	background: #2271b1;
+	border: 1px solid #1d5e92;
+	padding: 12px 18px;
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: .3px;
+}
+
+.ays-lead-form button[type=submit]:hover {
+	background: #1d5e92;
+	border-color: #184d78;
+}
+
+@media (prefers-color-scheme: dark) {
+	.ays-lead-form input[type=text],
+	.ays-lead-form input[type=email],
+	.ays-lead-form input[type=tel],
+	.ays-lead-form textarea {
+		background:#1e1f21;
+		color:#f5f6f7;
+		border-color:#3a3f45;
+	}
+	.ays-lead-form input:focus,
+	.ays-lead-form textarea:focus {
+		border-color:#5aa9ff;
+		box-shadow:0 0 0 1px #5aa9ff;
+	}
+	.ays-lead-form button[type=submit] { background:#2d8adf; border-color:#2470b4; }
+	.ays-lead-form button[type=submit]:hover { background:#2470b4; }
+}
