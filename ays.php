@@ -238,3 +238,28 @@ add_action('admin_post_ays_delete_item', function() {
 		wp_die('Items class not found');
 	}
 });
+
+// === Clients Tab admin-post handlers ===
+add_action('admin_post_ays_add_client', function() {
+	if (class_exists('AYS_Clients_Tab')) {
+		AYS_Clients_Tab::handle_add_client();
+	} else {
+		wp_die('Clients class not found');
+	}
+});
+
+add_action('admin_post_ays_update_client', function() {
+	if (class_exists('AYS_Clients_Tab')) {
+		AYS_Clients_Tab::handle_update_client();
+	} else {
+		wp_die('Clients class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_client', function() {
+	if (class_exists('AYS_Clients_Tab')) {
+		AYS_Clients_Tab::handle_delete_client();
+	} else {
+		wp_die('Clients class not found');
+	}
+});

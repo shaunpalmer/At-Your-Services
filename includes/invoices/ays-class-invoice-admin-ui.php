@@ -654,27 +654,11 @@ class AYS_Invoice_Admin_UI {
      * Render Clients tab
      */
     protected function render_clients_tab() {
-        ?>
-        <details class="ays-details" open>
-            <summary>
-                👥 <?php esc_html_e('Manage Clients', 'ays'); ?>
-                <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
-            </summary>
-            <div>
-                <div class="left-column">
-                    <p><?php esc_html_e('Client management interface will appear here.', 'ays'); ?></p>
-                </div>
-                <div class="right-column">
-                    <h4><?php esc_html_e('📌 Quick Tips', 'ays'); ?></h4>
-                    <ul>
-                        <li><?php esc_html_e('Add client contact details', 'ays'); ?></li>
-                        <li><?php esc_html_e('Track billing history', 'ays'); ?></li>
-                        <li><?php esc_html_e('Email must be unique', 'ays'); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-        <?php
+        if ( class_exists( 'AYS_Clients_Tab' ) ) {
+            AYS_Clients_Tab::render();
+        } else {
+            echo '<p>' . esc_html__( 'Clients tab class not found.', 'ays' ) . '</p>';
+        }
     }
 
     /**
