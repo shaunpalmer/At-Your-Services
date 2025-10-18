@@ -681,79 +681,11 @@ class AYS_Invoice_Admin_UI {
      * Render Items tab
      */
     protected function render_items_tab() {
-        ?>
-        <details class="ays-details" open>
-            <summary>
-                📦 <?php esc_html_e('Service Items Catalog', 'ays'); ?>
-                <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
-            </summary>
-            <div>
-                <div class="left-column">
-                    <p><?php esc_html_e('Your service items catalog will appear here. Add items like "Carpet Shampoo", "Hourly Labor", "Meter of Pipe", etc.', 'ays'); ?></p>
-                </div>
-                <div class="right-column">
-                    <h4><?php esc_html_e('📌 Item Types', 'ays'); ?></h4>
-                    <ul>
-                        <li><?php esc_html_e('Flat fee (qty: 1)', 'ays'); ?></li>
-                        <li><?php esc_html_e('Per unit (qty: N)', 'ays'); ?></li>
-                        <li><?php esc_html_e('Hourly rate (qty: hours)', 'ays'); ?></li>
-                        <li><?php esc_html_e('Per meter/distance', 'ays'); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-
-        <details class="ays-details">
-            <summary>
-                ➕ <?php esc_html_e('Create New Item', 'ays'); ?>
-                <span class="ays-badge new"><?php esc_html_e('quick add', 'ays'); ?></span>
-            </summary>
-            <div>
-                <div class="left-column">
-                    <form method="post" action="">
-                        <div class="ays-form-row">
-                            <label for="item_description"><?php esc_html_e('Description', 'ays'); ?> *</label>
-                            <input type="text" id="item_description" name="description" placeholder="<?php esc_attr_e('e.g., Carpet Shampoo 2 bed', 'ays'); ?>" />
-                            <p class="description"><?php esc_html_e('What service or product is this?', 'ays'); ?></p>
-                        </div>
-
-                        <div class="ays-form-row">
-                            <label for="item_service_type"><?php esc_html_e('Service Type', 'ays'); ?></label>
-                            <select id="item_service_type" name="service_type_id">
-                                <option value=""><?php esc_html_e('-- None --', 'ays'); ?></option>
-                                <!-- Service types will populate here -->
-                            </select>
-                            <p class="description"><?php esc_html_e('Organize items by type (e.g., Cleaning, Plumbing)', 'ays'); ?></p>
-                        </div>
-
-                        <div class="ays-form-row">
-                            <label for="item_rate"><?php esc_html_e('Rate', 'ays'); ?> *</label>
-                            <input type="number" id="item_rate" name="rate" step="0.01" min="0" placeholder="0.00" />
-                            <p class="description"><?php esc_html_e('Price per unit', 'ays'); ?></p>
-                        </div>
-
-                        <div class="ays-form-row">
-                            <label for="item_taxable">
-                                <input type="checkbox" id="item_taxable" name="taxable" value="1" checked />
-                                <?php esc_html_e('Taxable (GST applies)', 'ays'); ?>
-                            </label>
-                        </div>
-
-                        <?php submit_button(__('Add Item', 'ays'), 'primary', 'submit', false); ?>
-                    </form>
-                </div>
-                <div class="right-column">
-                    <h4><?php esc_html_e('💡 Tips', 'ays'); ?></h4>
-                    <ul>
-                        <li><?php esc_html_e('Use clear, descriptive names', 'ays'); ?></li>
-                        <li><?php esc_html_e('Rate = base cost (e.g., $50/unit)', 'ays'); ?></li>
-                        <li><?php esc_html_e('On invoice, qty multiplied by rate', 'ays'); ?></li>
-                        <li><?php esc_html_e('Taxable depends on your jurisdiction', 'ays'); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-        <?php
+        if ( class_exists( 'AYS_Items_Tab' ) ) {
+            AYS_Items_Tab::render();
+        } else {
+            echo '<p style="color: #dc3545;">' . esc_html__( 'Items module not loaded.', 'atyourservice' ) . '</p>';
+        }
     }
 
     /**
