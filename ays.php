@@ -263,3 +263,20 @@ add_action('admin_post_ays_delete_client', function() {
 		wp_die('Clients class not found');
 	}
 });
+
+// === Invoices Tab admin-post handlers ===
+add_action('admin_post_ays_create_invoice', function() {
+	if (class_exists('AYS_Invoices_Tab')) {
+		AYS_Invoices_Tab::handle_create_invoice();
+	} else {
+		wp_die('Invoices class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_invoice', function() {
+	if (class_exists('AYS_Invoices_Tab')) {
+		AYS_Invoices_Tab::handle_delete_invoice();
+	} else {
+		wp_die('Invoices class not found');
+	}
+});

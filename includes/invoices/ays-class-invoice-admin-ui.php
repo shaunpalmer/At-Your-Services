@@ -627,27 +627,11 @@ class AYS_Invoice_Admin_UI {
      * Render Invoices tab
      */
     protected function render_invoices_tab() {
-        ?>
-        <details class="ays-details" open>
-            <summary>
-                📋 <?php esc_html_e('Invoice List', 'ays'); ?>
-                <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
-            </summary>
-            <div>
-                <div class="left-column">
-                    <p><?php esc_html_e('Invoice list and management will appear here.', 'ays'); ?></p>
-                </div>
-                <div class="right-column">
-                    <h4><?php esc_html_e('📌 Quick Tips', 'ays'); ?></h4>
-                    <ul>
-                        <li><?php esc_html_e('Create invoices for any client', 'ays'); ?></li>
-                        <li><?php esc_html_e('Search items by service type', 'ays'); ?></li>
-                        <li><?php esc_html_e('Track payment status', 'ays'); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-        <?php
+        if ( class_exists( 'AYS_Invoices_Tab' ) ) {
+            AYS_Invoices_Tab::render();
+        } else {
+            echo '<p>' . esc_html__( 'Invoices tab class not found.', 'ays' ) . '</p>';
+        }
     }
 
     /**

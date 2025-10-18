@@ -1,0 +1,548 @@
+<?php
+/**
+ * AYS Invoices Tab - Invoice Management
+ *
+ * Manages the Invoices for the invoicing system.
+ * Provides interface for creating, editing, and viewing invoices.
+ *
+ * Database Table: wp_ays_invoices
+ * Columns: id, invoice_number, client_id, issue_date, due_date, subtotal, tax_amount, total, status, notes, created_at, updated_at
+ *
+ * @since 1.0
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+class AYS_Invoices_Tab {
+
+	/**
+	 * Render the Invoices tab content
+	 *
+	 * @return void
+	 */
+	public static function render() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		// Display notices
+		self::display_notices();
+
+		// Get edit ID if present
+		$edit_id = isset( $_GET['edit_invoice'] ) ? intval( $_GET['edit_invoice'] ) : 0;
+		$edit_invoice = $edit_id ? self::get_invoice( $edit_id ) : null;
+
+		if ( $edit_id && ! $edit_invoice ) {
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'Invoice not found.', 'atyourservice' ) . '</p></div>';
+			return;
+		}
+
+		if ( $edit_invoice ) {
+			// Show editor
+			self::render_invoice_editor( $edit_invoice );
+		} else {
+			// Show list
+			self::render_invoices_list();
+			// Show quick create
+			self::render_quick_create_form();
+		}
+	}
+
+	/**
+	 * Render the invoices list
+	 *
+	 * @return void
+	 */
+	protected static function render_invoices_list() {
+		global $wpdb;
+		$invoices = $wpdb->get_results( "SELECT i.*, c.name as client_name FROM {$wpdb->prefix}ays_invoices i LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id ORDER BY i.issue_date DESC LIMIT 50" );
+
+		if ( empty( $invoices ) ) {
+			echo '<p>' . esc_html__( 'No invoices yet. Create your first invoice below!', 'atyourservice' ) . '</p>';
+			return;
+		}
+
+		?>
+		<details class="ays-details" open>
+			<summary>
+				📋 <?php esc_html_e( 'Invoices List', 'atyourservice' ); ?>
+				<span class="ays-badge"><?php echo esc_html( count( $invoices ) . ' invoices' ); ?></span>
+			</summary>
+			<div>
+				<div class="left-column">
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Invoice #', 'atyourservice' ); ?></th>
+								<th><?php esc_html_e( 'Client', 'atyourservice' ); ?></th>
+								<th><?php esc_html_e( 'Date', 'atyourservice' ); ?></th>
+								<th><?php esc_html_e( 'Due Date', 'atyourservice' ); ?></th>
+								<th style="text-align: right;"><?php esc_html_e( 'Total', 'atyourservice' ); ?></th>
+								<th style="text-align: center;"><?php esc_html_e( 'Status', 'atyourservice' ); ?></th>
+								<th style="text-align: center;"><?php esc_html_e( 'Actions', 'atyourservice' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $invoices as $invoice ) : ?>
+								<tr>
+									<td><strong><?php echo esc_html( $invoice->invoice_number ); ?></strong></td>
+									<td><?php echo esc_html( $invoice->client_name ?: '—' ); ?></td>
+									<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->issue_date ) ) ); ?></td>
+									<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->due_date ) ) ); ?></td>
+									<td style="text-align: right;"><code>$<?php echo esc_html( number_format( $invoice->total, 2 ) ); ?></code></td>
+									<td style="text-align: center;">
+										<?php self::render_status_badge( $invoice->status ); ?>
+									</td>
+									<td style="text-align: center;">
+										<a href="<?php echo esc_url( add_query_arg( 'edit_invoice', $invoice->id ) ); ?>" class="button button-small">
+											<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
+										</a>
+										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_invoice', 'invoice_id' => $invoice->id ] ), 'ays_delete_invoice_' . $invoice->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this invoice?', 'atyourservice' ); ?>')">
+											<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
+										</a>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+				<div class="right-column">
+					<h4><?php esc_html_e( '📌 Quick Tips', 'atyourservice' ); ?></h4>
+					<ul>
+						<li><?php esc_html_e( 'Create invoices for your clients', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Add line items from your catalog', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Track payment status', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Edit or delete anytime', 'atyourservice' ); ?></li>
+					</ul>
+				</div>
+			</div>
+		</details>
+		<?php
+	}
+
+	/**
+	 * Render quick create form
+	 *
+	 * @return void
+	 */
+	protected static function render_quick_create_form() {
+		global $wpdb;
+		$clients = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_clients WHERE status = 'active' ORDER BY name" );
+
+		?>
+		<details class="ays-details open>
+			<summary>
+				➕ <?php esc_html_e( 'Create New Invoice', 'atyourservice' ); ?>
+			</summary>
+			<div>
+				<div class="left-column">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<?php wp_nonce_field( 'ays_create_invoice', 'ays_invoice_nonce' ); ?>
+						<input type="hidden" name="action" value="ays_create_invoice">
+
+						<table class="form-table">
+							<tr>
+								<th scope="row">
+									<label for="client_id"><?php esc_html_e( 'Client', 'atyourservice' ); ?> <span style="color: red;">*</span></label>
+								</th>
+								<td>
+									<select id="client_id" name="client_id" required class="regular-text">
+										<option value=""><?php esc_html_e( '— Select a client —', 'atyourservice' ); ?></option>
+										<?php foreach ( $clients as $client ) : ?>
+											<option value="<?php echo esc_attr( $client->id ); ?>">
+												<?php echo esc_html( $client->name ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="issue_date"><?php esc_html_e( 'Issue Date', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input 
+										type="date" 
+										id="issue_date" 
+										name="issue_date" 
+										value="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>"
+										class="regular-text"
+										style="width: 200px;"
+									>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="due_date"><?php esc_html_e( 'Due Date', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input 
+										type="date" 
+										id="due_date" 
+										name="due_date" 
+										value="<?php echo esc_attr( date( 'Y-m-d', strtotime( '+30 days' ) ) ); ?>"
+										class="regular-text"
+										style="width: 200px;"
+									>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="notes"><?php esc_html_e( 'Notes', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<textarea 
+										id="notes" 
+										name="notes" 
+										placeholder="<?php esc_attr_e( 'Any special notes for this invoice', 'atyourservice' ); ?>"
+										class="regular-text"
+										rows="3"
+									></textarea>
+								</td>
+							</tr>
+						</table>
+
+						<p class="submit">
+							<?php submit_button( __( 'Create Invoice', 'atyourservice' ), 'primary', 'submit', false ); ?>
+						</p>
+					</form>
+				</div>
+				<div class="right-column">
+					<h4><?php esc_html_e( '📌 Form Help', 'atyourservice' ); ?></h4>
+					<ul>
+						<li><strong><?php esc_html_e( 'Client:', 'atyourservice' ); ?></strong> <?php esc_html_e( 'Select from your active clients list', 'atyourservice' ); ?></li>
+						<li><strong><?php esc_html_e( 'Dates:', 'atyourservice' ); ?></strong> <?php esc_html_e( 'Issue date (today) and due date (30 days by default)', 'atyourservice' ); ?></li>
+						<li><strong><?php esc_html_e( 'Notes:', 'atyourservice' ); ?></strong> <?php esc_html_e( 'Optional invoice notes or payment terms', 'atyourservice' ); ?></li>
+					</ul>
+				</div>
+			</div>
+		</details>
+		<?php
+	}
+
+	/**
+	 * Render invoice editor
+	 *
+	 * @param object $invoice The invoice to edit.
+	 * @return void
+	 */
+	protected static function render_invoice_editor( $invoice ) {
+		global $wpdb;
+
+		$invoice_items = $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}ays_invoice_items WHERE invoice_id = %d ORDER BY created_at",
+			$invoice->id
+		) );
+
+		$clients = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_clients WHERE status = 'active' ORDER BY name" );
+		$client = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}ays_clients WHERE id = %d", $invoice->client_id ) );
+
+		?>
+		<div class="ays-invoice-editor">
+			<div class="editor-header">
+				<h2><?php echo esc_html__( 'Invoice', 'atyourservice' ) . ' #' . esc_html( $invoice->invoice_number ); ?></h2>
+				<a href="<?php echo esc_url( remove_query_arg( 'edit_invoice' ) ); ?>" class="button">
+					<?php esc_html_e( '← Back to List', 'atyourservice' ); ?>
+				</a>
+			</div>
+
+			<div class="editor-content">
+				<div class="editor-main">
+					<!-- Invoice Header -->
+					<div class="invoice-section">
+						<h3><?php esc_html_e( 'Invoice Details', 'atyourservice' ); ?></h3>
+						<table class="form-table">
+							<tr>
+								<th><label><?php esc_html_e( 'Invoice Number', 'atyourservice' ); ?></label></th>
+								<td><code><?php echo esc_html( $invoice->invoice_number ); ?></code></td>
+							</tr>
+							<tr>
+								<th><label><?php esc_html_e( 'Client', 'atyourservice' ); ?></label></th>
+								<td><?php echo esc_html( $client ? $client->name : '—' ); ?></td>
+							</tr>
+							<tr>
+								<th><label><?php esc_html_e( 'Issue Date', 'atyourservice' ); ?></label></th>
+								<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->issue_date ) ) ); ?></td>
+							</tr>
+							<tr>
+								<th><label><?php esc_html_e( 'Due Date', 'atyourservice' ); ?></label></th>
+								<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->due_date ) ) ); ?></td>
+							</tr>
+							<tr>
+								<th><label><?php esc_html_e( 'Status', 'atyourservice' ); ?></label></th>
+								<td><?php self::render_status_badge( $invoice->status ); ?></td>
+							</tr>
+						</table>
+					</div>
+
+					<!-- Line Items -->
+					<div class="invoice-section">
+						<h3><?php esc_html_e( 'Line Items', 'atyourservice' ); ?></h3>
+						<?php if ( empty( $invoice_items ) ) : ?>
+							<p><?php esc_html_e( 'No items on this invoice yet.', 'atyourservice' ); ?></p>
+						<?php else : ?>
+							<table class="widefat striped">
+								<thead>
+									<tr>
+										<th><?php esc_html_e( 'Description', 'atyourservice' ); ?></th>
+										<th style="text-align: right; width: 100px;"><?php esc_html_e( 'Qty', 'atyourservice' ); ?></th>
+										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Rate', 'atyourservice' ); ?></th>
+										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Amount', 'atyourservice' ); ?></th>
+										<th style="text-align: center; width: 60px;"><?php esc_html_e( 'Tax', 'atyourservice' ); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ( $invoice_items as $item ) : ?>
+										<tr>
+											<td><?php echo esc_html( $item->description ); ?></td>
+											<td style="text-align: right;"><?php echo esc_html( $item->quantity ); ?></td>
+											<td style="text-align: right;">$<?php echo esc_html( number_format( $item->rate, 2 ) ); ?></td>
+											<td style="text-align: right;">$<?php echo esc_html( number_format( $item->quantity * $item->rate, 2 ) ); ?></td>
+											<td style="text-align: center;"><?php echo $item->taxable ? '✓' : '—'; ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						<?php endif; ?>
+					</div>
+
+					<!-- Totals -->
+					<div class="invoice-section invoice-totals">
+						<table style="width: 100%; max-width: 400px; margin-left: auto;">
+							<tr>
+								<th style="text-align: right; padding: 8px;"><?php esc_html_e( 'Subtotal:', 'atyourservice' ); ?></th>
+								<td style="text-align: right; padding: 8px;"><code>$<?php echo esc_html( number_format( $invoice->subtotal, 2 ) ); ?></code></td>
+							</tr>
+							<tr>
+								<th style="text-align: right; padding: 8px;"><?php esc_html_e( 'Tax:', 'atyourservice' ); ?></th>
+								<td style="text-align: right; padding: 8px;"><code>$<?php echo esc_html( number_format( $invoice->tax_amount, 2 ) ); ?></code></td>
+							</tr>
+							<tr style="border-top: 2px solid #ccc; font-weight: bold; font-size: 16px;">
+								<th style="text-align: right; padding: 8px;"><?php esc_html_e( 'Total:', 'atyourservice' ); ?></th>
+								<td style="text-align: right; padding: 8px;"><code>$<?php echo esc_html( number_format( $invoice->total, 2 ) ); ?></code></td>
+							</tr>
+						</table>
+					</div>
+
+					<!-- Notes -->
+					<?php if ( $invoice->notes ) : ?>
+						<div class="invoice-section">
+							<h3><?php esc_html_e( 'Notes', 'atyourservice' ); ?></h3>
+							<p><?php echo esc_html( $invoice->notes ); ?></p>
+						</div>
+					<?php endif; ?>
+				</div>
+
+				<div class="editor-sidebar">
+					<div class="sidebar-box">
+						<h4><?php esc_html_e( '⚙️ Actions', 'atyourservice' ); ?></h4>
+						<p>
+							<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'ays_mark_paid', 'invoice_id' => $invoice->id ] ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Mark as paid?', 'atyourservice' ); ?>')">
+								<?php esc_html_e( 'Mark as Paid', 'atyourservice' ); ?>
+							</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<style>
+			.ays-invoice-editor {
+				background: white;
+				padding: 20px;
+				border-radius: 6px;
+				margin-top: 20px;
+			}
+			.editor-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 24px;
+				padding-bottom: 12px;
+				border-bottom: 2px solid #e5e7eb;
+			}
+			.editor-header h2 {
+				margin: 0;
+			}
+			.editor-content {
+				display: grid;
+				grid-template-columns: 1fr 250px;
+				gap: 24px;
+			}
+			.invoice-section {
+				margin-bottom: 24px;
+				padding: 16px;
+				background: #f9fafb;
+				border-radius: 4px;
+				border-left: 4px solid #4c51bf;
+			}
+			.invoice-section h3 {
+				margin-top: 0;
+				margin-bottom: 12px;
+			}
+			.invoice-totals {
+				background: #f0f4ff;
+				border-left-color: #4c51bf;
+			}
+			.sidebar-box {
+				background: white;
+				border: 1px solid #e5e7eb;
+				border-radius: 4px;
+				padding: 12px;
+				margin-bottom: 12px;
+			}
+			.sidebar-box h4 {
+				margin-top: 0;
+				margin-bottom: 12px;
+			}
+			@media (max-width: 768px) {
+				.editor-content {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
+		<?php
+	}
+
+	/**
+	 * Render status badge
+	 *
+	 * @param string $status The invoice status.
+	 * @return void
+	 */
+	protected static function render_status_badge( $status ) {
+		$badges = [
+			'draft'     => '📝 Draft',
+			'sent'      => '📧 Sent',
+			'paid'      => '✅ Paid',
+			'cancelled' => '❌ Cancelled',
+		];
+
+		echo esc_html( $badges[ $status ] ?? $status );
+	}
+
+	/**
+	 * Display success/error notices
+	 *
+	 * @return void
+	 */
+	protected static function display_notices() {
+		if ( isset( $_GET['ays_notice'] ) ) {
+			$notice = sanitize_key( $_GET['ays_notice'] );
+			
+			switch ( $notice ) {
+				case 'invoice_created':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Invoice created successfully!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'invoice_marked_paid':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Invoice marked as paid!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'invoice_deleted':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Invoice deleted successfully!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'invoice_error':
+					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( '✗ An error occurred. Please try again.', 'atyourservice' ) . '</p></div>';
+					break;
+			}
+		}
+	}
+
+	/**
+	 * Get a single invoice by ID
+	 *
+	 * @param int $invoice_id The invoice ID.
+	 * @return object|null The invoice object or null.
+	 */
+	protected static function get_invoice( $invoice_id ) {
+		global $wpdb;
+		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}ays_invoices WHERE id = %d", $invoice_id ) );
+	}
+
+	/**
+	 * Handle create invoice via admin_post
+	 *
+	 * @return void
+	 */
+	public static function handle_create_invoice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		if ( ! isset( $_POST['ays_invoice_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ays_invoice_nonce'] ) ), 'ays_create_invoice' ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
+		global $wpdb;
+
+		$client_id = isset( $_POST['client_id'] ) ? intval( $_POST['client_id'] ) : 0;
+		$issue_date = isset( $_POST['issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['issue_date'] ) ) : date( 'Y-m-d' );
+		$due_date = isset( $_POST['due_date'] ) ? sanitize_text_field( wp_unslash( $_POST['due_date'] ) ) : date( 'Y-m-d', strtotime( '+30 days' ) );
+		$notes = isset( $_POST['notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) ) : '';
+
+		if ( ! $client_id ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+			exit;
+		}
+
+		// Generate invoice number (e.g., INV-2025-001)
+		$last_invoice = $wpdb->get_row( "SELECT MAX(id) as last_id FROM {$wpdb->prefix}ays_invoices" );
+		$invoice_number = 'INV-' . date( 'Y' ) . '-' . str_pad( ( $last_invoice->last_id + 1 ), 3, '0', STR_PAD_LEFT );
+
+		$result = $wpdb->insert(
+			"{$wpdb->prefix}ays_invoices",
+			[
+				'invoice_number' => $invoice_number,
+				'client_id' => $client_id,
+				'issue_date' => $issue_date,
+				'due_date' => $due_date,
+				'subtotal' => 0,
+				'tax_amount' => 0,
+				'total' => 0,
+				'status' => 'draft',
+				'notes' => $notes,
+				'created_at' => current_time( 'mysql' ),
+				'updated_at' => current_time( 'mysql' ),
+			],
+			[ '%s', '%d', '%s', '%s', '%f', '%f', '%f', '%s', '%s', '%s', '%s' ]
+		);
+
+		if ( $result ) {
+			$invoice_id = $wpdb->insert_id;
+			wp_redirect( add_query_arg( 'edit_invoice', $invoice_id, add_query_arg( 'ays_notice', 'invoice_created', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) ) );
+		} else {
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+		}
+		exit;
+	}
+
+	/**
+	 * Handle delete invoice via admin_post
+	 *
+	 * @return void
+	 */
+	public static function handle_delete_invoice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		$invoice_id = isset( $_GET['invoice_id'] ) ? intval( $_GET['invoice_id'] ) : 0;
+		$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'ays_delete_invoice_' . $invoice_id ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
+		global $wpdb;
+		// Delete invoice items first
+		$wpdb->delete( "{$wpdb->prefix}ays_invoice_items", [ 'invoice_id' => $invoice_id ], [ '%d' ] );
+		// Delete invoice
+		$result = $wpdb->delete( "{$wpdb->prefix}ays_invoices", [ 'id' => $invoice_id ], [ '%d' ] );
+
+		if ( $result ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_deleted', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+		} else {
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+		}
+		exit;
+	}
+}
