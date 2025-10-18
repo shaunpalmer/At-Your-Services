@@ -187,12 +187,13 @@ class AYS_Admin_Menu {
 	public static function render_invoices_page() {
 		?>
 		<div class="wrap ays-admin-wrap">
-			<h1><?php esc_html_e( 'Invoices', 'atyourservice' ); ?></h1>
-			<p><?php esc_html_e( 'Create, manage, and track your invoices.', 'atyourservice' ); ?></p>
-			
-			<div class="notice notice-info inline">
-				<p><?php esc_html_e( 'Invoice management features coming soon.', 'atyourservice' ); ?></p>
-			</div>
+			<?php
+			if ( class_exists( 'AYS_Invoices_Tab' ) ) {
+				AYS_Invoices_Tab::render();
+			} else {
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'Invoices Tab class not found.', 'atyourservice' ) . '</p></div>';
+			}
+			?>
 		</div>
 		<?php
 	}
@@ -206,12 +207,13 @@ class AYS_Admin_Menu {
 	public static function render_clients_page() {
 		?>
 		<div class="wrap ays-admin-wrap">
-			<h1><?php esc_html_e( 'Clients', 'atyourservice' ); ?></h1>
-			<p><?php esc_html_e( 'Manage your client database and contact information.', 'atyourservice' ); ?></p>
-			
-			<div class="notice notice-info inline">
-				<p><?php esc_html_e( 'Client management features coming soon.', 'atyourservice' ); ?></p>
-			</div>
+			<?php
+			if ( class_exists( 'AYS_Clients_Tab' ) ) {
+				AYS_Clients_Tab::render();
+			} else {
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'Clients Tab class not found.', 'atyourservice' ) . '</p></div>';
+			}
+			?>
 		</div>
 		<?php
 	}
@@ -225,12 +227,13 @@ class AYS_Admin_Menu {
 	public static function render_items_page() {
 		?>
 		<div class="wrap ays-admin-wrap">
-			<h1><?php esc_html_e( 'Items', 'atyourservice' ); ?></h1>
-			<p><?php esc_html_e( 'Manage your service items and product catalog.', 'atyourservice' ); ?></p>
-			
-			<div class="notice notice-info inline">
-				<p><?php esc_html_e( 'Item management features coming soon.', 'atyourservice' ); ?></p>
-			</div>
+			<?php
+			if ( class_exists( 'AYS_Items_Tab' ) ) {
+				AYS_Items_Tab::render();
+			} else {
+				echo '<div class="notice notice-error"><p>' . esc_html__( 'Items Tab class not found.', 'atyourservice' ) . '</p></div>';
+			}
+			?>
 		</div>
 		<?php
 	}
