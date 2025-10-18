@@ -74,7 +74,7 @@ class AYS_Admin_Menu {
 			'manage_options',                                     // Capability
 			self::$main_slug,                                     // Menu slug
 			[ self::class, 'render_dashboard_page' ],            // Callback
-			'dashicons-briefcase',                               // Icon
+			'dashicons-businessperson',                          // Icon
 			25                                                    // Position (just below Services)
 		);
 
