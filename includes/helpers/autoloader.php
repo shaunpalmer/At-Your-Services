@@ -38,7 +38,18 @@ class Ays_Autoloader {
         
         // Adapters
         'LeadArrayAdapter'          => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadArrayAdapter.php',
-        'LeadCPTAdapter'            => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadCPTAdapter.php'
+        'LeadCPTAdapter'            => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadCPTAdapter.php',
+        
+        // Invoicing Module
+        'AYS_Invoicing_Installer'   => AYS_PLUGIN_PATH . 'includes/invoices/ays-install-invoices.php',
+        'AYS_Invoice_Repository'    => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-repository.php',
+        'AYS_Invoice_Service'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-service.php',
+        'AYS_Client_Service'        => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-client-service.php',
+        'AYS_Item_Service'          => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-item-service.php',
+        'AYS_Payment_Service'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-payment-service.php',
+        'AYS_Invoice_Admin_UI'      => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-admin-ui.php',
+        'AYS_Invoice_Email'         => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-email.php',
+        'AYS_Invoice_PDF'           => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-pdf.php'
     ];
 
     public static function autoload($class_name) {
@@ -52,9 +63,11 @@ class Ays_Autoloader {
         }
         
         // For unregistered classes, only allow certain prefixes to avoid class pollution
+        // Allowed: Lead*, Mail*, Mailer, Null*, Ays_*, AYS_*, Invoice*
         if (strpos($class_name, 'Lead') === 0 || strpos($class_name, 'Mail') === 0 || 
             strpos($class_name, 'Mailer') === 0 || strpos($class_name, 'Null') === 0 ||
-            strpos($class_name, 'Ays_') === 0 || strpos($class_name, 'AYS_') === 0) {
+            strpos($class_name, 'Ays_') === 0 || strpos($class_name, 'AYS_') === 0 ||
+            strpos($class_name, 'Invoice') === 0) {
             // Fall through
         } else {
             return;

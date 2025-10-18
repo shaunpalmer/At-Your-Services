@@ -99,6 +99,10 @@ function ays_notifications_activate() {
 	if ( ! wp_next_scheduled('ays_notifications_health_ping') ) {
 		wp_schedule_event(time() + 60, 'hourly', 'ays_notifications_health_ping');
 	}
+
+	// === Invoicing Module DB Installation ===
+	require_once AYS_PLUGIN_PATH . 'includes/invoices/ays-install-invoices.php';
+	ays_invoices_install();
 }
 register_activation_hook(__FILE__, 'ays_notifications_activate');
 
