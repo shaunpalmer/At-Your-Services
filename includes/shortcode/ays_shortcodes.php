@@ -50,11 +50,13 @@ function ays_lead_form_shortcode( $atts = [] ) {
             $booking_time = isset( $_POST['ays_booking_time'] ) ? sanitize_text_field( wp_unslash( $_POST['ays_booking_time'] ) ) : '';
 
             if ( empty( $name ) ) { $errors[] = __( 'Name is required.', 'ays' ); }
-            if ( empty( $email ) || ! is_email( $email ) ) { $errors[] = __( 'Valid email required.', 'ays' ); }
+            if ( empty( $email ) || ! is_email( $email ) ) { 
+                $errors[] = __( 'A valid email address is required.', 'ays' ); 
+            }
             if ( empty( $phone ) ) { $errors[] = __( 'Phone is required.', 'ays' ); }
 
             if ( empty( $errors ) ) {
-                $post_id = wp_insert_post( [
+                $lead_data = [
                     'post_type'   => 'ays_lead',
                     'post_status' => 'publish',
                     'post_title'  => $name . ' - ' . current_time( 'mysql' ),
@@ -64,12 +66,28 @@ function ays_lead_form_shortcode( $atts = [] ) {
                         'ays_notes' => $notes,
                         'ays_booking_date' => $booking_date,
                         'ays_booking_time' => $booking_time,
+                        // Add raw fields for the [all-fields] token
+                        'ays_name' => $name,
                     ],
-                ], true );
+                ];
+
+                $post_id = wp_insert_post( $lead_data, true );
 
                 if ( is_wp_error( $post_id ) ) {
                     $errors[] = __( 'Could not save lead. Please try again later.', 'ays' );
                 } else {
+                    // Pass the raw post data to the action
+                    $raw_lead_data = [
+                        'name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'notes' => $notes,
+                        'booking_date' => $booking_date,
+                        'booking_time' => $booking_time,
+                        'page_url' => get_permalink(),
+                        'timestamp' => current_time('mysql'),
+                    ];
+                    do_action('ays_lead_created', $post_id, $raw_lead_data);
                     $success = true;
                 }
             }

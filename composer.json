@@ -1,0 +1,26 @@
+{
+  "name": "shaunpalmer/at-your-services",
+  "description": "Lead capture and notification system for WordPress",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "version": "1.0.0",
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "AYS\\": "includes/",
+      "AYS\\Notifications\\": "includes/notifications/",
+      "AYS\\Notifications\\Adapters\\": "includes/notifications/adapters/",
+      "AYS\\Notifications\\Transport\\": "includes/notifications/transport/",
+      "AYS\\PostTypes\\": "includes/post-types/",
+      "AYS\\Taxonomies\\": "includes/taxonomies/",
+      "AYS\\Shortcode\\": "includes/shortcode/",
+      "AYS\\Helpers\\": "includes/helpers/",
+      "AYS\\Admin\\": "admin/"
+    },
+    "files": [
+      "includes/helpers/functions.php"
+    ]
+  }
+}

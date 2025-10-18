@@ -14,27 +14,50 @@ class Ays_Autoloader {
         'Ays_CPT_Lead'     => AYS_PLUGIN_PATH . 'includes/post-types/ays-cpt-lead.php',
     'Ays_Leads_Export_Page' => AYS_PLUGIN_PATH . 'admin/class-ays-leads-export.php',
     'Ays_Lead_Dashboard_Admin' => AYS_PLUGIN_PATH . 'admin/class-ays-lead-dashboard.php',
+    'Ays_Lead_Notices' => AYS_PLUGIN_PATH . 'includes/admin/ays-lead-notices.php',
         // Taxonomies
         'Ays_Taxonomy_Service_Type'   => AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-service-type.php',
         'Ays_Taxonomy_Price_Range'    => AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-price-range.php',
-        'Ays_Taxonomy_Neighbourhood'  => AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-neighbourhood.php'
+        'Ays_Taxonomy_Neighbourhood'  => AYS_PLUGIN_PATH . 'includes/taxonomies/ays-taxonomy-neighbourhood.php',
+        
+        // Notifications
+        'AYS_Notification_Router'   => AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notification_Router.php',
+        'AYS_Notifier'              => AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notifier.php',
+        'AYS_Notification_Settings' => AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notification_Settings.php',
+        'AYS_Notification_Logger'   => AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notification_Logger.php',
+        'AYS_Validation_Cron'       => AYS_PLUGIN_PATH . 'includes/notifications/AYS_Validation_Cron.php',
+        'Mailer'                    => AYS_PLUGIN_PATH . 'includes/notifications/Mailer.php',
+        'MailTransportFactory'      => AYS_PLUGIN_PATH . 'includes/notifications/transport/MailTransportFactory.php',
+        'MailTransportInterface'    => AYS_PLUGIN_PATH . 'includes/notifications/transport/MailTransportInterface.php',
+        'WPMailTransport'           => AYS_PLUGIN_PATH . 'includes/notifications/transport/WPMailTransport.php',
+        'NullTransport'             => AYS_PLUGIN_PATH . 'includes/notifications/transport/NullTransport.php',
+        'FileLoggingTransport'      => AYS_PLUGIN_PATH . 'includes/notifications/transport/FileLoggingTransport.php',
+        
+        // Adapter Interfaces (must load before implementing classes)
+        'LeadSourceAdapterInterface' => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadSourceAdapterInterface.php',
+        
+        // Adapters
+        'LeadArrayAdapter'          => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadArrayAdapter.php',
+        'LeadCPTAdapter'            => AYS_PLUGIN_PATH . 'includes/notifications/adapters/LeadCPTAdapter.php'
     ];
 
     public static function autoload($class_name) {
-        // Only autoload Ays_ classes to avoid class pollution
-        if (strpos($class_name, 'Ays_') !== 0) {
-            return;
-        }
-
+        // Check if class is in our map first (bypass prefix checks for registered classes)
         if (array_key_exists($class_name, self::$classes_map)) {
-               
-            // Normalize the file path
-            $file_path = wp_normalize_path( self::$classes_map[$class_name] );
+            $file_path = wp_normalize_path(self::$classes_map[$class_name]);
             if (file_exists($file_path)) {
                 require_once $file_path;
-            } else {
-                // Silent fail to avoid log noise in production – developer can var_dump if needed.
             }
+            return;
+        }
+        
+        // For unregistered classes, only allow certain prefixes to avoid class pollution
+        if (strpos($class_name, 'Lead') === 0 || strpos($class_name, 'Mail') === 0 || 
+            strpos($class_name, 'Mailer') === 0 || strpos($class_name, 'Null') === 0 ||
+            strpos($class_name, 'Ays_') === 0 || strpos($class_name, 'AYS_') === 0) {
+            // Fall through
+        } else {
+            return;
         }
     }
 

@@ -1,0 +1,39 @@
+/* Layout */
+.ays-wrap .ays-card{
+  background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:16px;margin-top:16px;
+}
+
+/* Tabs */
+.ays-tabs{
+  display:flex;gap:8px;margin:16px 0;border-bottom:1px solid #dcdcde;flex-wrap:wrap;
+}
+.ays-tab{
+  padding:8px 12px;border:1px solid transparent;border-radius:6px 6px 0 0;
+  text-decoration:none;color:#1d2327;position:relative;top:1px;
+}
+.ays-tab.is-active{
+  border-color:#dcdcde #dcdcde #fff;background:#fff;
+}
+
+/* Panels */
+.ays-tabpanel{display:none;}
+.ays-tabpanel.is-active{display:block;}
+
+/* Details */
+.ays-details{
+  margin:16px 0;border:1px solid #e0e0e0;border-radius:8px;background:#fff;
+}
+.ays-details > summary{
+  cursor:pointer;padding:12px 14px;font-weight:600;list-style:none;
+}
+.ays-details[open] > summary{border-bottom:1px solid #eaeaea;}
+.ays-details__body{padding:12px 14px;}
+.ays-live-badge{
+  margin-left:8px;background:#e6f4ea;color:#137333;padding:2px 6px;border-radius:6px;font-size:11px;
+}
+
+/* Fields */
+.ays-field{display:block;margin-bottom:12px;}
+.ays-section-form hr{border:none;border-top:1px solid #eee;margin:12px 0;}
+.ays-switch{display:flex;gap:8px;align-items:center;margin:8px 0;}
+.ul-disc{list-style:disc;margin-left:18px;}

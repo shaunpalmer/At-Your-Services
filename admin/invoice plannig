@@ -1,0 +1,993 @@
+the AYS ecosystem in the same visual and structural rhythm. Let’s break this into what you’ll tell Co-Pilot and how to wire it cleanly.
+
+🧭 Co-Pilot Context — what to tell it
+
+“We’re adding an Invoicing module inside the existing At Your Service (AYS) plugin.
+It should appear in the WordPress admin menu under the AYS parent (where ‘Leads’ already sits), with the same UI pattern and icon styling.
+Priority-wise, it should load just after the Leads section (e.g., menu position +5 or +10).
+It’s a full section, not a submenu — it’ll have its own sub-pages: Invoices, Clients, Items, Payments, Reports, and Settings.
+The invoicing module will use new database tables installed via the plugin’s activation hook (one-time DB installer script).
+The whole module starts with an email address — every invoice and client is email-centric.
+We’ll store company profile data (from Settings) separately, not in the options table anymore; instead, we’ll query it via $wpdb or WP_Query once the install creates the new tables.”
+
+That tells Co-Pilot exactly how to “tuck it in” menu-wise and architecture-wise.
+
+⚙️ Admin Menu Integration Plan
+
+Base file:
+/includes/invoices/ays-class-invoice-admin-ui.php
+
+Hook into menu:
+
+add_action('admin_menu', 'ays_register_invoice_menu', 15);
+function ays_register_invoice_menu() {
+    // Priority: just after Leads
+    $position = 56; // roughly between CPTs and Appearance
+
+    add_menu_page(
+        __('Invoicing', 'ays'),
+        __('Invoicing', 'ays'),
+        'manage_ays_invoices',
+        'ays_invoicing',
+        'ays_render_invoice_dashboard',
+        'dashicons-media-text', // or custom AYS icon
+        $position
+    );
+
+    add_submenu_page('ays_invoicing', 'Invoices', 'Invoices', 'manage_ays_invoices', 'ays_invoicing', 'ays_render_invoice_dashboard');
+    add_submenu_page('ays_invoicing', 'Clients', 'Clients', 'manage_ays_invoices', 'ays_clients', 'ays_render_clients_page');
+    add_submenu_page('ays_invoicing', 'Items', 'Items', 'manage_ays_invoices', 'ays_items', 'ays_render_items_page');
+    add_submenu_page('ays_invoicing', 'Payments', 'Payments', 'manage_ays_invoices', 'ays_payments', 'ays_render_payments_page');
+    add_submenu_page('ays_invoicing', 'Reports', 'Reports', 'manage_ays_invoices', 'ays_reports', 'ays_render_reports_page');
+    add_submenu_page('ays_invoicing', 'Settings', 'Settings', 'manage_ays_invoices', 'ays_invoice_settings', 'ays_render_invoice_settings');
+}
+
+
+That keeps it in the same family tree as Leads — same icon set, same layout.
+
+🧱 Installer Script (on plugin activation)
+
+Create /includes/invoices/ays-install-invoices.php.
+
+Hook it:
+
+register_activation_hook(__FILE__, 'ays_invoices_install');
+function ays_invoices_install() {
+    global $wpdb;
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "
+    CREATE TABLE {$wpdb->prefix}ays_clients (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(190) NOT NULL,
+        email VARCHAR(190) NOT NULL,
+        phone VARCHAR(50),
+        address_line1 VARCHAR(190),
+        city VARCHAR(120),
+        postcode VARCHAR(20),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) $charset_collate;
+
+    CREATE TABLE {$wpdb->prefix}ays_invoices (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        client_id BIGINT UNSIGNED,
+        inv_number VARCHAR(20) UNIQUE,
+        status VARCHAR(20),
+        issue_date DATE,
+        due_date DATE,
+        total DECIMAL(10,2),
+        email_sent TINYINT DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) $charset_collate;
+    ";
+
+    dbDelta($sql);
+}
+
+
+Yeah — good pickup, Shaun. That’s the right instinct.
+Let’s zoom in on those relationships properly because they drive how we query and store invoices cleanly later.
+
+---
+
+## 🧩 Core Relationship Model (for AYS Invoicing)
+
+You're absolutely right — what we’re really building is:
+
+```
+1 Business  →  Many Clients  
+1 Client    →  Many Invoices  
+1 Invoice   →  Many Items  
+1 Invoice   →  Many Payments  
+1 Item      →  Can appear on Many Invoices (many-to-many)
+```
+
+So we’ve got **one-to-many** and **many-to-many** relationships mixed through it.
+Let’s go through them and fix the schema logic.
+
+---
+
+### 1️⃣ Business → Clients (One-to-Many)
+
+* One business profile (Super Clean) serves many clients.
+* We can store your business once in `wp_ays_company_profile` and relate via foreign key in invoices, not in clients.
+
+✅ **Implementation:**
+`wp_ays_company_profile.id` → `wp_ays_invoices.company_id`
+
+This lets you later add *multi-business support* (e.g., Project Studios + Super Clean) without changing schema.
+
+---
+
+### 2️⃣ Clients → Invoices (One-to-Many)
+
+Each client can have many invoices, but each invoice belongs to one client.
+
+✅ **Schema stays as is:**
+
+```sql
+wp_ays_invoices.client_id BIGINT UNSIGNED REFERENCES wp_ays_clients(id)
+```
+
+When you delete a client (soft delete), invoices remain intact (they’re historical records).
+
+---
+
+### 3️⃣ Invoices → Items (Many-to-Many)
+
+This is the big one.
+
+An “Item” (like “Oven Clean” or “3-Bedroom End-of-Tenancy”)
+can appear on many invoices, and each invoice can have many items.
+
+✅ **Bridge table:**
+We already have `wp_ays_invoice_items` acting as a **join table**.
+
+**Structure:**
+
+```sql
+wp_ays_invoice_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  invoice_id BIGINT UNSIGNED,
+  item_id BIGINT UNSIGNED NULL,
+  description TEXT,
+  details TEXT,
+  qty DECIMAL(10,2),
+  rate DECIMAL(10,2),
+  taxable TINYINT(1),
+  line_tax DECIMAL(10,2),
+  line_total DECIMAL(10,2),
+  FOREIGN KEY (invoice_id) REFERENCES wp_ays_invoices(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES wp_ays_items(id) ON DELETE SET NULL
+)
+```
+
+That gives you:
+
+```
+Invoices  ←→  Invoice_Items  ←→  Items
+```
+
+So: **Many-to-Many** resolved.
+
+---
+
+### 4️⃣ Invoices → Payments (One-to-Many)
+
+A single invoice can have multiple payments (partial, deposits, etc.).
+
+✅ **Schema:**
+
+```sql
+wp_ays_payments.invoice_id BIGINT UNSIGNED REFERENCES wp_ays_invoices(id)
+```
+
+If you add refunds later, we can extend payments with `type ENUM('payment','refund')`.
+
+---
+
+### 5️⃣ Clients → Payments (Indirect)
+
+Through invoices:
+
+```
+Client → Invoices → Payments
+```
+
+So you can query:
+
+```sql
+SELECT * FROM wp_ays_payments 
+JOIN wp_ays_invoices USING(invoice_id)
+WHERE client_id = 123;
+```
+
+---
+
+### 6️⃣ Items → Categories (Optional Many-to-Many)
+
+If later you want item grouping (like “Cleaning”, “Repairs”, “Gardening”),
+we can add a small join table:
+
+```sql
+wp_ays_item_categories (
+  item_id BIGINT UNSIGNED,
+  category_id BIGINT UNSIGNED
+)
+```
+
+Not essential for MVP, but you’ll want it if you expand the item library later.
+
+---
+
+### 🔁 Summary Diagram
+
+```
+┌─────────────────────────┐
+│ wp_ays_company_profile  │
+└────────────┬────────────┘
+             │ (1-to-many)
+             ▼
+┌─────────────────────────┐
+│ wp_ays_clients          │
+└────────────┬────────────┘
+             │ (1-to-many)
+             ▼
+┌─────────────────────────┐
+│ wp_ays_invoices         │
+└────┬──────────┬─────────┘
+     │          │ (1-to-many)
+     │          ▼
+     │    ┌────────────────────┐
+     │    │ wp_ays_payments    │
+     │    └────────────────────┘
+     │
+     │ (many-to-many)
+     ▼
+┌─────────────────────────┐
+│ wp_ays_invoice_items    │ ←→ wp_ays_items
+└─────────────────────────┘
+```
+
+---
+
+### 🧠 Architectural Benefits
+
+* **Atomic:** Every invoice and payment is standalone; you never lose history.
+* **Expandable:** Can later handle multiple businesses (multi-tenant).
+* **Queryable:** Simple `JOIN` paths for dashboards:
+
+  * invoices per client
+  * items per client
+  * payments per month
+* **Composable:** You can reuse `Invoice_Items` join logic for quotes or estimates later.
+
+---
+
+### ✅ So the relationships you’ll define to Co-Pilot
+
+> “We have a one-to-many relationship between the business and clients,
+> a one-to-many relationship between clients and invoices,
+> a one-to-many relationship between invoices and payments,
+> and a many-to-many relationship between invoices and items.
+> The join table `wp_ays_invoice_items` handles that many-to-many bridge.”
+
+---
+
+If you want, I can produce the **final DB installer script (dbDelta)** with all these relationships and foreign keys embedded, so your activation hook can build it automatically.
+Would you like me to lay that out next — the complete install file with proper indexes and cascade rules?
+
+
+🧩 Why You're Right
+
+status — every entity benefits from a quick lifecycle flag (draft, active, archived, etc.).
+It saves joins and avoids “deleted_at IS NULL” logic everywhere.
+
+hash — essential for external linking, API calls, or public sharing (like /invoice/SC-000123?hash=abc123).
+
+🧱 Pattern to Apply
+
+We’ll add these two universal columns to every core table:
+
+status TINYINT DEFAULT 1,   -- or ENUM / VARCHAR if more readable
+hash CHAR(32) NOT NULL UNIQUE,
+
+
+💡 Generate hash automatically in your Repository layer:
+
+$data['hash'] = md5(uniqid(mt_rand(), true));
+
+🔐 Example Integration per Table
+wp_ays_clients
+status ENUM('active','archived','deleted') DEFAULT 'active',
+hash CHAR(32) UNIQUE,
+
+wp_ays_invoices
+status ENUM('draft','sent','viewed','overdue','paid','void') DEFAULT 'draft',
+hash CHAR(32) UNIQUE,
+
+wp_ays_items
+status ENUM('active','archived') DEFAULT 'active',
+hash CHAR(32) UNIQUE,
+
+wp_ays_payments
+status ENUM('pending','confirmed','failed','refunded') DEFAULT 'pending',
+hash CHAR(32) UNIQUE,
+
+
+…and so on for wp_ays_email_templates etc.
+
+🧠 Practical Uses
+
+Dropdowns:
+Pull statuses directly from a small JSON array in PHP or JavaScript to populate filters or selects:
+
+const INVOICE_STATUS = [
+  {value: 'draft', label: 'Draft'},
+  {value: 'sent', label: 'Sent'},
+  {value: 'viewed', label: 'Viewed'},
+  {value: 'paid', label: 'Paid'},
+  {value: 'void', label: 'Void'}
+];
+
+
+API endpoints:
+GET /ays/v1/invoices/{hash} gives you a secure, shareable public link without exposing numeric IDs.
+
+Internal joins:
+Easier to debug, easier to soft-delete or restore.
+
+🧱 Default Rule
+
+Let’s make it a universal convention for AYS modules:
+
+Every primary entity table includes status, hash, created_at, updated_at.
+
+That way Leads, Clients, Invoices, Payments, and even Templates share the same base structure.
+You’ll thank yourself a year from now when you’re filtering across modules or syncing data.
+
+
+
+💡 You can chain all the invoicing tables into that installer file and wrap it with a version check like:
+
+if (get_option('ays_invoices_db_version') !== '1.0') { ays_invoices_install(); update_option('ays_invoices_db_version', '1.0'); }
+
+🧠 Notes for Co-Pilot
+
+Email-first logic: All invoice creation starts with validating the email; block save if missing.
+
+DB Installer: Write once; use dbDelta(); run from plugin activation.
+
+WP_Query vs options: After the install, company profile lives in its own table (wp_ays_company_profile), fetched via $wpdb.
+
+Menu priority: just after Leads, before Appearance; reuse AYS admin page layout functions for consistency.
+
+File structure: mirror Leads module (/includes/leads/ → /includes/invoices/).
+
+Hook names: prefix everything ays_invoices_ to avoid collisions.
+
+Permission: reuse manage_ays_invoices capability (defined once in your roles setup).
+
+🔩 Bonus
+
+Once that installer runs, you can reuse your existing email notification layer (the one you just built for Leads) for invoices too — same pattern, just change template type to 'invoice_customer' or 'invoice_admin'.
+
+
+
+
+ — got you. Let’s turn those screenshots into a tight, owner-friendly invoicing module for AYS that kills the subscription and slots straight into your existing plugin architecture.
+
+I’m giving you: (1) the exact screens we’ll build (mirrors the screenshots), (2) DB schema, (3) business rules, (4) file/class layout, (5) CRUD + flows, (6) PDFs/emails/payments, and (7) a lean MVP→V2 roadmap. You can paste this straight into your planning doc.
+
+---
+
+# AYS Invoicing — Product/Tech Plan
+
+## 1) Goals (NZ-first, owner-friendly)
+
+* Replace Invoice Simple: create, email, PDF, record payments, light reports.
+* Zero vendor lock-in: all data in WP tables; exportable CSV/PDF.
+* Fast entry from phone: minimal fields, remembered clients/items.
+* GST-aware (NZ 15%), clean invoice numbering, and email-required enforcement.
+
+---
+
+## 2) Screens (mapped from your screenshots)
+
+### 2.1 Invoices List
+
+* Columns: Invoice #, Client, Issue Date, Due Date, Total, Balance, Status (Draft/Sent/Viewed/Overdue/Paid), “•••” actions (View / Edit / Email / PDF / Record Payment / History / Delete).
+* Filters: Status, Date range, Client, Search.
+* Bulk: Mark Sent, Delete (soft).
+
+### 2.2 Invoice Editor (Preview | Edit | History tabs)
+
+* Header actions: Payment scheduling (V2), PDF, Email Invoice.
+* Left pane (form):
+
+  * Title (e.g., “Invoice – window clean”).
+  * From (Company profile auto-filled; editable per invoice): Name, Email, Address lines, City, Postcode.
+  * Bill To (client picker with inline create): Name, Email (required), Secondary Email, Address, Phone/Mobile.
+  * Items table: Description, Additional Details (multiline), Qty, Rate, Taxable ✓, Line total. Add/Remove rows. Item search inserts saved “Items”.
+  * Totals box: Subtotal, GST 15% toggle per line (or per invoice), Discount (amt/%), Shipping/Extras, Total, Amount Paid, Balance Due.
+  * Notes to customer, Terms (defaults from template).
+* Right pane:
+
+  * “Preview via email” (send to yourself).
+  * Payment methods (Stripe/PayPal toggle; “Finish setup” link).
+  * Template/Theme swatches (colour, logo placement, font).
+  * Manage payment settings link.
+
+### 2.3 Clients
+
+* Table like your screenshot: Name, Email(s), Address, Phone, Total Billed.
+* “New Client” form: Name, Email (required), Secondary Email, Address, City, Country, Phone, Mobile, Notes.
+
+### 2.4 Items (Products/Services)
+
+* List: Description, Additional Details, Rate, Taxable ✓.
+* “New Item”: Description (required), Details (rich), Unit (optional), Default rate, Default taxable.
+
+### 2.5 Settings → Business Profile & Template
+
+* Logo upload (Super Clean logo).
+* Name, Business Number, Owner Name, Address (multi-line), City, Postcode.
+* Email (reply-to), Phone, Mobile, Website.
+* Invoice template defaults:
+
+  * Prefix (e.g., SC-), Next number, Date format, Due in X days, Default notes/terms, Default GST rate (15%), Show/Hide line tax, Colour scheme, Font.
+* Email templates (TinyMCE):
+
+  * Admin notification (semi-fixed; uses `[all-fields]`).
+  * Customer invoice email (subject/body with placeholders).
+* Payments: Stripe/PayPal toggles and keys (V1: links/pay-now button; V2: webhooks).
+
+### 2.6 Payments (Log)
+
+* Table: Date, Invoice #, Method, Amount, Notes, Created by.
+* “Record payment” modal from invoice.
+
+### 2.7 Reports (MVP: two quick views)
+
+* Invoices by status (counts & totals).
+* Received payments by month (bar).
+
+### 2.8 History (per invoice)
+
+* Timeline: created, edited, emailed, viewed (if tracking pixel), payment logged, status changes.
+
+---
+
+## 3) Data Model (custom tables, `wp_ays_*`)
+
+**Conventions**: snake_case, bigint PK, utf8mb4, created_at/updated_at.
+
+### 3.1 `wp_ays_company_profile` (1 row)
+
+* id, name, business_number, owner_name, email, phone, mobile, website, address_line1, address_line2, city, postcode, logo_attachment_id, settings_json
+
+### 3.2 `wp_ays_clients`
+
+* id, name, email (required), secondary_email, phone, mobile, address_line1, address_line2, city, postcode, country, notes, total_billed_cache, status, created_at, updated_at, deleted_at
+
+### 3.3 `wp_ays_items`
+
+* id, description (required), details, unit, rate_decimal, taxable_tinyint, created_at, updated_at, deleted_at
+
+### 3.4 `wp_ays_invoices`
+
+* id, inv_number (unique), prefix, status ENUM('draft','sent','viewed','overdue','paid','void'), client_id (FK), from_snapshot_json, bill_to_snapshot_json, notes, terms, issue_date, due_date, currency (‘NZD’), subtotal_decimal, tax_total_decimal, discount_type ENUM('amt','pct','none'), discount_value_decimal, shipping_decimal, total_decimal, amount_paid_decimal, balance_decimal, payment_url_token (uuid), viewed_at, emailed_at, created_at, updated_at, deleted_at
+
+### 3.5 `wp_ays_invoice_items`
+
+* id, invoice_id (FK), item_id (nullable), description, details, qty_decimal, rate_decimal, taxable_tinyint, line_tax_decimal, line_total_decimal, sort_order
+
+### 3.6 `wp_ays_payments`
+
+* id, invoice_id (FK), method ENUM('cash','bank','stripe','paypal','other'), amount_decimal, txn_id, notes, received_at, created_by_user, created_at
+
+### 3.7 `wp_ays_email_templates`
+
+* id, slug ('invoice_customer','invoice_admin'), subject, body_html, body_text, enabled_tinyint, updated_at
+
+### 3.8 `wp_ays_email_log`
+
+* id, invoice_id (nullable), to_email, subject, status ENUM('queued','sent','failed'), provider_msg, created_at
+
+> Snapshots keep invoices immutable if you later change client or company details.
+
+---
+
+## 4) Business Rules (NZ-ready, reliable)
+
+* **Email is required** (frontend + backend). No email → block submission & save (fail fast).
+* Invoice numbering: prefix + zero-pad sequence (e.g., `SC-000123`), atomic increment (use `SELECT … FOR UPDATE` or `wpdb->query('LOCK TABLES …')`).
+* GST: default 15% NZ; per-line taxable ✓; totals auto-compute; show GST line item visibly.
+* Status flow:
+
+  * draft → sent (on email) → viewed (tracking pixel or pay link open) → paid (balance 0) / overdue (past due & balance>0) → void (admin only).
+* Deletion: soft delete (retain number/history).
+* Validation: numeric fields fixed-point decimals (stringified), never float math; sanitize TinyMCE with `wp_kses_post`.
+* Email dispatch:
+
+  * To admin/owner + customer on “Send Invoice”.
+  * Block send if any “To” empty.
+  * Log every send to `wp_ays_email_log`.
+* Files: PDF rendered server-side (DOMPDF or mPDF), stored as transient on demand (don’t bloat uploads).
+* Permissions: `manage_ays_invoices` (Owner/Admin), `edit_ays_invoices` (Managers), `view_ays_invoices` (Staff).
+* Audit: all changes recorded in `history_json` (or `wp_ays_invoice_events` if you prefer a table).
+
+---
+
+## 5) CRUD & Flows
+
+### 5.1 Create Invoice
+
+1. Choose client (or create inline).
+2. Add items (search saved items, or free-type).
+3. Toggle taxable, set qty/rate.
+4. Save as Draft → preview → Email.
+5. On email: status→Sent; email log entry.
+
+### 5.2 Edit Invoice
+
+* Allowed while draft/sent/viewed. Lock totals if paid/void (allow adding credit note in V2).
+
+### 5.3 Delete (Soft)
+
+* Mark `deleted_at`; exclude from lists; number remains reserved.
+
+### 5.4 Record Payment
+
+* Modal: amount, method, notes.
+* Updates amount_paid/balance; if balance 0 → Paid.
+* Creates `wp_ays_payments` row and invoice history event.
+
+### 5.5 Email Invoice
+
+* Uses customer template; admin notification optional.
+* Attach PDF; include “Pay now” button if payment method enabled.
+* Requires valid customer email; fail loud and log.
+
+### 5.6 PDF
+
+* Themeable template (logo, colours, GST summary, notes/terms).
+* Single render per view (no permanent upload unless “Save PDF” clicked).
+
+---
+
+## 6) Email, Templates, Placeholders
+
+* Placeholders: `[client_name] [client_email] [invoice_number] [invoice_total] [invoice_due_date] [pay_url] [all-fields]`.
+* Admin notification body supports `[all-fields]` rendering a `<table>` of the invoice (and lead, if triggered from a lead→estimate→invoice pipeline later).
+* TinyMCE for the customer email body, stored in `wp_ays_email_templates`.
+
+---
+
+## 7) Payments (phased)
+
+### V1 (fast path)
+
+* Stripe Checkout + PayPal redirect using invoice-scoped `payment_url_token`.
+* After return web route validates payment and creates `wp_ays_payments` row.
+
+### V2 (webhooks + auto-reconcile)
+
+* Stripe webhook (`payment_intent.succeeded`) and PayPal webhook mark invoice paid automatically.
+* Optional surcharge/fee handling.
+
+---
+
+## 8) File/Folder & Class Layout (WordPress, no Composer)
+
+```
+/ays
+  /includes
+    /invoices
+      ays-class-invoice-model.php
+      ays-class-invoice-repository.php
+      ays-class-invoice-service.php        // business rules, numbering, totals
+      ays-class-invoice-email.php          // templates + send
+      ays-class-invoice-pdf.php            // DOMPDF/mPDF adapter
+      ays-class-invoice-admin-ui.php       // screens, lists, forms
+      ays-class-payment-service.php
+      ays-class-client-service.php
+      ays-class-item-service.php
+      ays-class-reports.php
+    ays-class-permissions.php
+    ays-class-rest.php                     // /wp-json/ays/v1/...
+    ays-install.php                        // table creation + seed
+  /assets
+    /js  (TypeScript compiled)             // admin screens, search/pickers
+    /css
+  /templates
+    invoice-pdf.php
+    email-customer.php
+    email-admin.php
+```
+
+**Patterns used**
+
+* **Repository** (DB reads/writes via `$wpdb`).
+* **Service** (totals, tax, numbering, status transitions).
+* **Adapter** (PDF/payment provider swap).
+* **Factory** (PDF engine: dompdf|mpdf).
+* **Strategy** (numbering schemes later if needed).
+
+---
+
+## 9) REST Endpoints (admin-only unless tokened)
+
+* `GET /ays/v1/invoices` (filters/pagination)
+* `POST /ays/v1/invoices`
+* `GET /ays/v1/invoices/{id}`
+* `PUT /ays/v1/invoices/{id}`
+* `DELETE /ays/v1/invoices/{id}`
+* `POST /ays/v1/invoices/{id}/email`
+* `GET /ays/v1/invoices/{id}/pdf`
+* `POST /ays/v1/invoices/{id}/payments`
+* `GET /ays/v1/clients`, `POST /ays/v1/clients`, …
+* Public pay link: `GET /ays/v1/pay/{token}` (renders hosted pay page), `POST` to create checkout session.
+
+---
+
+## 10) DB Creation (sketch)
+
+```sql
+CREATE TABLE wp_ays_clients (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(190) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  secondary_email VARCHAR(190) NULL,
+  phone VARCHAR(50) NULL,
+  mobile VARCHAR(50) NULL,
+  address_line1 VARCHAR(190) NULL,
+  address_line2 VARCHAR(190) NULL,
+  city VARCHAR(120) NULL,
+  postcode VARCHAR(20) NULL,
+  country VARCHAR(120) NULL,
+  notes TEXT NULL,
+  total_billed_cache DECIMAL(12,2) DEFAULT 0,
+  status TINYINT DEFAULT 1,
+  created_at DATETIME, updated_at DATETIME, deleted_at DATETIME NULL,
+  KEY (email), KEY (name)
+);
+-- similar create statements for profile, items, invoices, invoice_items, payments, email_templates, email_log
+```
+
+---
+
+## 11) Totals Calc (precision)
+
+* Use strings→`bc*` or cast to ints in cents.
+* Per line: `line_total = qty * rate`, `line_tax = taxable ? line_total * gst_rate : 0`.
+* Invoice: `subtotal = Σ line_total`; `tax_total = Σ line_tax`; `total = subtotal + tax_total - discount + shipping`; `balance = total - amount_paid`.
+
+---
+
+## 12) Admin UX Touches (speed)
+
+* Client & Item quick pickers with typeahead.
+* Remember last colour/template per user.
+* Autosave drafts every 10s.
+* “Send test” on template page.
+* History sidebar on editor.
+
+---
+
+## 13) Security & Reliability
+
+* Nonces on forms, caps checks (`manage_ays_invoices`).
+* Email hard requirement at both UI and API.
+* Sanitise TinyMCE, escape outputs.
+* Soft deletes with “Purge” tool (owner only).
+* Background email queue (optional) using WP Cron to avoid slow requests.
+
+---
+
+## 14) Testing Checklist (short, actionable)
+
+* Create/edit/delete clients, items (CRUD).
+* Create invoice from new+existing client.
+* Taxable vs non-taxable lines, discounts %, fixed.
+* Numbering increments under load (10 rapid creates).
+* Email sends: customer + admin; missing email blocked.
+* PDF render on large item notes.
+* Record payment; status flips to Paid; balance=0.
+* Overdue transition (cron) after due date.
+* Reports totals match invoice/payments.
+
+---
+
+## 15) Rollout Plan
+
+**Sprint 1 (MVP)**
+DB + Models/Repos, Clients/Items CRUD, Invoice editor (draft), totals/tax, numbering, PDF, Email send, Record payment, Lists & filters.
+
+**Sprint 2**
+Theme templates, settings page (business profile, templates), reports basic, history, soft delete, CSV export.
+
+**Sprint 3 (nice)**
+Stripe/PayPal V1, public pay page, webhook auto-reconcile, “payment scheduling” stub, viewed tracking, reminders (7/1 day before/after due).
+
+---
+
+## 16) Quick contrasts (so choices are clear)
+
+* **DOMPDF vs mPDF**: DOMPDF integrates fast; mPDF better fonts/RTL. Start DOMPDF; adapter for swap.
+* **Inline PDF vs saved file**: Inline render avoids uploads bloat; add “Save PDF” for rare archival.
+* **REST + JS vs classic admin-post**: REST gives you snappy AJAX; fall back to admin-post for email/PDF if needed.
+* **Cents (ints) vs decimals**: Cents are safest; decimals OK if you centralise math in `InvoiceService`.
+
+---
+
+## 17) Copy/paste defaults (Business Profile seed)
+
+* Name: **Super Clean**
+* Business Number: **042-580-236**
+* Owner: **Shaun Palmer**
+* Address: **P.O BOX 262, Christchurch, Canterbury, 8025, New Zealand**
+* Email: **[shaun@supercleanchchnz.com](mailto:shaun@supercleanchchnz.com)**
+* Phone: **0221014024**
+* Mobile: **0220601100**
+* Website: **[https://supercleanchchnz.com](https://supercleanchchnz.com)**
+* GST: **15%**
+* Invoice prefix: **SC-**, next: **000001**, due in **7** days
+
+---
+
+## 18) Dev notes you’ll care about
+
+* Autoloader: reuse your single class-map loader; prefix every class/file `ays-`.
+* Keep DB writes in repositories; no queries inside UI classes.
+* One `InvoiceService::recalculate($invoice_id)` called on every save; no duplicate math elsewhere.
+* Add `EmailValidator::check($email)` (syntax+MX) before any send; queue deeper checks if you want.
+
+---
+
+Want me to spin up the **table creator** and the **InvoiceService skeleton** next (with totals, numbering, and email enforcement)? I’ll keep it lean, drop it under `/includes/invoices/`, and you can wire the admin UI after lunch.
+
+
+Perfect, mate — I’ll line this up properly so when you come back from Jeff’s, it’s ready for Co-Pilot to build from without missing a beat.
+
+Here’s the full **installer plan** with your `status` + `hash` conventions baked in across all tables, and notes ready for Co-Pilot on how it fits future lead-to-invoice automation and follow-up flows.
+
+---
+
+# 🧱 AYS Invoicing — Installer Script (DB Schema Plan)
+
+## ⚙️ General Conventions
+
+Every table:
+
+* `id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+* `hash CHAR(32) UNIQUE NOT NULL`
+* `status ENUM(...) DEFAULT 'active'`
+* `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`
+* `updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
+* All `DECIMAL(12,2)` values for money
+* `deleted_at DATETIME NULL` for soft deletes (optional)
+
+---
+
+## 1️⃣ `wp_ays_company_profile`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_company_profile (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  name VARCHAR(190) NOT NULL,
+  business_number VARCHAR(50),
+  owner_name VARCHAR(190),
+  email VARCHAR(190) NOT NULL,
+  phone VARCHAR(50),
+  mobile VARCHAR(50),
+  website VARCHAR(190),
+  address_line1 VARCHAR(190),
+  address_line2 VARCHAR(190),
+  city VARCHAR(120),
+  postcode VARCHAR(20),
+  logo_id BIGINT UNSIGNED,
+  settings_json LONGTEXT,
+  status ENUM('active','archived') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) $charset_collate;
+```
+
+---
+
+## 2️⃣ `wp_ays_clients`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_clients (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  name VARCHAR(190) NOT NULL,
+  email VARCHAR(190) NOT NULL,
+  secondary_email VARCHAR(190),
+  phone VARCHAR(50),
+  mobile VARCHAR(50),
+  address_line1 VARCHAR(190),
+  address_line2 VARCHAR(190),
+  city VARCHAR(120),
+  postcode VARCHAR(20),
+  country VARCHAR(120),
+  notes TEXT,
+  total_billed DECIMAL(12,2) DEFAULT 0.00,
+  status ENUM('active','archived','deleted') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL
+) $charset_collate;
+```
+
+---
+
+## 3️⃣ `wp_ays_items`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  description VARCHAR(190) NOT NULL,
+  details TEXT,
+  unit VARCHAR(50),
+  rate DECIMAL(12,2),
+  taxable TINYINT(1) DEFAULT 1,
+  status ENUM('active','archived') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) $charset_collate;
+```
+
+---
+
+## 4️⃣ `wp_ays_invoices`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_invoices (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  company_id BIGINT UNSIGNED,
+  client_id BIGINT UNSIGNED,
+  inv_number VARCHAR(30) UNIQUE,
+  prefix VARCHAR(10) DEFAULT 'SC-',
+  issue_date DATE,
+  due_date DATE,
+  subtotal DECIMAL(12,2),
+  tax_total DECIMAL(12,2),
+  discount DECIMAL(12,2),
+  shipping DECIMAL(12,2),
+  total DECIMAL(12,2),
+  amount_paid DECIMAL(12,2),
+  balance DECIMAL(12,2),
+  notes TEXT,
+  terms TEXT,
+  status ENUM('draft','sent','viewed','overdue','paid','void') DEFAULT 'draft',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL,
+  FOREIGN KEY (company_id) REFERENCES {$wpdb->prefix}ays_company_profile(id) ON DELETE SET NULL,
+  FOREIGN KEY (client_id) REFERENCES {$wpdb->prefix}ays_clients(id) ON DELETE SET NULL
+) $charset_collate;
+```
+
+---
+
+## 5️⃣ `wp_ays_invoice_items`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_invoice_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  invoice_id BIGINT UNSIGNED,
+  item_id BIGINT UNSIGNED NULL,
+  description TEXT,
+  details TEXT,
+  qty DECIMAL(12,2) DEFAULT 1.00,
+  rate DECIMAL(12,2),
+  taxable TINYINT(1) DEFAULT 1,
+  line_tax DECIMAL(12,2),
+  line_total DECIMAL(12,2),
+  status ENUM('active','archived') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES {$wpdb->prefix}ays_items(id) ON DELETE SET NULL
+) $charset_collate;
+```
+
+---
+
+## 6️⃣ `wp_ays_payments`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_payments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  invoice_id BIGINT UNSIGNED,
+  method ENUM('cash','bank','stripe','paypal','other') DEFAULT 'cash',
+  amount DECIMAL(12,2),
+  txn_id VARCHAR(100),
+  notes TEXT,
+  received_at DATETIME,
+  status ENUM('pending','confirmed','failed','refunded') DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE
+) $charset_collate;
+```
+
+---
+
+## 7️⃣ `wp_ays_email_templates`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_email_templates (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  slug VARCHAR(50) UNIQUE,
+  subject VARCHAR(190),
+  body_html LONGTEXT,
+  body_text TEXT,
+  enabled TINYINT(1) DEFAULT 1,
+  status ENUM('active','archived') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) $charset_collate;
+```
+
+---
+
+## 8️⃣ `wp_ays_email_log`
+
+```sql
+CREATE TABLE {$wpdb->prefix}ays_email_log (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  invoice_id BIGINT UNSIGNED,
+  to_email VARCHAR(190),
+  subject VARCHAR(190),
+  status ENUM('queued','sent','failed') DEFAULT 'queued',
+  provider_msg TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE SET NULL
+) $charset_collate;
+```
+
+---
+
+## ✅ Co-Pilot Build Notes
+
+Tell it:
+
+> “Add `status` and `hash` fields to every table as above.
+> Generate the hash automatically when inserting.
+> Use `dbDelta()` for creation inside `ays_invoices_install()` on activation.
+> After successful install, update an option like `ays_invoices_db_version = 1.1`.
+> Wrap it in a version check so it only runs once.”
+
+---
+
+## 🧠 Future Prospecting Integration
+
+* Your **Lead → Prospect → Client → Invoice** pipeline will flow naturally:
+
+  * Each stage can share a `status` field: `new`, `warm`, `hot`, `follow-up`, `won`, `lost`, etc.
+  * Email templates can pull `{status_label}` for personalization.
+  * `hash` provides continuity for tracking the same entity across modules.
+
+---
+
+When you’re back from Jeff’s, we can wire this into `/includes/invoices/ays-install-invoices.php` and register it with:
+
+```php
+register_activation_hook(__FILE__, 'ays_invoices_install');
+```
+
+Want me to generate that **ready-to-drop PHP installer file** (full with `$wpdb`, `$charset_collate`, and `dbDelta()` calls) next?

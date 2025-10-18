@@ -185,6 +185,78 @@ class Ays_Lead_Dashboard_Admin {
                         </tbody></table>
                     </div>
                 </details>
+                <details class="ays-details">
+                    <summary><?php esc_html_e('Lead Notices','ays'); ?></summary>
+                    <div>
+                        <?php
+                        global $wpdb;
+                        $log_table = $wpdb->prefix . 'ays_notification_log';
+                        $logs = $wpdb->get_results("SELECT * FROM $log_table ORDER BY ts DESC LIMIT 10");
+                        $leads = get_posts([
+                            'post_type'      => 'ays_lead',
+                            'posts_per_page' => 10,
+                            'orderby'        => 'date',
+                            'order'          => 'DESC',
+                        ]);
+                        ?>
+                        <h3><?php echo esc_html__('Recent Notification Logs', 'ays'); ?></h3>
+                        <table class="widefat fixed">
+                            <thead><tr>
+                                <th><?php esc_html_e('Time', 'ays'); ?></th>
+                                <th><?php esc_html_e('Code', 'ays'); ?></th>
+                                <th><?php esc_html_e('Details', 'ays'); ?></th>
+                            </tr></thead>
+                            <tbody>
+                            <?php foreach ($logs as $log): ?>
+                                <tr>
+                                    <td><?php echo esc_html($log->ts); ?></td>
+                                    <td><?php echo esc_html($log->code); ?></td>
+                                    <td><pre style="white-space:pre-wrap;max-width:400px;"><?php echo esc_html($log->details); ?></pre></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+
+                        <h3><?php echo esc_html__('Lead Notification Status', 'ays'); ?></h3>
+                        <table class="widefat fixed">
+                            <thead><tr>
+                                <th><?php esc_html_e('Lead', 'ays'); ?></th>
+                                <th><?php esc_html_e('Status', 'ays'); ?></th>
+                                <th><?php esc_html_e('Last Notified', 'ays'); ?></th>
+                                <th><?php esc_html_e('Actions', 'ays'); ?></th>
+                            </tr></thead>
+                            <tbody>
+                            <?php foreach ($leads as $lead):
+                                $notified = get_post_meta($lead->ID, '_ays_notified', true);
+                                $status = $notified ? __('Sent', 'ays') : __('Pending/Failed', 'ays');
+                                $url = wp_nonce_url(
+                                    admin_url('admin-post.php?action=ays_resend_lead&lead_id=' . $lead->ID),
+                                    'ays_resend_lead'
+                                );
+                            ?>
+                                <tr>
+                                    <td><a href="<?php echo esc_url(get_edit_post_link($lead->ID)); ?>"><?php echo esc_html($lead->post_title ?: 'Lead #' . $lead->ID); ?></a></td>
+                                    <td><?php echo esc_html($status); ?></td>
+                                    <td><?php echo esc_html($notified ?: '-'); ?></td>
+                                    <td>
+                                        <?php if (!$notified): ?>
+                                            <a class="button" href="<?php echo esc_url($url); ?>"><?php esc_html_e('Resend', 'ays'); ?></a>
+                                        <?php else: ?>
+                                            <span style="color: #46b450;">&#10003;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:2em;">
+                            <?php wp_nonce_field('ays_send_test_notice', 'ays_send_test_notice_nonce'); ?>
+                            <input type="hidden" name="action" value="ays_send_test_notice">
+                            <button type="submit" class="button button-secondary"><?php esc_html_e('Send Test Notification', 'ays'); ?></button>
+                        </form>
+                    </div>
+                </details>
                 <?php submit_button(); ?>
             </form>
             <div class="ays-panel">
