@@ -24,81 +24,11 @@ class AYS_Invoice_Admin_UI {
     const OPTION_KEY = 'ays_invoice_settings';
 
     public function __construct() {
-        add_action('admin_menu', [$this, 'register_menu']);
+        // NOTE: Menu registration moved to AYS_Admin_Menu class for centralized management
+        // This class now only handles the page content rendering and settings
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'admin_assets']);
         add_action('current_screen', [$this, 'add_help_tabs']);
-    }
-
-    /**
-     * Register admin menu
-     */
-    public function register_menu() {
-        // Parent menu: Invoicing
-        add_menu_page(
-            __('Invoicing', 'ays'),
-            __('Invoicing', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing',
-            [$this, 'render_dashboard'],
-            'dashicons-money-alt', // Or custom icon
-            56 // Position after custom post types
-        );
-
-        // Subpages
-        add_submenu_page(
-            'ays_invoicing',
-            __('Invoices', 'ays'),
-            __('Invoices', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing',
-            [$this, 'render_dashboard']
-        );
-
-        add_submenu_page(
-            'ays_invoicing',
-            __('Clients', 'ays'),
-            __('Clients', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing_clients',
-            [$this, 'render_dashboard']
-        );
-
-        add_submenu_page(
-            'ays_invoicing',
-            __('Items', 'ays'),
-            __('Items', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing_items',
-            [$this, 'render_dashboard']
-        );
-
-        add_submenu_page(
-            'ays_invoicing',
-            __('Payments', 'ays'),
-            __('Payments', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing_payments',
-            [$this, 'render_dashboard']
-        );
-
-        add_submenu_page(
-            'ays_invoicing',
-            __('Reports', 'ays'),
-            __('Reports', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing_reports',
-            [$this, 'render_dashboard']
-        );
-
-        add_submenu_page(
-            'ays_invoicing',
-            __('Settings', 'ays'),
-            __('Settings', 'ays'),
-            'manage_ays_invoices',
-            'ays_invoicing_settings',
-            [$this, 'render_dashboard']
-        );
     }
 
     /**
@@ -620,9 +550,13 @@ class AYS_Invoice_Admin_UI {
     }
 
     /**
-     * Render main dashboard
+     * Render main dashboard page
+     * 
+     * Called by AYS_Admin_Menu when user navigates to Dashboard
+     * 
+     * @return void
      */
-    public function render_dashboard() {
+    public function render_page() {
         if (!current_user_can('manage_ays_invoices')) {
             wp_die(esc_html__('You do not have permission to access this page.', 'ays'));
         }
