@@ -660,28 +660,13 @@ class AYS_Invoice_Admin_UI {
      * Render Payments tab
      */
     protected function render_payments_tab() {
-        ?>
-        <details class="ays-details" open>
-            <summary>
-                💳 <?php esc_html_e('Payment Log', 'ays'); ?>
-                <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
-            </summary>
-            <div>
-                <div class="left-column">
-                    <p><?php esc_html_e('Payment records and audit trail will appear here.', 'ays'); ?></p>
-                </div>
-                <div class="right-column">
-                    <h4><?php esc_html_e('📌 Payment Types', 'ays'); ?></h4>
-                    <ul>
-                        <li><?php esc_html_e('Cash', 'ays'); ?></li>
-                        <li><?php esc_html_e('Bank transfer', 'ays'); ?></li>
-                        <li><?php esc_html_e('Stripe/PayPal', 'ays'); ?></li>
-                        <li><?php esc_html_e('Other', 'ays'); ?></li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-        <?php
+        if ( class_exists( 'AYS_Payments_Tab' ) ) {
+            AYS_Payments_Tab::render();
+        } else {
+            ?>
+            <div class="notice notice-error"><p><?php esc_html_e( 'Payments module not loaded', 'atyourservice' ); ?></p></div>
+            <?php
+        }
     }
 
     /**
@@ -777,6 +762,13 @@ class AYS_Invoice_Admin_UI {
         <?php
         if ( class_exists( 'AYS_Company_Profile' ) ) {
             AYS_Company_Profile::render();
+        }
+        ?>
+
+        <!-- Stripe Payment Settings Section -->
+        <?php
+        if ( class_exists( 'AYS_Stripe_Settings' ) ) {
+            AYS_Stripe_Settings::render();
         }
         ?>
 

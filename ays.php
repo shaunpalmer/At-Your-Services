@@ -280,3 +280,45 @@ add_action('admin_post_ays_delete_invoice', function() {
 		wp_die('Invoices class not found');
 	}
 });
+
+// === Payments Tab admin-post handlers ===
+add_action('admin_post_ays_add_payment', function() {
+	if (class_exists('AYS_Payments_Tab')) {
+		AYS_Payments_Tab::handle_add_payment();
+	} else {
+		wp_die('Payments class not found');
+	}
+});
+
+add_action('admin_post_ays_update_payment', function() {
+	if (class_exists('AYS_Payments_Tab')) {
+		AYS_Payments_Tab::handle_update_payment();
+	} else {
+		wp_die('Payments class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_payment', function() {
+	if (class_exists('AYS_Payments_Tab')) {
+		AYS_Payments_Tab::handle_delete_payment();
+	} else {
+		wp_die('Payments class not found');
+	}
+});
+
+// === Stripe Payment Handler ===
+add_action('admin_post_ays_stripe_checkout', function() {
+	if (class_exists('AYS_Stripe_Handler')) {
+		AYS_Stripe_Handler::handle_checkout();
+	} else {
+		wp_die('Stripe handler not found');
+	}
+});
+
+add_action('admin_post_nopriv_ays_stripe_checkout', function() {
+	if (class_exists('AYS_Stripe_Handler')) {
+		AYS_Stripe_Handler::handle_checkout();
+	} else {
+		wp_die('Stripe handler not found');
+	}
+});

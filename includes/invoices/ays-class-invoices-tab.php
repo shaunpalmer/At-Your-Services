@@ -16,6 +16,18 @@ defined( 'ABSPATH' ) || exit;
 class AYS_Invoices_Tab {
 
 	/**
+	 * Invoice status constants with labels and icons
+	 * Statuses: draft, sent, viewed, paid, void
+	 */
+	const INVOICE_STATUSES = [
+		'draft'  => [ 'label' => 'Draft', 'icon' => '📝', 'color' => '#999' ],
+		'sent'   => [ 'label' => 'Sent', 'icon' => '📧', 'color' => '#2196F3' ],
+		'viewed' => [ 'label' => 'Viewed', 'icon' => '👁️', 'color' => '#4CAF50' ],
+		'paid'   => [ 'label' => 'Paid', 'icon' => '✅', 'color' => '#27AE60' ],
+		'void'   => [ 'label' => 'Void', 'icon' => '❌', 'color' => '#FF5252' ],
+	];
+
+	/**
 	 * Render the Invoices tab content
 	 *
 	 * @return void
@@ -337,7 +349,19 @@ class AYS_Invoices_Tab {
 					<div class="sidebar-box">
 						<h4><?php esc_html_e( '⚙️ Actions', 'atyourservice' ); ?></h4>
 						<p>
-							<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'ays_mark_paid', 'invoice_id' => $invoice->id ] ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Mark as paid?', 'atyourservice' ); ?>')">
+							<?php if ( $invoice->status !== 'paid' ) : ?>
+								<?php if ( AYS_Stripe_Settings::is_configured() ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom: 10px;">
+										<?php wp_nonce_field( 'ays_stripe_checkout', '_wpnonce' ); ?>
+										<input type="hidden" name="action" value="ays_stripe_checkout">
+										<input type="hidden" name="invoice_id" value="<?php echo esc_attr( $invoice->id ); ?>">
+										<button type="submit" class="button button-primary" style="width: 100%;">
+											💳 <?php esc_html_e( 'Pay Now (Stripe)', 'atyourservice' ); ?>
+										</button>
+									</form>
+								<?php endif; ?>
+							<?php endif; ?>
+							<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'ays_mark_paid', 'invoice_id' => $invoice->id ] ) ); ?>" class="button button-small" style="width: 100%; box-sizing: border-box;" onclick="return confirm('<?php esc_attr_e( 'Mark as paid?', 'atyourservice' ); ?>')">
 								<?php esc_html_e( 'Mark as Paid', 'atyourservice' ); ?>
 							</a>
 						</p>
@@ -411,14 +435,17 @@ class AYS_Invoices_Tab {
 	 * @return void
 	 */
 	protected static function render_status_badge( $status ) {
-		$badges = [
-			'draft'     => '📝 Draft',
-			'sent'      => '📧 Sent',
-			'paid'      => '✅ Paid',
-			'cancelled' => '❌ Cancelled',
-		];
+		if ( ! isset( self::INVOICE_STATUSES[ $status ] ) ) {
+			echo esc_html( $status );
+			return;
+		}
 
-		echo esc_html( $badges[ $status ] ?? $status );
+		$status_info = self::INVOICE_STATUSES[ $status ];
+		?>
+		<span style="color: <?php echo esc_attr( $status_info['color'] ); ?>; font-weight: 500;">
+			<?php echo esc_html( $status_info['icon'] . ' ' . $status_info['label'] ); ?>
+		</span>
+		<?php
 	}
 
 	/**
