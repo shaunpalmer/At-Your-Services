@@ -802,32 +802,39 @@ class AYS_Invoice_Admin_UI {
                 </div>
             </details>
 
-            <details class="ays-details">
-                <summary>
-                    🏷️ <?php esc_html_e('Service Types', 'ays'); ?>
-                    <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
-                </summary>
-                <div>
-                    <div class="left-column">
-                        <p><?php esc_html_e('Create service types to organize your items (e.g., Cleaning, Plumbing, Gardening).', 'ays'); ?></p>
-                        <p><?php esc_html_e('Service types will be available for filtering when creating invoices and managing items.', 'ays'); ?></p>
-                        <!-- Service types CRUD table will go here -->
-                    </div>
-                    <div class="right-column">
-                        <h4><?php esc_html_e('📌 Examples', 'ays'); ?></h4>
-                        <ul>
-                            <li><?php esc_html_e('Cleaning', 'ays'); ?></li>
-                            <li><?php esc_html_e('Plumbing', 'ays'); ?></li>
-                            <li><?php esc_html_e('Gardening', 'ays'); ?></li>
-                            <li><?php esc_html_e('Consulting', 'ays'); ?></li>
-                            <li><?php esc_html_e('Repairs', 'ays'); ?></li>
-                        </ul>
-                    </div>
-                </div>
-            </details>
-
-            <?php submit_button(__('Save Settings', 'ays'), 'primary'); ?>
+            <?php submit_button(__('Save Invoice Defaults', 'ays'), 'primary'); ?>
         </form>
+
+        <!-- Company Profile Section -->
+        <?php
+        if ( class_exists( 'AYS_Company_Profile' ) ) {
+            AYS_Company_Profile::render();
+        }
+        ?>
+
+        <details class="ays-details">
+            <summary>
+                🏷️ <?php esc_html_e('Service Types', 'ays'); ?>
+                <span class="ays-badge"><?php esc_html_e('coming soon', 'ays'); ?></span>
+            </summary>
+            <div>
+                <div class="left-column">
+                    <p><?php esc_html_e('Create service types to organize your items (e.g., Cleaning, Plumbing, Gardening).', 'ays'); ?></p>
+                    <p><?php esc_html_e('Service types will be available for filtering when creating invoices and managing items.', 'ays'); ?></p>
+                    <!-- Service types CRUD table will go here -->
+                </div>
+                <div class="right-column">
+                    <h4><?php esc_html_e('📌 Examples', 'ays'); ?></h4>
+                    <ul>
+                        <li><?php esc_html_e('Cleaning', 'ays'); ?></li>
+                        <li><?php esc_html_e('Plumbing', 'ays'); ?></li>
+                        <li><?php esc_html_e('Gardening', 'ays'); ?></li>
+                        <li><?php esc_html_e('Consulting', 'ays'); ?></li>
+                        <li><?php esc_html_e('Repairs', 'ays'); ?></li>
+                    </ul>
+                </div>
+            </div>
+        </details>
 
         <!-- Live Preview Panel (from lead dashboard pattern) -->
         <div class="ays-panel">

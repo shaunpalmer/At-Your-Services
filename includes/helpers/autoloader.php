@@ -51,6 +51,7 @@ class Ays_Autoloader {
         'AYS_Payment_Service'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-payment-service.php',
         'AYS_Invoice_Admin_UI'      => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-admin-ui.php',
         'AYS_Items_Tab'             => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-items-tab.php',
+        'AYS_Company_Profile'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-company-profile.php',
         'AYS_Invoice_Email'         => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-email.php',
         'AYS_Invoice_PDF'           => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-pdf.php'
     ];
