@@ -13,6 +13,30 @@ defined( 'ABSPATH' ) || exit;
 class AYS_Stripe_Handler {
 
 	/**
+	 * Initialize Stripe SDK with active API key from settings
+	 * Call this before any Stripe API operations
+	 *
+	 * @return bool True if Stripe initialized successfully, false otherwise
+	 */
+	public static function initialize_stripe() {
+		// Check if settings are configured
+		if ( ! AYS_Stripe_Settings::is_configured() ) {
+			return false;
+		}
+
+		// Get active keys (test or live)
+		$keys = AYS_Stripe_Settings::get_active_keys();
+
+		// Set the API key on the Stripe SDK
+		if ( ! empty( $keys['secret_key'] ) ) {
+			\Stripe\Stripe::setApiKey( $keys['secret_key'] );
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Initialize Stripe handler
 	 * Hook this early in plugin initialization
 	 *
@@ -51,6 +75,11 @@ class AYS_Stripe_Handler {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_webhook( $request ) {
+		// Initialize Stripe SDK first
+		if ( ! self::initialize_stripe() ) {
+			return new WP_REST_Response( [ 'error' => 'Stripe not configured' ], 400 );
+		}
+
 		// Get raw body for signature verification
 		$raw_body = $request->get_body();
 		$signature = $request->get_header( 'Stripe-Signature' );
@@ -244,6 +273,11 @@ class AYS_Stripe_Handler {
 	 * @return void
 	 */
 	public static function handle_checkout() {
+		// Initialize Stripe SDK first
+		if ( ! self::initialize_stripe() ) {
+			wp_die( esc_html__( 'Stripe is not configured. Please add API keys in Settings.', 'atyourservice' ) );
+		}
+
 		// Check permissions
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
@@ -273,11 +307,6 @@ class AYS_Stripe_Handler {
 
 		if ( ! $invoice ) {
 			wp_die( esc_html__( 'Invoice not found', 'atyourservice' ) );
-		}
-
-		// Check if Stripe is configured
-		if ( ! AYS_Stripe_Settings::is_configured() ) {
-			wp_die( esc_html__( 'Stripe is not configured. Please add API keys in Settings.', 'atyourservice' ) );
 		}
 
 		// Get active keys

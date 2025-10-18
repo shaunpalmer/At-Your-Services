@@ -6,22 +6,29 @@
  * Uses WordPress dbDelta() for safe table creation (idempotent).
  * Runs only once; wrapped in version check.
  *
+ * Relationship Model (NZ invoicing):
+ * - 1 Business (company_profile) → Many Clients
+ * - 1 Client → Many Invoices
+ * - 1 Invoice → Many Items (many-to-many via wp_ays_invoice_items bridge)
+ * - 1 Invoice → Many Payments
+ *
  * Tables created:
- * - wp_ays_company_profile    (business info, 1 row)
- * - wp_ays_clients            (customers)
- * - wp_ays_service_types      (service categorization/filtering)
+ * - wp_ays_company_profile    (business info, single row)
+ * - wp_ays_clients            (customers, email-required)
  * - wp_ays_items              (services/products catalog)
- * - wp_ays_invoices           (main invoices)
- * - wp_ays_invoice_items      (line items, many-to-many bridge)
- * - wp_ays_payments           (payment log)
+ * - wp_ays_invoices           (invoices with status: draft, sent, viewed, overdue, paid, void)
+ * - wp_ays_invoice_items      (line items, many-to-many bridge between invoices & items)
+ * - wp_ays_payments           (payment log for each invoice)
  * - wp_ays_email_templates    (invoice email templates)
  * - wp_ays_email_log          (sent email audit trail)
  *
  * Conventions:
- * - Every table: id (BIGINT PK), hash (CHAR 32 UNIQUE), status (ENUM), created_at, updated_at
- * - Money fields: DECIMAL(12,2) for precision (never float math)
- * - Soft deletes: deleted_at DATETIME NULL
- * - Foreign keys: cascade on invoice delete, set null on entity delete
+ * - Primary key: id BIGINT UNSIGNED AUTO_INCREMENT
+ * - Hash: CHAR(32) UNIQUE for public/external sharing
+ * - Status: ENUM with specific allowed values per table
+ * - Timestamps: created_at, updated_at DATETIME; soft delete: deleted_at DATETIME NULL
+ * - Money fields: DECIMAL(12,2) for precision (cents/cents, never float)
+ * - Foreign keys: CASCADE on invoice delete, SET NULL on entity delete (preserves history)
  *
  * @since 1.0
  */

@@ -88,45 +88,58 @@ class AYS_Admin_Menu {
 			[ self::class, 'render_dashboard_page' ]
 		);
 
-		// Invoices submenu
-		add_submenu_page(
+		// Invoices submenu - Redirects to the main dashboard's invoices tab.
+		$invoices_hook = add_submenu_page(
 			self::$main_slug,
 			__( 'Invoices', 'atyourservice' ),
 			__( 'Invoices', 'atyourservice' ),
 			'manage_options',
 			'ays-invoices',
-			[ self::class, 'render_invoices_page' ]
+			'__return_empty_string'
 		);
+		add_action( 'load-' . $invoices_hook, function() {
+			wp_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
+			exit;
+		});
 
-		// Clients submenu
-		add_submenu_page(
+		// Clients submenu - Redirects to the main dashboard's clients tab.
+		$clients_hook = add_submenu_page(
 			self::$main_slug,
 			__( 'Clients', 'atyourservice' ),
 			__( 'Clients', 'atyourservice' ),
 			'manage_options',
 			'ays-clients',
-			[ self::class, 'render_clients_page' ]
+			'__return_empty_string'
 		);
+		add_action( 'load-' . $clients_hook, function() {
+			wp_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) );
+			exit;
+		});
 
-		// Items submenu
-		add_submenu_page(
+		// Items submenu - Redirects to the main dashboard's items tab.
+		$items_hook = add_submenu_page(
 			self::$main_slug,
 			__( 'Items', 'atyourservice' ),
 			__( 'Items', 'atyourservice' ),
 			'manage_options',
 			'ays-items',
-			[ self::class, 'render_items_page' ]
+			'__return_empty_string'
 		);
+		add_action( 'load-' . $items_hook, function() {
+			wp_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=items' ) );
+			exit;
+		});
 
-		// Payments submenu
-		add_submenu_page(
+		// Payments submenu - Uses a page load hook to redirect to the correct tab.
+		$hook = add_submenu_page(
 			self::$main_slug,
 			__( 'Payments', 'atyourservice' ),
 			__( 'Payments', 'atyourservice' ),
 			'manage_options',
-			'ays-payments',
-			[ self::class, 'render_payments_page' ]
+			'ays-payments', // A simple slug is fine now.
+			'__return_empty_string' // Use a WP core function that just returns nothing.
 		);
+		add_action( 'load-' . $hook, [ self::class, 'redirect_to_payments_tab' ] );
 
 		// Reports submenu
 		add_submenu_page(
@@ -138,15 +151,19 @@ class AYS_Admin_Menu {
 			[ self::class, 'render_reports_page' ]
 		);
 
-		// Settings submenu
-		add_submenu_page(
+		// Settings submenu - Redirects to the main dashboard's settings tab.
+		$settings_hook = add_submenu_page(
 			self::$main_slug,
 			__( 'Settings', 'atyourservice' ),
 			__( 'Settings', 'atyourservice' ),
 			'manage_options',
 			'ays-settings',
-			[ self::class, 'render_settings_page' ]
+			'__return_empty_string'
 		);
+		add_action( 'load-' . $settings_hook, function() {
+			wp_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=settings' ) );
+			exit;
+		});
 	}
 
 	/**
@@ -239,22 +256,14 @@ class AYS_Admin_Menu {
 	}
 
 	/**
-	 * Render the payments page
+	 * Redirects the user from the virtual payments page to the correct tab.
 	 * 
 	 * @since 0.1.3
 	 * @return void
 	 */
-	public static function render_payments_page() {
-		?>
-		<div class="wrap ays-admin-wrap">
-			<h1><?php esc_html_e( 'Payments', 'atyourservice' ); ?></h1>
-			<p><?php esc_html_e( 'Track and record payments from your invoices.', 'atyourservice' ); ?></p>
-			
-			<div class="notice notice-info inline">
-				<p><?php esc_html_e( 'Payment tracking features coming soon.', 'atyourservice' ); ?></p>
-			</div>
-		</div>
-		<?php
+	public static function redirect_to_payments_tab() {
+		wp_redirect( admin_url( 'admin.php?page=' . self::$main_slug . '&tab=payments' ) );
+		exit;
 	}
 
 	/**

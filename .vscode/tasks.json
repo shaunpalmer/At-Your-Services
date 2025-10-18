@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Chrome with Debugging",
+      "type": "shell",
+      "command": "chrome.exe",
+      "args": [
+        "--remote-debugging-port=9222",
+        "--user-data-dir=${workspaceFolder}/.chrome-debug",
+        "--new-window",
+        "http://projectstudios.local/wp-admin/admin.php?page=ays-invoicing"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start MCP Server",
+      "type": "shell",
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--browserUrl",
+        "ws://localhost:9222/devtools/browser"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
+}

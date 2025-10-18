@@ -142,7 +142,7 @@ class AYS_Invoices_Tab {
 		$clients = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_clients WHERE status = 'active' ORDER BY name" );
 
 		?>
-		<details class="ays-details open>
+		<details class="ays-details" open>
 			<summary>
 				➕ <?php esc_html_e( 'Create New Invoice', 'atyourservice' ); ?>
 			</summary>

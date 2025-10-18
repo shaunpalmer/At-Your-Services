@@ -29,6 +29,7 @@ class AYS_Invoice_Admin_UI {
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'admin_assets']);
         add_action('current_screen', [$this, 'add_help_tabs']);
+        add_action('wp_ajax_ays_create_payment_intent', ['AYS_Payments_Tab', 'create_payment_intent']);
     }
 
     /**
@@ -89,8 +90,9 @@ class AYS_Invoice_Admin_UI {
      * - Inline styles/scripts for zero external HTTP requests
      */
     public function admin_assets($hook) {
-        // Only on our invoicing pages
-        if (strpos($hook, 'ays_invoicing') === false) {
+        // We only load assets on our specific dashboard page to avoid conflicts.
+        // Use strpos for a flexible check, similar to the lead dashboard pattern.
+        if (strpos($hook, 'ays-dashboard') === false) {
             return;
         }
 
@@ -165,25 +167,45 @@ class AYS_Invoice_Admin_UI {
             display: block;
         }
 
+        /* General layout styles from Lead Dashboard for consistency */
+        .ays-panel {
+            background: #f9f9f9;
+            border: 1px solid #dcdcde;
+            border-radius: 6px;
+            margin: 0 0 18px;
+            padding: 16px 18px;
+        }
+
         .ays-details {
             background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 16px;
+            border: 1px solid #c3c4c7; /* Lead dashboard border color */
+            border-radius: 6px; /* Lead dashboard border radius */
+            margin: 16px 0; /* Add top and bottom margin for breathing room */
             overflow: hidden;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06); /* Subtle depth */
         }
 
         .ays-details summary {
             padding: 16px 20px;
             font-weight: 600;
             cursor: pointer;
-            background: linear-gradient(135deg, #6366f1 0%, #4c51bf 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #4c51bf 100%); /* Keep the purple/blue gradient */
             color: #fff;
             user-select: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s ease;
+            border-bottom: 1px solid transparent; /* Add border for open state */
+        }
+
+        .ays-details[open] {
+            box-shadow: 0 0 0 2px #4c51bf inset, 0 1px 2px rgba(16,24,40,0.06); /* Keep subtle depth */
+            border-color: #4c51bf;
+        }
+
+        .ays-details[open] summary {
+             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .ays-details summary:hover {
@@ -191,19 +213,23 @@ class AYS_Invoice_Admin_UI {
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
         }
 
-        .ays-details[open] summary {
-            border-bottom: 1px solid #e5e7eb;
-        }
-
         .ays-details summary::marker {
             color: #fff;
         }
 
         .ays-details > div {
-            padding: 24px 20px;
+            padding: 24px 30px; /* Increased horizontal padding */
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 24px;
+            gap: 30px; /* Increased gap */
+            border-top: 1px solid #dcdcde; /* A slightly softer grey border */
+        }
+
+        /* Loosen form rows inside details on the Invoices tab */
+        .ays-details .left-column .form-table th,
+        .ays-details .left-column .form-table td {
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
 
         .ays-details .left-column {
@@ -213,7 +239,7 @@ class AYS_Invoice_Admin_UI {
         .ays-details .right-column {
             background: #f8f9fa;
             border-left: 3px solid #4c51bf;
-            padding: 16px;
+            padding: 20px; /* Increased padding */
             border-radius: 4px;
         }
 
@@ -224,6 +250,9 @@ class AYS_Invoice_Admin_UI {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            padding-bottom: 8px; /* Added padding */
+            border-bottom: 1px solid #e5e7eb; /* Added border */
+            margin-bottom: 16px; /* Added margin */
         }
 
         .ays-details .right-column ul,
@@ -268,15 +297,6 @@ class AYS_Invoice_Admin_UI {
             vertical-align: middle;
             letter-spacing: 0.5px;
             font-weight: 600;
-        }
-
-        /* Live Preview Panel (from lead dashboard) */
-        .ays-panel {
-            background: #f9f9f9;
-            border: 1px solid #dcdcde;
-            border-radius: 6px;
-            margin: 0 0 18px;
-            padding: 16px 18px;
         }
 
         .ays-preview-heading {
@@ -398,33 +418,17 @@ class AYS_Invoice_Admin_UI {
             border-top: 1px solid #d1d5db;
         }
 
-        /* Enhanced Details from lead dashboard */
-        .ays-details summary {
-            padding: 12px 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .ays-details[open] {
-            box-shadow: 0 0 0 2px #2271b1 inset;
-            border-color: #2271b1;
-        }
-
-        .ays-details > div {
-            padding: 16px 20px;
-            border-top: 1px solid #c3c4c7;
-        }
-
         .ays-form-row {
             margin-bottom: 20px;
         }
 
         .ays-form-row label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px; /* Increased margin */
             font-weight: 500;
             color: #374151;
             font-size: 14px;
+            padding: 0 2px; /* Added slight horizontal padding */
         }
 
         .ays-form-row input[type="text"],
@@ -475,36 +479,160 @@ class AYS_Invoice_Admin_UI {
 
         wp_add_inline_style('wp-admin', $css);
 
-        // Inline JavaScript for tab switching and live preview sync (pattern from lead dashboard)
+        // Localize script data for AJAX tab switching
+        // Use wp_rest nonce for REST API calls (WordPress standard)
+        // Ensure jQuery is enqueued so our inline JS executes
+        wp_enqueue_script('jquery');
+        $use_rest = (bool) $this->get_option('use_rest', false);
+        $debug    = (bool) $this->get_option('debug', false);
+        wp_localize_script('jquery', 'aysInvoicing', [
+            'restBase' => esc_url_raw( rest_url( 'ays/v1/invoicing/tab/' ) ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            // Feature flags sourced from settings
+            'useRest' => $use_rest,
+            'debug'   => $debug,
+        ]);
+
+        // Inline JavaScript for AJAX tab switching and live preview sync
         $js = '
         (function($) {
+            var tabLoading = false;
+            var currentTab = "invoices";
+
             // Live preview sync - updates invoice preview as user edits settings
             function syncInvoicePreview() {
                 var prefix = $("#invoice_prefix").val() || "INV-";
-                var gsT_rate = parseFloat($("#gst_rate").val()) || 15;
+                var gst_rate = parseFloat($("#gst_rate").val()) || 15;
                 var dueDays = parseInt($("#due_in_days").val()) || 7;
                 var currency = $("#currency").val() || "NZD";
                 var currencySymbol = currency === "NZD" ? "$" : currency === "USD" ? "$" : currency === "AUD" ? "A$" : currency === "GBP" ? "£" : "€";
                 
                 // Update preview elements
                 $("[data-preview=prefix]").text(prefix);
-                $("[data-preview=gst_rate]").text(gsT_rate.toFixed(2));
+                $("[data-preview=gst_rate]").text(gst_rate.toFixed(2));
                 $("[data-preview=due_days]").text(dueDays);
                 $("[data-preview=currency]").text(currency + " " + currencySymbol);
             }
             
-            // Tab switching (like in original code)
-            $(".ays-invoicing-tab").on("click", function(e) {
+            // AJAX tab switching - load content without page reload
+            function loadTabContent(tabName) {
+                if (tabLoading) return;
+                if (aysInvoicing.debug) {
+                    console.log("Loading tab:", tabName);
+                    console.log("ajaxUrl:", aysInvoicing.ajaxUrl, "restBase:", aysInvoicing.restBase, "useRest:", aysInvoicing.useRest);
+                }
+                
+                tabLoading = true;
+                var $contentArea = $(".ays-invoicing-content");
+                
+                // Show loading state
+                $contentArea.css("opacity", "0.5");
+                
+                if (aysInvoicing.useRest) {
+                    // REST transport (JSON)
+                    $.ajax({
+                        url: aysInvoicing.restBase + tabName,
+                        type: "GET",
+                        dataType: "json",
+                        headers: { "X-WP-Nonce": aysInvoicing.nonce },
+                        success: function(resp) {
+                            if (aysInvoicing.debug) console.log("REST success:", resp);
+                            if (resp && resp.success) {
+                                $contentArea.html(resp.content || "");
+                                currentTab = tabName;
+                                var newUrl = window.location.pathname + "?page=ays-dashboard&tab=" + tabName;
+                                window.history.replaceState({tab: tabName}, "", newUrl);
+                                if ($.fn.wpColorPicker) {
+                                    $(".ays-color-field").wpColorPicker({
+                                        change: function() { syncInvoicePreview(); },
+                                        clear: function() { syncInvoicePreview(); }
+                                    });
+                                }
+                            } else {
+                                console.error("REST response not success:", resp);
+                                $contentArea.html("<p style=\"color:red;\">Error: REST response invalid.</p>");
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("REST load error:", {status: xhr.status, error: error, response: xhr.responseText});
+                            var snippet = (xhr.responseText || "").toString().slice(0, 400).replace(/[\n\r]+/g, " ");
+                            $contentArea.html(
+                                "<div style=\"background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:4px;\">"
+                                + "<strong>REST error:</strong> " + (xhr.status || "0") + " " + (xhr.statusText || "")
+                                + "<div style=\"margin-top:6px;color:#6b7280;font-size:12px;\">" + snippet + "</div>"
+                                + "</div>"
+                            );
+                        },
+                        complete: function() {
+                            tabLoading = false;
+                            $contentArea.css("opacity", "1");
+                        }
+                    });
+                } else {
+                    // admin-ajax transport (HTML)
+                    var ajaxUrl = aysInvoicing.ajaxUrl;
+                    var data = { action: "ays_load_tab", tab: tabName, nonce: aysInvoicing.nonce, format: "html" };
+                    if (aysInvoicing.debug) console.log("AJAX data:", data);
+                    $.ajax({
+                        url: ajaxUrl,
+                        type: "POST",
+                        data: data,
+                        dataType: "html",
+                        success: function(response) {
+                            if (aysInvoicing.debug) console.log("AJAX success (html)");
+                            $contentArea.html(response);
+                            currentTab = tabName;
+                            var newUrl = window.location.pathname + "?page=ays-dashboard&tab=" + tabName;
+                            window.history.replaceState({tab: tabName}, "", newUrl);
+                            if ($.fn.wpColorPicker) {
+                                $(".ays-color-field").wpColorPicker({
+                                    change: function() { syncInvoicePreview(); },
+                                    clear: function() { syncInvoicePreview(); }
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Tab load error:", {status: xhr.status, statusText: xhr.statusText, error: error, response: xhr.responseText});
+                            var snippet = (xhr.responseText || "").toString().slice(0, 400).replace(/[\n\r]+/g, " ");
+                            $contentArea.html(
+                                "<div style=\"background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:4px;\">"
+                                + "<strong>AJAX error:</strong> " + (xhr.status || "0") + " " + (xhr.statusText || "")
+                                + "<div style=\"margin-top:6px;color:#6b7280;font-size:12px;\">" + snippet + "</div>"
+                                + "</div>"
+                            );
+                        },
+                        complete: function() {
+                            tabLoading = false;
+                            $contentArea.css("opacity", "1");
+                        }
+                    });
+                }
+            }
+            
+            // Tab click handler
+            $(document).on("click", ".ays-invoicing-tab", function(e) {
                 e.preventDefault();
-                var tab = $(this).data("tab");
                 
-                // Hide all content
-                $(".ays-invoicing-content").removeClass("active");
+                var $tab = $(this);
+                var tabName = $tab.data("tab");
+                
+                if (aysInvoicing.debug) {
+                    console.log("Tab clicked:", tabName);
+                    console.log("aysInvoicing:", aysInvoicing);
+                }
+                
+                if (tabName === currentTab) {
+                    console.log("Same tab, skipping");
+                    return;
+                }
+                
+                // Update active states
                 $(".ays-invoicing-tab").removeClass("active");
+                $tab.addClass("active");
                 
-                // Show selected content
-                $("[data-content=\"" + tab + "\"]").addClass("active");
-                $(this).addClass("active");
+                // Load content via AJAX
+                loadTabContent(tabName);
             });
             
             // Sync preview when any setting changes
@@ -514,6 +642,18 @@ class AYS_Invoice_Admin_UI {
             
             // Initialize on page load
             $(document).ready(function() {
+                if (aysInvoicing.debug) {
+                    console.log("AYS Invoicing JS loaded");
+                    console.log("aysInvoicing object:", aysInvoicing);
+                }
+                
+                // Set initial active tab from URL parameter
+                var urlParams = new URLSearchParams(window.location.search);
+                var initialTab = urlParams.get("tab") || "invoices";
+                currentTab = initialTab;
+                
+                if (aysInvoicing.debug) console.log("Initial tab:", initialTab);
+                
                 // Initialize color pickers if present
                 if ($.fn.wpColorPicker) {
                     $(".ays-color-field").wpColorPicker({
@@ -522,16 +662,86 @@ class AYS_Invoice_Admin_UI {
                     });
                 }
                 
-                // Auto-open first tab
-                $(".ays-invoicing-tab:first").trigger("click");
-                
                 // Initial sync
                 syncInvoicePreview();
             });
         })(jQuery);
         ';
 
-        wp_add_inline_script('jquery-core', $js);
+        // Attach our inline script after jQuery so $() is available
+        wp_add_inline_script('jquery', $js);
+    }
+
+    /**
+     * AJAX handler for loading tab content
+     */
+    public static function ajax_load_tab() {
+        // Verify nonce (will exit with -1 on failure)
+        check_ajax_referer('wp_rest', 'nonce');
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $tab_name = sanitize_text_field($_POST['tab'] ?? '');
+
+        // Validate tab name
+        $allowed_tabs = ['invoices', 'clients', 'items', 'payments', 'reports', 'settings'];
+        if (!in_array($tab_name, $allowed_tabs, true)) {
+            wp_send_json_error('Invalid tab');
+        }
+
+        // Render with diagnostics
+        $content = '';
+        try {
+            // Start output buffering
+            ob_start();
+
+            // Render the appropriate tab
+            switch ($tab_name) {
+                case 'invoices':
+                    (new self())->render_invoices_tab();
+                    break;
+                case 'clients':
+                    (new self())->render_clients_tab();
+                    break;
+                case 'items':
+                    (new self())->render_items_tab();
+                    break;
+                case 'payments':
+                    (new self())->render_payments_tab();
+                    break;
+                case 'reports':
+                    (new self())->render_reports_tab();
+                    break;
+                case 'settings':
+                    (new self())->render_settings_tab();
+                    break;
+            }
+
+            $content = ob_get_clean();
+        } catch (\Throwable $e) {
+            if (function_exists('error_log')) {
+                error_log('[AYS] ajax_load_tab error for tab ' . $tab_name . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+            }
+            $error_html = '<div class="notice notice-error" style="padding:10px;"><strong>Render error:</strong> '
+                . esc_html($e->getMessage()) . ' <em>(' . esc_html($e->getFile()) . ':' . intval($e->getLine()) . ')</em></div>';
+            if (isset($_POST['format']) && $_POST['format'] === 'html') {
+                echo $error_html;
+                wp_die();
+            }
+            wp_send_json_error(['error' => 'Render error', 'message' => $e->getMessage()]);
+        }
+
+        // If front-end requested HTML directly, return raw markup
+        if (isset($_POST['format']) && $_POST['format'] === 'html') {
+            echo $content;
+            wp_die();
+        }
+
+        // Default: JSON response shape
+        wp_send_json_success(['content' => $content, 'tab' => $tab_name]);
     }
 
     /**
@@ -557,67 +767,66 @@ class AYS_Invoice_Admin_UI {
      * @return void
      */
     public function render_page() {
-        if (!current_user_can('manage_ays_invoices')) {
+        if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to access this page.', 'ays'));
         }
 
-        $current_tab = sanitize_text_field($_GET['page'] ?? 'ays_invoicing');
+        $current_tab = sanitize_text_field($_GET['tab'] ?? 'invoices');
+        $nonce = wp_create_nonce('ays_invoicing_nonce');
 
         ?>
-        <div class="wrap ays-invoicing-wrap">
+        <div class="wrap ays-invoicing-wrap" data-ays-nonce="<?php echo esc_attr($nonce); ?>">
             <div class="ays-invoicing-header">
                 <h1>💰 <?php esc_html_e('Invoicing Dashboard', 'ays'); ?></h1>
             </div>
 
             <nav class="ays-invoicing-tabs">
-                <a href="?page=ays_invoicing" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing' ? 'active' : ''; ?>" data-tab="invoices">
+                <a href="?page=ays-dashboard&tab=invoices" class="ays-invoicing-tab <?php echo $current_tab === 'invoices' ? 'active' : ''; ?>" data-tab="invoices">
                     <?php esc_html_e('Invoices', 'ays'); ?>
                 </a>
-                <a href="?page=ays_invoicing_clients" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing_clients' ? 'active' : ''; ?>" data-tab="clients">
+                <a href="?page=ays-dashboard&tab=clients" class="ays-invoicing-tab <?php echo $current_tab === 'clients' ? 'active' : ''; ?>" data-tab="clients">
                     <?php esc_html_e('Clients', 'ays'); ?>
                 </a>
-                <a href="?page=ays_invoicing_items" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing_items' ? 'active' : ''; ?>" data-tab="items">
+                <a href="?page=ays-dashboard&tab=items" class="ays-invoicing-tab <?php echo $current_tab === 'items' ? 'active' : ''; ?>" data-tab="items">
                     <?php esc_html_e('Items', 'ays'); ?>
                 </a>
-                <a href="?page=ays_invoicing_payments" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing_payments' ? 'active' : ''; ?>" data-tab="payments">
+                <a href="?page=ays-dashboard&tab=payments" class="ays-invoicing-tab <?php echo $current_tab === 'payments' ? 'active' : ''; ?>" data-tab="payments">
                     <?php esc_html_e('Payments', 'ays'); ?>
                 </a>
-                <a href="?page=ays_invoicing_reports" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing_reports' ? 'active' : ''; ?>" data-tab="reports">
+                <a href="?page=ays-dashboard&tab=reports" class="ays-invoicing-tab <?php echo $current_tab === 'reports' ? 'active' : ''; ?>" data-tab="reports">
                     <?php esc_html_e('Reports', 'ays'); ?>
                 </a>
-                <a href="?page=ays_invoicing_settings" class="ays-invoicing-tab <?php echo $current_tab === 'ays_invoicing_settings' ? 'active' : ''; ?>" data-tab="settings">
+                <a href="?page=ays-dashboard&tab=settings" class="ays-invoicing-tab <?php echo $current_tab === 'settings' ? 'active' : ''; ?>" data-tab="settings">
                     <?php esc_html_e('Settings', 'ays'); ?>
                 </a>
             </nav>
 
-            <!-- Invoices Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing' ? 'active' : ''; ?>" data-content="invoices">
-                <?php $this->render_invoices_tab(); ?>
-            </div>
-
-            <!-- Clients Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing_clients' ? 'active' : ''; ?>" data-content="clients">
-                <?php $this->render_clients_tab(); ?>
-            </div>
-
-            <!-- Items Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing_items' ? 'active' : ''; ?>" data-content="items">
-                <?php $this->render_items_tab(); ?>
-            </div>
-
-            <!-- Payments Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing_payments' ? 'active' : ''; ?>" data-content="payments">
-                <?php $this->render_payments_tab(); ?>
-            </div>
-
-            <!-- Reports Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing_reports' ? 'active' : ''; ?>" data-content="reports">
-                <?php $this->render_reports_tab(); ?>
-            </div>
-
-            <!-- Settings Tab -->
-            <div class="ays-invoicing-content <?php echo $current_tab === 'ays_invoicing_settings' ? 'active' : ''; ?>" data-content="settings">
-                <?php $this->render_settings_tab(); ?>
+            <!-- Single content area for AJAX tab switching -->
+            <div id="ays-tab-content" class="ays-invoicing-content active">
+                <?php 
+                // Render initial tab content on page load
+                switch ( $current_tab ) {
+                    case 'clients':
+                        $this->render_clients_tab();
+                        break;
+                    case 'items':
+                        $this->render_items_tab();
+                        break;
+                    case 'payments':
+                        $this->render_payments_tab();
+                        break;
+                    case 'reports':
+                        $this->render_reports_tab();
+                        break;
+                    case 'settings':
+                        $this->render_settings_tab();
+                        break;
+                    case 'invoices':
+                    default:
+                        $this->render_invoices_tab();
+                        break;
+                }
+                ?>
             </div>
         </div>
         <?php
@@ -746,11 +955,23 @@ class AYS_Invoice_Admin_UI {
                     <div class="right-column">
                         <h4><?php esc_html_e('💡 Settings Explained', 'ays'); ?></h4>
                         <ul>
-                            <li><?php esc_html_e('<strong>Prefix:</strong> Part of invoice number (e.g., INV-001)', 'ays'); ?></li>
-                            <li><?php esc_html_e('<strong>GST:</strong> Tax percentage added to taxable items', 'ays'); ?></li>
-                            <li><?php esc_html_e('<strong>Due Days:</strong> Payment terms (e.g., 7 = due in 7 days)', 'ays'); ?></li>
-                            <li><?php esc_html_e('<strong>Currency:</strong> Display symbol ($, £, €, etc.)', 'ays'); ?></li>
+                            <li><?php echo wp_kses_post( __('<strong>Prefix:</strong> Part of invoice number (e.g., INV-001)', 'ays') ); ?></li>
+                            <li><?php echo wp_kses_post( __('<strong>GST:</strong> Tax percentage added to taxable items', 'ays') ); ?></li>
+                            <li><?php echo wp_kses_post( __('<strong>Due Days:</strong> Payment terms (e.g., 7 = due in 7 days)', 'ays') ); ?></li>
+                            <li><?php echo wp_kses_post( __('<strong>Currency:</strong> Display symbol ($, £, €, etc.)', 'ays') ); ?></li>
                         </ul>
+
+                        <hr style="margin:16px 0; border:none; border-top:1px solid #e5e7eb;" />
+                        <h4><?php esc_html_e('🔧 Developer Options', 'ays'); ?></h4>
+                        <p class="description" style="margin-top:0;"><?php esc_html_e('These options control how tabs load and whether debug logs appear in the browser console.', 'ays'); ?></p>
+                        <label style="display:block; margin:8px 0;">
+                            <input type="checkbox" name="<?php echo self::OPTION_KEY; ?>[use_rest]" value="1" <?php checked( (bool) $this->get_option('use_rest', false), true ); ?> />
+                            <?php esc_html_e('Use REST transport for tabs (experimental)', 'ays'); ?>
+                        </label>
+                        <label style="display:block; margin:8px 0;">
+                            <input type="checkbox" name="<?php echo self::OPTION_KEY; ?>[debug]" value="1" <?php checked( (bool) $this->get_option('debug', false), true ); ?> />
+                            <?php esc_html_e('Enable debug logs in console', 'ays'); ?>
+                        </label>
                     </div>
                 </div>
             </details>
@@ -910,6 +1131,9 @@ class AYS_Invoice_Admin_UI {
         $out['gst_rate'] = isset($input['gst_rate']) ? floatval($input['gst_rate']) : 15;
         $out['due_in_days'] = isset($input['due_in_days']) ? intval($input['due_in_days']) : 7;
         $out['currency'] = isset($input['currency']) ? sanitize_text_field($input['currency']) : 'NZD';
+        // Developer options
+        $out['use_rest'] = !empty($input['use_rest']) ? true : false;
+        $out['debug']    = !empty($input['debug']) ? true : false;
         return $out;
     }
 

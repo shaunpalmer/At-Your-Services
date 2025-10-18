@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Chrome for Debugging",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://projectstudios.local/wp-admin/admin.php?page=ays-invoicing",
+      "webRoot": "${workspaceFolder}",
+      "runtimeArgs": [
+        "--remote-debugging-port=9222",
+        "--user-data-dir=${workspaceFolder}/.chrome-debug"
+      ]
+    }
+  ]
+}

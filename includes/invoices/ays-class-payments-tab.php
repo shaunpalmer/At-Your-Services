@@ -13,6 +13,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// Include Stripe library
+require_once AYS_PLUGIN_PATH . 'vendor/stripe/init.php';
+
 class AYS_Payments_Tab {
 
 	const PAYMENT_METHODS = [
@@ -39,12 +42,80 @@ class AYS_Payments_Tab {
 		$edit_payment = $edit_id ? self::get_payment( $edit_id ) : null;
 
 		?>
-		<!-- Payments Log Section -->
-		<details class="ays-details" open>
+		<!-- Stripe Configuration Section -->
+		<details class="ays-details">
 			<summary>
-				💳 <?php esc_html_e( 'Payments Log', 'atyourservice' ); ?>
-				<span class="ays-badge"><?php echo esc_html( self::get_payments_count() . ' payments' ); ?></span>
+				🔧 <?php esc_html_e( 'Stripe Configuration', 'atyourservice' ); ?>
+				<span class="ays-badge <?php echo empty(get_option('ays_stripe_secret_key')) ? 'new' : ''; ?>">
+					<?php echo empty(get_option('ays_stripe_secret_key')) ? 'Not Configured' : 'Configured'; ?>
+				</span>
 			</summary>
+			<div>
+				<div class="left-column">
+					<form method="post" action="options.php">
+						<?php settings_fields('ays_payments_settings'); ?>
+						<div class="ays-form-row">
+							<label for="ays_stripe_publishable_key"><?php esc_html_e( 'Stripe Publishable Key', 'atyourservice' ); ?></label>
+							<input type="text" id="ays_stripe_publishable_key" name="ays_stripe_publishable_key"
+								   value="<?php echo esc_attr(get_option('ays_stripe_publishable_key', '')); ?>" />
+							<p class="description"><?php esc_html_e( 'Your Stripe publishable key (starts with pk_)', 'atyourservice' ); ?></p>
+						</div>
+						<div class="ays-form-row">
+							<label for="ays_stripe_secret_key"><?php esc_html_e( 'Stripe Secret Key', 'atyourservice' ); ?></label>
+							<input type="password" id="ays_stripe_secret_key" name="ays_stripe_secret_key"
+								   value="<?php echo esc_attr(get_option('ays_stripe_secret_key', '')); ?>" />
+							<p class="description"><?php esc_html_e( 'Your Stripe secret key (starts with sk_)', 'atyourservice' ); ?></p>
+						</div>
+						<?php submit_button(esc_html__('Save Settings', 'atyourservice')); ?>
+					</form>
+				</div>
+				<div class="right-column">
+					<h4><?php esc_html_e( '📌 Setup Instructions', 'atyourservice' ); ?></h4>
+					<ol>
+						<li><?php esc_html_e( 'Log into your', 'atyourservice' ); ?> <a href="https://dashboard.stripe.com/" target="_blank"><?php esc_html_e( 'Stripe Dashboard', 'atyourservice' ); ?></a></li>
+						<li><?php esc_html_e( 'Navigate to API Keys in the Developers section', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Copy your Publishable key and Secret key', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Paste them above and save', 'atyourservice' ); ?></li>
+					</ol>
+					<p><strong><?php esc_html_e( 'Note:', 'atyourservice' ); ?></strong> <?php esc_html_e( 'Use test keys for development.', 'atyourservice' ); ?></p>
+				</div>
+			</div>
+		</details>
+
+		<!-- Process Payment Section -->
+		<details class="ays-details">
+			<summary>
+				💳 <?php esc_html_e( 'Process Payment', 'atyourservice' ); ?>
+			</summary>
+			<div>
+				<div class="left-column">
+					<p><?php esc_html_e( 'Select an invoice to process payment:', 'atyourservice' ); ?></p>
+					<select id="invoice-select" class="ays-form-row">
+						<option value=""><?php esc_html_e( 'Choose an invoice...', 'atyourservice' ); ?></option>
+						<?php
+						global $wpdb;
+						$invoices = $wpdb->get_results("SELECT id, invoice_number FROM {$wpdb->prefix}ays_invoices WHERE status != 'paid' ORDER BY created_at DESC");
+						foreach ($invoices as $invoice) {
+							echo '<option value="' . esc_attr($invoice->id) . '">' . esc_attr($invoice->invoice_number) . '</option>';
+						}
+						?>
+					</select>
+					<div id="payment-form" style="display: none;">
+						<div id="card-element"><!-- Stripe Card Element --></div>
+						<button id="pay-button" class="button button-primary"><?php esc_html_e( 'Pay Invoice', 'atyourservice' ); ?></button>
+					</div>
+				</div>
+				<div class="right-column">
+					<h4><?php esc_html_e( '📌 Payment Methods', 'atyourservice' ); ?></h4>
+					<ul>
+						<li><?php esc_html_e( 'Credit/Debit Cards', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Google Pay', 'atyourservice' ); ?></li>
+						<li><?php esc_html_e( 'Bank Transfer (ACH)', 'atyourservice' ); ?></li>
+					</ul>
+					<p><?php esc_html_e( 'All payments are processed securely through Stripe.', 'atyourservice' ); ?></p>
+				</div>
+			</div>
+		</details>
 			<div>
 				<div class="left-column">
 					<?php self::render_payments_table(); ?>
@@ -500,5 +571,126 @@ class AYS_Payments_Tab {
 			wp_redirect( add_query_arg( 'ays_notice', 'payment_error', admin_url( 'admin.php?page=ays-dashboard&tab=payments' ) ) );
 		}
 		exit;
+	}
+
+	/**
+	 * Handle AJAX request to create Stripe payment intent
+	 */
+	public static function create_payment_intent() {
+		check_ajax_referer('ays_stripe_payment', 'nonce');
+
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Unauthorized');
+		}
+
+		$invoice_id = intval($_POST['invoice_id']);
+		if (!$invoice_id) {
+			wp_send_json_error('Invalid invoice ID');
+		}
+
+		global $wpdb;
+		$invoice = $wpdb->get_row($wpdb->prepare(
+			"SELECT i.*, c.email FROM {$wpdb->prefix}ays_invoices i 
+			LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id 
+			WHERE i.id = %d",
+			$invoice_id
+		));
+
+		if (!$invoice) {
+			wp_send_json_error('Invoice not found');
+		}
+
+		$stripe_secret_key = get_option('ays_stripe_secret_key');
+		if (empty($stripe_secret_key)) {
+			wp_send_json_error('Stripe not configured');
+		}
+
+		\Stripe\Stripe::setApiKey($stripe_secret_key);
+
+		try {
+			$payment_intent = \Stripe\PaymentIntent::create([
+				'amount' => intval($invoice->total * 100), // Amount in cents
+				'currency' => 'usd', // Assuming USD, can be made configurable
+				'metadata' => [
+					'invoice_id' => $invoice_id,
+					'invoice_number' => $invoice->invoice_number,
+				],
+				'receipt_email' => $invoice->email,
+			]);
+
+			wp_send_json_success([
+				'client_secret' => $payment_intent->client_secret,
+			]);
+		} catch (\Stripe\Exception\ApiErrorException $e) {
+			wp_send_json_error($e->getMessage());
+		}
+	}
+
+	/**
+	 * Enqueue Stripe scripts and handle payment processing
+	 */
+	public static function enqueue_scripts() {
+		$stripe_publishable_key = get_option('ays_stripe_publishable_key', '');
+		if (!empty($stripe_publishable_key)) {
+			wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', [], '3', true);
+			wp_add_inline_script('stripe-js', "
+				var stripe = Stripe('$stripe_publishable_key');
+				var elements = stripe.elements();
+				var cardElement = elements.create('card');
+				var invoiceId = null;
+
+				document.getElementById('invoice-select').addEventListener('change', function() {
+					invoiceId = this.value;
+					if (invoiceId) {
+						document.getElementById('payment-form').style.display = 'block';
+						if (!document.getElementById('card-element').hasChildNodes()) {
+							cardElement.mount('#card-element');
+						}
+					} else {
+						document.getElementById('payment-form').style.display = 'none';
+					}
+				});
+
+				document.getElementById('pay-button').addEventListener('click', function(e) {
+					e.preventDefault();
+					if (!invoiceId) return;
+
+					fetch(ajaxurl, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+						},
+						body: 'action=ays_create_payment_intent&invoice_id=' + invoiceId + '&nonce=' + ays_ajax.nonce
+					})
+					.then(response => response.json())
+					.then(data => {
+						if (data.success) {
+							return stripe.confirmCardPayment(data.data.client_secret, {
+								payment_method: {
+									card: cardElement,
+								}
+							});
+						} else {
+							throw new Error(data.data);
+						}
+					})
+					.then(result => {
+						if (result.error) {
+							alert('Payment failed: ' + result.error.message);
+						} else {
+							alert('Payment succeeded!');
+							location.reload();
+						}
+					})
+					.catch(error => {
+						alert('Error: ' + error.message);
+					});
+				});
+			");
+
+			wp_localize_script('stripe-js', 'ays_ajax', [
+				'nonce' => wp_create_nonce('ays_stripe_payment')
+			]);
+		}
 	}
 }

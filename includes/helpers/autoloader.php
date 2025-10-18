@@ -59,7 +59,8 @@ class Ays_Autoloader {
         'AYS_Invoice_PDF'           => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-pdf.php',
         'AYS_Payments_Tab'          => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-payments-tab.php',
         'AYS_Stripe_Settings'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-stripe-settings.php',
-        'AYS_Stripe_Handler'        => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-stripe-handler.php'
+        'AYS_Stripe_Handler'        => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-stripe-handler.php',
+        'AYS_AJAX_Tabs'             => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-ajax-tabs.php'
     ];
 
     public static function autoload($class_name) {

@@ -86,9 +86,16 @@ function ays_notifications_bootstrap() {
         AYS_Notification_Router::init();
     }
 
-	// === Invoicing Admin UI ===
-	if (is_admin() && class_exists('AYS_Invoice_Admin_UI')) {
-		new AYS_Invoice_Admin_UI();
+	// === Invoicing Admin UI & AJAX Tabs ===
+	if (is_admin()) {
+		if (class_exists('AYS_Invoice_Admin_UI')) {
+			new AYS_Invoice_Admin_UI();
+		}
+		if (class_exists('AYS_AJAX_Tabs')) {
+			AYS_AJAX_Tabs::init();
+		}
+		// Ensure AJAX handler is registered regardless of UI instantiation timing
+		add_action('wp_ajax_ays_load_tab', ['AYS_Invoice_Admin_UI', 'ajax_load_tab']);
 	}
 }
 add_action('plugins_loaded', 'ays_notifications_bootstrap', 5);
@@ -112,10 +119,30 @@ function ays_notifications_activate() {
 	}
 
 	// === Invoicing Module DB Installation ===
-	require_once AYS_PLUGIN_PATH . 'includes/invoices/ays-install-invoices.php';
-	ays_invoices_install();
+	// This is now handled by ays_check_and_install_db() on admin_init
 }
 register_activation_hook(__FILE__, 'ays_notifications_activate');
+
+/**
+ * Checks if the database tables are installed and installs them if not.
+ * This is a more reliable way to ensure DB tables are created, especially during development.
+ */
+function ays_check_and_install_db() {
+    if (get_option('ays_db_version') != '0.1.3') {
+        require_once AYS_PLUGIN_PATH . 'includes/invoices/ays-install-invoices.php';
+        ays_invoices_install();
+        update_option('ays_db_version', '0.1.3');
+    }
+
+    // Add a trigger to run the seeder script
+    if (isset($_GET['ays_action']) && $_GET['ays_action'] === 'seed_data' && current_user_can('manage_options')) {
+        require_once AYS_PLUGIN_PATH . 'seed-sample-data.php';
+        // Redirect to avoid re-seeding on refresh
+        wp_redirect(admin_url('admin.php?page=ays-invoicing&ays_notice=seeded'));
+        exit;
+    }
+}
+add_action('admin_init', 'ays_check_and_install_db');
 
 function ays_notifications_deactivate() {
 	wp_clear_scheduled_hook('ays_notifications_health_ping');

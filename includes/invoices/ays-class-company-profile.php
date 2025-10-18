@@ -321,9 +321,9 @@ class AYS_Company_Profile {
 				}
 
 				mediaUploader = wp.media.frames.file_frame = wp.media({
-					title: '<?php esc_js_e( 'Select Company Logo', 'atyourservice' ); ?>',
+					title: <?php echo wp_json_encode( __( 'Select Company Logo', 'atyourservice' ) ); ?>,
 					button: {
-						text: '<?php esc_js_e( 'Use This Image', 'atyourservice' ); ?>'
+						text: <?php echo wp_json_encode( __( 'Use This Image', 'atyourservice' ) ); ?>
 					},
 					multiple: false,
 					library: {
