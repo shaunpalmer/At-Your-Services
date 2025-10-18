@@ -398,6 +398,42 @@ input:focus {
 
 ### Phase 4: REST API & JavaScript
 - [ ] POST /wp-json/ays/v1/items/search
+
+---
+
+## Today’s notes — 2025-10-19
+
+Brief update capturing the latest UI polish, tab stability, settings flags, and version-control cleanup.
+
+- UI/UX
+    - Added gentle spacing and a subtle box-shadow to all `<details>` sections for readability.
+    - Ensured consistent inner padding on form tables and panels; fixed a malformed `<details>` tag in the Invoices quick-create form.
+    - Kept meaningful section titles (no generic “Details”).
+
+- Tabs and transport
+    - Tabs default to admin-ajax transport for reliability in wp-admin; optional REST path is feature-flagged.
+    - Localized into JS: `ajaxUrl`, `nonce`, `useRest`, `debug`, `restBase`.
+    - Nonce and capability checks verified; improved error panel and console diagnostics.
+    - Reports tab renderer is enabled again and wrapped in try/catch for safer server-side rendering.
+
+- Settings → Developer Options
+    - Added two toggles in Settings → “Developer Options”: `use_rest` (switch to REST) and `debug` (verbose client logs).
+    - Persisted via `sanitize_settings()` and surfaced to JS via localization.
+
+- Dev tooling
+    - Chrome DevTools automation available via the local MCP server (development aid only; not part of the shipped plugin).
+
+- Version control and push protection
+    - Introduced/updated `.gitignore` to exclude `vendor/`, `node_modules/`, and `mcp-server/node_modules/`.
+    - Removed heavy/vendor content from tracking and created a clean branch without those files in history: `free-version-clean`.
+    - Successfully pushed `free-version-clean` to GitHub; open a PR to merge into `free-version`:
+        - https://github.com/shaunpalmer/At-Your-Services/pull/new/free-version-clean
+    - Earlier push-protection block was due to a test Stripe key mentioned in `vendor/stripe/README.md`; excluding `vendor/` avoids this in the repo.
+
+- Optional quick check (next session)
+    - Toggle REST transport in Settings and verify tab loads at `/wp-json/ays/v1/invoicing/tab/{tab}`.
+    - Then merge the PR and continue with CRUD services and Stripe follow-ups.
+
 - [ ] JavaScript item search modal
 - [ ] Live invoice preview (like lead dashboard)
 - [ ] Inline form editing
