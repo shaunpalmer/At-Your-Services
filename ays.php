@@ -79,6 +79,11 @@ function ays_notifications_bootstrap() {
     if (class_exists('AYS_Notification_Router')) {
         AYS_Notification_Router::init();
     }
+
+	// === Invoicing Admin UI ===
+	if (is_admin() && class_exists('AYS_Invoice_Admin_UI')) {
+		new AYS_Invoice_Admin_UI();
+	}
 }
 add_action('plugins_loaded', 'ays_notifications_bootstrap', 5);
 
