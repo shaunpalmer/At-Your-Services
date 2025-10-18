@@ -41,6 +41,11 @@ if ( ! defined( 'AYS_PLUGIN_PATH' ) ) {
     define( 'AYS_PLUGIN_PATH', wp_normalize_path( plugin_dir_path( __FILE__ ) ) );
 }
 
+// Define plugin basename constant
+if ( ! defined( 'AYS_PLUGIN_BASENAME' ) ) {
+	define( 'AYS_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+}
+
 // Use custom autoloader (classes not yet namespaced for PSR-4)
 require_once AYS_PLUGIN_PATH . 'includes/helpers/autoloader.php';
 Ays_Autoloader::register();
@@ -54,6 +59,7 @@ require_once AYS_PLUGIN_PATH . 'includes/helpers/AYS_Email_Validator.php';
 require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
 require_once AYS_PLUGIN_PATH . 'admin/settings.php';
 require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
+require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-menu.php';
 
 // === Notification System Bootstrap ===
 require_once AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notification_Settings.php';
