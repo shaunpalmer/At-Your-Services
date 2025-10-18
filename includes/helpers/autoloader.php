@@ -42,6 +42,8 @@ class Ays_Autoloader {
         
         // Invoicing Module
         'AYS_Invoicing_Installer'   => AYS_PLUGIN_PATH . 'includes/invoices/ays-install-invoices.php',
+        'AYS_Service_Type_Repository' => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-service-type-repository.php',
+        'AYS_Service_Type_Service'  => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-service-type-service.php',
         'AYS_Invoice_Repository'    => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-repository.php',
         'AYS_Invoice_Service'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-invoice-service.php',
         'AYS_Client_Service'        => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-client-service.php',

@@ -9,6 +9,7 @@
  * Tables created:
  * - wp_ays_company_profile    (business info, 1 row)
  * - wp_ays_clients            (customers)
+ * - wp_ays_service_types      (service categorization/filtering)
  * - wp_ays_items              (services/products catalog)
  * - wp_ays_invoices           (main invoices)
  * - wp_ays_invoice_items      (line items, many-to-many bridge)
@@ -37,7 +38,7 @@ function ays_invoices_install() {
 
     // Version check: only run if version mismatch
     $installed_version = get_option('ays_invoices_db_version', '0.0.0');
-    if (version_compare($installed_version, '1.0', '>=')) {
+    if (version_compare($installed_version, '1.1', '>=')) {
         return; // Already installed
     }
 
@@ -104,12 +105,36 @@ function ays_invoices_install() {
     dbDelta($clients_table);
 
     // =========================================================================
-    // 3. wp_ays_items - Services/Products Catalog
+    // 3. wp_ays_service_types - Service Type Categories
+    // =========================================================================
+    $service_types_table = "
+    CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_service_types (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        hash CHAR(32) UNIQUE NOT NULL,
+        name VARCHAR(190) NOT NULL,
+        slug VARCHAR(100) UNIQUE NOT NULL,
+        description TEXT,
+        icon_class VARCHAR(100),
+        color_hex VARCHAR(7),
+        sort_order INT DEFAULT 0,
+        status ENUM('active','archived') DEFAULT 'active',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_slug (slug),
+        KEY idx_status (status),
+        KEY idx_sort_order (sort_order)
+    ) $charset_collate;
+    ";
+    dbDelta($service_types_table);
+
+    // =========================================================================
+    // 4. wp_ays_items - Services/Products Catalog
     // =========================================================================
     $items_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_items (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         hash CHAR(32) UNIQUE NOT NULL,
+        service_type_id BIGINT UNSIGNED NULL,
         description VARCHAR(190) NOT NULL,
         details TEXT,
         unit VARCHAR(50),
@@ -118,14 +143,16 @@ function ays_invoices_install() {
         status ENUM('active','archived') DEFAULT 'active',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        KEY idx_service_type_id (service_type_id),
         KEY idx_status (status),
-        KEY idx_description (description)
+        KEY idx_description (description),
+        FOREIGN KEY fk_service_type (service_type_id) REFERENCES {$wpdb->prefix}ays_service_types(id) ON DELETE SET NULL
     ) $charset_collate;
     ";
     dbDelta($items_table);
 
     // =========================================================================
-    // 4. wp_ays_invoices - Main Invoice Records
+    // 5. wp_ays_invoices - Main Invoice Records
     // =========================================================================
     $invoices_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_invoices (
@@ -137,16 +164,22 @@ function ays_invoices_install() {
         prefix VARCHAR(10) DEFAULT 'SC-',
         issue_date DATE,
         due_date DATE,
+        from_snapshot_json LONGTEXT NULL,
+        bill_to_snapshot_json LONGTEXT NULL,
         subtotal DECIMAL(12,2) DEFAULT 0.00,
         tax_total DECIMAL(12,2) DEFAULT 0.00,
         discount DECIMAL(12,2) DEFAULT 0.00,
+        discount_type ENUM('amt','pct','none') DEFAULT 'none',
         shipping DECIMAL(12,2) DEFAULT 0.00,
         total DECIMAL(12,2) DEFAULT 0.00,
         amount_paid DECIMAL(12,2) DEFAULT 0.00,
         balance DECIMAL(12,2) DEFAULT 0.00,
+        currency VARCHAR(3) DEFAULT 'NZD',
+        payment_url_token VARCHAR(36) UNIQUE NULL,
         notes TEXT,
         terms TEXT,
         status ENUM('draft','sent','viewed','overdue','paid','void') DEFAULT 'draft',
+        primary_service_type_id BIGINT UNSIGNED NULL,
         viewed_at DATETIME NULL,
         emailed_at DATETIME NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -157,14 +190,17 @@ function ays_invoices_install() {
         KEY idx_inv_number (inv_number),
         KEY idx_status (status),
         KEY idx_issue_date (issue_date),
+        KEY idx_payment_url_token (payment_url_token),
+        KEY idx_primary_service_type_id (primary_service_type_id),
         FOREIGN KEY fk_company (company_id) REFERENCES {$wpdb->prefix}ays_company_profile(id) ON DELETE SET NULL,
-        FOREIGN KEY fk_client (client_id) REFERENCES {$wpdb->prefix}ays_clients(id) ON DELETE SET NULL
+        FOREIGN KEY fk_client (client_id) REFERENCES {$wpdb->prefix}ays_clients(id) ON DELETE SET NULL,
+        FOREIGN KEY fk_primary_service_type (primary_service_type_id) REFERENCES {$wpdb->prefix}ays_service_types(id) ON DELETE SET NULL
     ) $charset_collate;
     ";
     dbDelta($invoices_table);
 
     // =========================================================================
-    // 5. wp_ays_invoice_items - Line Items (Many-to-Many Bridge)
+    // 6. wp_ays_invoice_items - Line Items (Many-to-Many Bridge)
     // =========================================================================
     $invoice_items_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_invoice_items (
@@ -193,7 +229,7 @@ function ays_invoices_install() {
     dbDelta($invoice_items_table);
 
     // =========================================================================
-    // 6. wp_ays_payments - Payment Log/Record
+    // 7. wp_ays_payments - Payment Log/Record
     // =========================================================================
     $payments_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_payments (
@@ -204,6 +240,7 @@ function ays_invoices_install() {
         amount DECIMAL(12,2) DEFAULT 0.00,
         txn_id VARCHAR(100),
         notes TEXT,
+        created_by_user BIGINT UNSIGNED NULL,
         received_at DATETIME,
         status ENUM('pending','confirmed','failed','refunded') DEFAULT 'pending',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -211,13 +248,14 @@ function ays_invoices_install() {
         KEY idx_invoice_id (invoice_id),
         KEY idx_method (method),
         KEY idx_status (status),
+        KEY idx_created_by_user (created_by_user),
         FOREIGN KEY fk_invoice (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE
     ) $charset_collate;
     ";
     dbDelta($payments_table);
 
     // =========================================================================
-    // 7. wp_ays_email_templates - Invoice Email Templates
+    // 8. wp_ays_email_templates - Invoice Email Templates
     // =========================================================================
     $email_templates_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_email_templates (
@@ -238,7 +276,7 @@ function ays_invoices_install() {
     dbDelta($email_templates_table);
 
     // =========================================================================
-    // 8. wp_ays_email_log - Email Send Audit Trail
+    // 9. wp_ays_email_log - Email Send Audit Trail
     // =========================================================================
     $email_log_table = "
     CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_email_log (
@@ -334,7 +372,7 @@ View and manage invoice: {admin_url}',
     // =========================================================================
     // Mark installation complete
     // =========================================================================
-    update_option('ays_invoices_db_version', '1.0');
+    update_option('ays_invoices_db_version', '1.1');
 }
 
 /**
