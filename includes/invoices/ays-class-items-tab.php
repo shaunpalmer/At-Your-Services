@@ -25,8 +25,8 @@ class AYS_Items_Tab {
 			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
 		}
 
-		// Handle form submissions
-		self::handle_form_submission();
+		// Display notices
+		self::display_notices();
 
 		// Get edit ID if present
 		$edit_id = isset( $_GET['edit_item'] ) ? intval( $_GET['edit_item'] ) : 0;
@@ -147,11 +147,11 @@ class AYS_Items_Tab {
 		// Get service types for dropdown
 		$service_types = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_service_types ORDER BY name" );
 
-		$nonce_action = 'ays_save_item_' . ( $item ? $item->id : 'new' );
+		$nonce_action = $item ? 'ays_update_item_' . $item->id : 'ays_add_item';
 		$action = $item ? 'ays_update_item' : 'ays_add_item';
 
 		?>
-		<form method="post" class="ays-item-form">
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ays-item-form">
 			<?php wp_nonce_field( $nonce_action, 'ays_item_nonce' ); ?>
 			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">
 			<?php if ( $item ) : ?>
@@ -255,97 +255,168 @@ class AYS_Items_Tab {
 	}
 
 	/**
-	 * Handle form submissions (add, update, delete)
+	 * Display success/error notices
+	 *
+	 * @return void
+	 */
+	protected static function display_notices() {
+		if ( isset( $_GET['ays_notice'] ) ) {
+			$notice = sanitize_key( $_GET['ays_notice'] );
+			
+			switch ( $notice ) {
+				case 'item_added':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Item added successfully!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'item_updated':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Item updated successfully!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'item_deleted':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Item deleted successfully!', 'atyourservice' ) . '</p></div>';
+					break;
+				case 'item_error':
+					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( '✗ An error occurred. Please try again.', 'atyourservice' ) . '</p></div>';
+					break;
+			}
+		}
+	}
+
+	/**
+	 * Handle form submissions (add, update, delete) - DEPRECATED
+	 * Now handled by admin_post actions in main plugin file
 	 *
 	 * @return void
 	 */
 	protected static function handle_form_submission() {
+		// Deprecated - handled by admin_post hooks
+	}
+
+	/**
+	 * Handle add item via admin_post
+	 *
+	 * @return void
+	 */
+	public static function handle_add_item() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		if ( ! isset( $_POST['ays_item_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ays_item_nonce'] ) ), 'ays_add_item' ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
 		global $wpdb;
 
-		// Add item
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ays_add_item' ) {
-			if ( ! isset( $_POST['ays_item_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ays_item_nonce'] ) ), 'ays_save_item_new' ) ) {
-				wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
-			}
+		$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+		$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
+		$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
+		$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
+		$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
 
-			$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
-			$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
-			$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
-			$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
-			$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
-
-			if ( ! $description || ! $rate ) {
-				wp_die( esc_html__( 'Description and rate are required', 'atyourservice' ) );
-			}
-
-			$wpdb->insert(
-				"{$wpdb->prefix}ays_items",
-				[
-					'description' => $description,
-					'details' => $details,
-					'service_type_id' => $service_type_id,
-					'rate' => $rate,
-					'taxable' => $taxable,
-					'created_at' => current_time( 'mysql' ),
-					'updated_at' => current_time( 'mysql' ),
-				],
-				[ '%s', '%s', '%d', '%f', '%d', '%s', '%s' ]
-			);
-
-			wp_redirect( add_query_arg( 'ays_notice', 'item_added' ) );
+		if ( ! $description || ! $rate ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
 			exit;
 		}
 
-		// Update item
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ays_update_item' ) {
-			$item_id = isset( $_POST['item_id'] ) ? intval( $_POST['item_id'] ) : 0;
-			if ( ! isset( $_POST['ays_item_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ays_item_nonce'] ) ), 'ays_save_item_' . $item_id ) ) {
-				wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
-			}
+		$result = $wpdb->insert(
+			"{$wpdb->prefix}ays_items",
+			[
+				'description' => $description,
+				'details' => $details,
+				'service_type_id' => $service_type_id,
+				'rate' => $rate,
+				'taxable' => $taxable,
+				'created_at' => current_time( 'mysql' ),
+				'updated_at' => current_time( 'mysql' ),
+			],
+			[ '%s', '%s', '%d', '%f', '%d', '%s', '%s' ]
+		);
 
-			$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
-			$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
-			$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
-			$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
-			$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
+		if ( $result ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_added', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+		} else {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+		}
+		exit;
+	}
 
-			if ( ! $description || ! $rate ) {
-				wp_die( esc_html__( 'Description and rate are required', 'atyourservice' ) );
-			}
+	/**
+	 * Handle update item via admin_post
+	 *
+	 * @return void
+	 */
+	public static function handle_update_item() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
 
-			$wpdb->update(
-				"{$wpdb->prefix}ays_items",
-				[
-					'description' => $description,
-					'details' => $details,
-					'service_type_id' => $service_type_id,
-					'rate' => $rate,
-					'taxable' => $taxable,
-					'updated_at' => current_time( 'mysql' ),
-				],
-				[ 'id' => $item_id ],
-				[ '%s', '%s', '%d', '%f', '%d', '%s' ],
-				[ '%d' ]
-			);
+		$item_id = isset( $_POST['item_id'] ) ? intval( $_POST['item_id'] ) : 0;
 
-			wp_redirect( add_query_arg( 'ays_notice', 'item_updated' ) );
+		if ( ! isset( $_POST['ays_item_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ays_item_nonce'] ) ), 'ays_update_item_' . $item_id ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
+		global $wpdb;
+
+		$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
+		$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
+		$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
+		$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
+		$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
+
+		if ( ! $description || ! $rate ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
 			exit;
 		}
 
-		// Delete item
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'ays_delete_item' ) {
-			$item_id = isset( $_GET['item_id'] ) ? intval( $_GET['item_id'] ) : 0;
-			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		$result = $wpdb->update(
+			"{$wpdb->prefix}ays_items",
+			[
+				'description' => $description,
+				'details' => $details,
+				'service_type_id' => $service_type_id,
+				'rate' => $rate,
+				'taxable' => $taxable,
+				'updated_at' => current_time( 'mysql' ),
+			],
+			[ 'id' => $item_id ],
+			[ '%s', '%s', '%d', '%f', '%d', '%s' ],
+			[ '%d' ]
+		);
 
-			if ( ! wp_verify_nonce( $nonce, 'ays_delete_item_' . $item_id ) ) {
-				wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
-			}
-
-			$wpdb->delete( "{$wpdb->prefix}ays_items", [ 'id' => $item_id ], [ '%d' ] );
-
-			wp_redirect( add_query_arg( 'ays_notice', 'item_deleted' ) );
-			exit;
+		if ( $result !== false ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_updated', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+		} else {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
 		}
+		exit;
+	}
+
+	/**
+	 * Handle delete item via admin_post
+	 *
+	 * @return void
+	 */
+	public static function handle_delete_item() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		$item_id = isset( $_GET['item_id'] ) ? intval( $_GET['item_id'] ) : 0;
+		$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'ays_delete_item_' . $item_id ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
+		global $wpdb;
+		$result = $wpdb->delete( "{$wpdb->prefix}ays_items", [ 'id' => $item_id ], [ '%d' ] );
+
+		if ( $result ) {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_deleted', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+		} else {
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+		}
+		exit;
 	}
 
 	/**

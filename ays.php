@@ -213,3 +213,28 @@ add_action('admin_post_ays_send_test_notice', function() {
 	}
 	wp_die('Test send failed');
 });
+
+// === Items Tab admin-post handlers ===
+add_action('admin_post_ays_add_item', function() {
+	if (class_exists('AYS_Items_Tab')) {
+		AYS_Items_Tab::handle_add_item();
+	} else {
+		wp_die('Items class not found');
+	}
+});
+
+add_action('admin_post_ays_update_item', function() {
+	if (class_exists('AYS_Items_Tab')) {
+		AYS_Items_Tab::handle_update_item();
+	} else {
+		wp_die('Items class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_item', function() {
+	if (class_exists('AYS_Items_Tab')) {
+		AYS_Items_Tab::handle_delete_item();
+	} else {
+		wp_die('Items class not found');
+	}
+});
