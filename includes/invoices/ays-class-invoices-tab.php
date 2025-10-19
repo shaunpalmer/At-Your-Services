@@ -352,6 +352,17 @@ class AYS_Invoices_Tab {
 							<p><?php echo esc_html( $invoice->notes ); ?></p>
 						</div>
 					<?php endif; ?>
+
+					<!-- Admin Invoice Preview -->
+					<div class="invoice-section">
+						<h3 style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+							<span><?php esc_html_e( 'Invoice Preview', 'atyourservice' ); ?></span>
+							<button type="button" class="button" id="ays-print-invoice-preview">🖨️ <?php esc_html_e( 'Print Preview', 'atyourservice' ); ?></button>
+						</h3>
+						<div id="ays-invoice-preview" class="ays-invoice-preview">
+							<?php self::render_invoice_preview( $invoice, $invoice_items, $client ); ?>
+						</div>
+					</div>
 				</div>
 
 				<div class="editor-sidebar">
@@ -440,6 +451,26 @@ class AYS_Invoices_Tab {
 				}
 			}
 		</style>
+
+		<script>
+		(function(){
+			var btn = document.getElementById('ays-print-invoice-preview');
+			if(!btn) return;
+			btn.addEventListener('click', function(){
+				var container = document.getElementById('ays-invoice-preview');
+				if(!container) return;
+				var printWin = window.open('', '_blank');
+				var html = '\n<!doctype html><html><head><meta charset="utf-8"><title>Invoice Preview</title>' +
+					'<style>body{font-family:Arial,sans-serif;margin:20px;} .ays-invoice-preview{border:0;padding:0;} .ays-invoice-preview-header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding-bottom:20px;border-bottom:2px solid #e5e7eb;} .ays-invoice-preview-items{width:100%;border-collapse:collapse;margin-bottom:20px;} .ays-invoice-preview-items thead{background:#f3f4f6;border-bottom:2px solid #d1d5db;} .ays-invoice-preview-items th{padding:10px;text-align:left;font-weight:600;font-size:13px;color:#4c51bf;text-transform:uppercase;letter-spacing:.5px;} .ays-invoice-preview-items td{padding:10px;border-bottom:1px solid #e5e7eb;} .ays-invoice-preview-total{display:grid;grid-template-columns:auto 1fr;gap:20px;justify-content:flex-end;margin-top:20px;padding-top:20px;border-top:2px solid #e5e7eb;} .ays-invoice-preview-total-row{display:grid;grid-template-columns:120px 1fr;gap:20px;align-items:center;margin-bottom:8px;} .ays-invoice-preview-total-row.final{font-weight:600;font-size:16px;color:#4c51bf;padding:8px 0;border-top:1px solid #d1d5db;} </style></head><body>' +
+					container.innerHTML + '</body></html>';
+				printWin.document.open();
+				printWin.document.write(html);
+				printWin.document.close();
+				printWin.focus();
+				printWin.print();
+			});
+		})();
+		</script>
 		<?php
 	}
 
@@ -460,6 +491,114 @@ class AYS_Invoices_Tab {
 		<span style="color: <?php echo esc_attr( $status_info['color'] ); ?>; font-weight: 500;">
 			<?php echo esc_html( $status_info['icon'] . ' ' . $status_info['label'] ); ?>
 		</span>
+		<?php
+	}
+
+	/**
+	 * Render admin invoice preview box content
+	 *
+	 * @param object $invoice Current invoice
+	 * @param array  $items   Invoice items from DB
+	 * @param object $client  Client row
+	 * @return void
+	 */
+	protected static function render_invoice_preview( $invoice, $items, $client ) {
+		$company = class_exists('AYS_Company_Profile') ? AYS_Company_Profile::get_profile() : [
+			'company_name' => get_bloginfo('name'),
+			'company_address' => '',
+			'company_email' => get_option('admin_email'),
+			'company_phone' => '',
+		];
+		$company_name    = isset($company['company_name']) ? $company['company_name'] : get_bloginfo('name');
+		$company_address = isset($company['company_address']) ? nl2br( esc_html( $company['company_address'] ) ) : '';
+		$company_email   = isset($company['company_email']) ? $company['company_email'] : '';
+		$company_phone   = isset($company['company_phone']) ? $company['company_phone'] : '';
+
+		$client_name  = isset($client->name) ? $client->name : '—';
+		$client_email = isset($client->email) ? $client->email : '';
+		$client_phone = isset($client->phone) ? $client->phone : '';
+
+		?>
+		<div class="ays-invoice-preview-header">
+			<div class="ays-invoice-preview-from">
+				<h3><?php esc_html_e('From:', 'atyourservice'); ?></h3>
+				<p><strong><?php echo esc_html( $company_name ); ?></strong><br/>
+					<?php echo $company_address ? $company_address . '<br/>' : ''; ?>
+					<?php echo $company_email ? esc_html( $company_email ) . '<br/>' : ''; ?>
+					<?php echo $company_phone ? esc_html( $company_phone ) : ''; ?></p>
+			</div>
+			<div style="text-align:right;">
+				<h1 style="margin:0 0 10px;color:#4c51bf;">INVOICE</h1>
+				<p style="margin:0;">
+					<?php esc_html_e('Invoice #', 'atyourservice'); ?> <strong><?php echo esc_html( $invoice->invoice_number ); ?></strong><br/>
+					<small style="color:#6b7280;"><?php esc_html_e('Issued:', 'atyourservice'); ?> <?php echo esc_html( date_i18n( 'Y-m-d', strtotime( $invoice->issue_date ) ) ); ?></small>
+				</p>
+			</div>
+		</div>
+
+		<div class="ays-invoice-preview-header">
+			<div class="ays-invoice-preview-to">
+				<h3><?php esc_html_e('Bill To:', 'atyourservice'); ?></h3>
+				<p><strong><?php echo esc_html( $client_name ); ?></strong><br/>
+					<?php echo $client_email ? esc_html( $client_email ) . '<br/>' : ''; ?>
+					<?php echo $client_phone ? esc_html( $client_phone ) : ''; ?></p>
+			</div>
+			<div style="text-align:right;">
+				<table style="margin:0 auto;font-size:13px;">
+					<tr>
+						<td style="padding:4px 20px 4px 0;text-align:right;color:#6b7280;">
+							<?php esc_html_e('Due Date:', 'atyourservice'); ?> <strong><?php echo esc_html( date_i18n( 'Y-m-d', strtotime( $invoice->due_date ) ) ); ?></strong>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<table class="ays-invoice-preview-items">
+			<thead>
+				<tr>
+					<th><?php esc_html_e('Description', 'atyourservice'); ?></th>
+					<th style="text-align:center;">Qty</th>
+					<th style="text-align:right;">Rate</th>
+					<th style="text-align:right;">Amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php if ( empty( $items ) ) : ?>
+					<tr><td colspan="4" style="text-align:center;color:#6b7280;">— <?php esc_html_e('No items yet', 'atyourservice'); ?> —</td></tr>
+				<?php else : foreach ( $items as $it ) : ?>
+					<tr>
+						<td><?php echo esc_html( $it->description ); ?></td>
+						<td style="text-align:center;">&times;<?php echo esc_html( $it->quantity ); ?></td>
+						<td style="text-align:right;">$<?php echo esc_html( number_format( (float)$it->rate, 2 ) ); ?></td>
+						<td style="text-align:right;">$<?php echo esc_html( number_format( (float)$it->quantity * (float)$it->rate, 2 ) ); ?></td>
+					</tr>
+				<?php endforeach; endif; ?>
+			</tbody>
+		</table>
+
+		<div class="ays-invoice-preview-total">
+			<div style="grid-column:1 / -1;display:grid;grid-template-columns:auto 1fr;gap:20px;justify-content:flex-end;">
+				<div class="ays-invoice-preview-total-row">
+					<strong style="text-align:right;">Subtotal:</strong>
+					<span style="text-align:right;">$<?php echo esc_html( number_format( (float)$invoice->subtotal, 2 ) ); ?></span>
+				</div>
+				<div class="ays-invoice-preview-total-row">
+					<strong style="text-align:right;">Tax:</strong>
+					<span style="text-align:right;">$<?php echo esc_html( number_format( (float)$invoice->tax_amount, 2 ) ); ?></span>
+				</div>
+				<div class="ays-invoice-preview-total-row final">
+					<strong style="text-align:right;">TOTAL:</strong>
+					<span style="text-align:right;">$<?php echo esc_html( number_format( (float)$invoice->total, 2 ) ); ?></span>
+				</div>
+			</div>
+		</div>
+
+		<?php if ( class_exists('AYS_Company_Profile') ) : ?>
+			<div style="margin-top:12px;">
+				<?php echo AYS_Company_Profile::get_bank_transfer_html( $invoice->invoice_number ); // already escaped ?>
+			</div>
+		<?php endif; ?>
 		<?php
 	}
 
