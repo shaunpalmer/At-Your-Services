@@ -16,12 +16,12 @@ global $wpdb;
 
 echo "<h2>Seeding Sample Data...</h2>";
 
-// Service Types
+// Service Types (ensure status & sort_order columns when present)
 $service_types = [
-    ['name' => 'Residential Cleaning', 'description' => 'Standard home cleaning services.'],
-    ['name' => 'Commercial Cleaning', 'description' => 'Cleaning for offices and commercial properties.'],
-    ['name' => 'Specialty Cleaning', 'description' => 'Windows, carpets, and other specialized tasks.'],
-    ['name' => 'Move-out Cleaning', 'description' => 'End of tenancy cleaning.'],
+    ['name' => 'Residential Cleaning', 'description' => 'Standard home cleaning services.', 'status' => 'active', 'sort_order' => 1],
+    ['name' => 'Commercial Cleaning', 'description' => 'Cleaning for offices and commercial properties.', 'status' => 'active', 'sort_order' => 2],
+    ['name' => 'Specialty Cleaning', 'description' => 'Windows, carpets, and other specialized tasks.', 'status' => 'active', 'sort_order' => 3],
+    ['name' => 'Move-out Cleaning', 'description' => 'End of tenancy cleaning.', 'status' => 'active', 'sort_order' => 4],
 ];
 
 foreach ($service_types as $st) {
@@ -143,6 +143,8 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
             'total' => $total,
             'status' => $status,
             'notes' => "Sample invoice for $client_name.",
+            'created_at' => current_time('mysql'),
+            'updated_at' => current_time('mysql'),
         ]);
         $invoice_id = $wpdb->insert_id;
 
@@ -155,6 +157,31 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
                 'price' => $item_data['price'],
                 'tax' => $item_data['tax'],
             ]);
+        }
+
+        // Link invoice to service types via bridge using item->service_type_id
+        $item_service_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT it.service_type_id FROM {$wpdb->prefix}ays_invoice_items ii
+             JOIN {$wpdb->prefix}ays_items it ON it.id = ii.item_id
+             WHERE ii.invoice_id = %d AND it.service_type_id IS NOT NULL",
+            $invoice_id
+        ));
+        foreach ((array)$item_service_ids as $sid) {
+            $sid = intval($sid);
+            if ($sid > 0) {
+                $exists_link = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_services WHERE invoice_id = %d AND service_type_id = %d",
+                    $invoice_id, $sid
+                ));
+                if (!$exists_link) {
+                    $wpdb->insert("{$wpdb->prefix}ays_invoice_services", [
+                        'hash' => md5(uniqid(mt_rand(), true)),
+                        'invoice_id' => $invoice_id,
+                        'service_type_id' => $sid,
+                        'sort_order' => 0,
+                    ]);
+                }
+            }
         }
         echo "<p>✓ Added invoice $invoice_number for $client_name.</p>";
     }

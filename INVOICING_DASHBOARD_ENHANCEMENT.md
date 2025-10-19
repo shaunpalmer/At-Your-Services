@@ -491,3 +491,24 @@ The lead dashboard is a masterpiece of WordPress admin design. By studying it de
 6. **Is future-proof** - Architecture supports advanced features
 
 This is exactly the kind of sophisticated admin UI that makes users trust a plugin. 🚀
+
+---
+
+## 🧩 New: Service Type Chips & Filter
+
+- Added colored chips that display attached Service Types in both the Invoices list and the editor header. This gives quick visual context for what each invoice covers.
+- Added a simple “Filter by Service” dropdown on the Invoices list (query param `svc`). Selecting a service narrows the list to invoices linked to that service type.
+- Seeder now ensures service types have status/sort_order and automatically links seeded invoices to service types via the `wp_ays_invoice_services` bridge by inspecting their line items.
+- The DB checker gained a `--report` flag to print quick counts (clients, invoices, items, services, links, payments) plus orphan checks for confidence.
+
+Files touched:
+- `includes/invoices/ays-class-invoices-tab.php` (chips, filter, nonce hardening, helpers)
+- `seed-sample-data.php` (link invoices→services)
+- `check-tables.php` (`--report` support)
+
+Security:
+- The Service Types save handler now uses `check_admin_referer()` bound to the specific invoice ID.
+
+Next small wins:
+- Add color mapping per service type (custom color in `ays_service_types`) and use it to style chips.
+- Add list filters by status + date range to combine with service filter.

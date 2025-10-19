@@ -52,6 +52,33 @@ foreach ($tables as $table) {
     echo "  - $table_name: $count records\n";
 }
 
+// Optional quick report
+if (isset($argv) && in_array('--report', $argv, true)) {
+    echo "\n=== Quick Report ===\n";
+    $counts = [
+        'clients' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_clients WHERE (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00')"),
+        'invoices' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoices"),
+        'items' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_items"),
+        'invoice_items' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_items"),
+        'service_types' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_service_types"),
+        'invoice_services' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_services"),
+        'payments' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments"),
+    ];
+    printf(
+        "Invoices: %d | Clients: %d | Items: %d | Invoice-Items: %d | Service Types: %d | Invoice-Services: %d | Payments: %d\n",
+        $counts['invoices'], $counts['clients'], $counts['items'], $counts['invoice_items'], $counts['service_types'], $counts['invoice_services'], $counts['payments']
+    );
+
+    // Orphan checks
+    echo "Orphan Checks:\n";
+    $orph_invoice_items = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_items ii LEFT JOIN {$wpdb->prefix}ays_invoices i ON ii.invoice_id = i.id WHERE i.id IS NULL");
+    $orph_invoice_services = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_services ivs LEFT JOIN {$wpdb->prefix}ays_invoices i ON ivs.invoice_id = i.id WHERE i.id IS NULL");
+    $orph_payments = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments p LEFT JOIN {$wpdb->prefix}ays_invoices i ON p.invoice_id = i.id WHERE i.id IS NULL");
+    printf("  - invoice_items without invoice: %d\n", $orph_invoice_items);
+    printf("  - invoice_services without invoice: %d\n", $orph_invoice_services);
+    printf("  - payments without invoice: %d\n", $orph_payments);
+}
+
 echo "\n=== Items ===\n";
 $items = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ays_items");
 echo "Total items: " . count($items) . "\n";

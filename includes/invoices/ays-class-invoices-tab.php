@@ -67,7 +67,24 @@ class AYS_Invoices_Tab {
 	 */
 	protected static function render_invoices_list() {
 		global $wpdb;
-		$invoices = $wpdb->get_results( "SELECT i.*, c.name as client_name FROM {$wpdb->prefix}ays_invoices i LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id ORDER BY i.issue_date DESC LIMIT 50" );
+		// Optional filter by service type
+		$filter_service = isset( $_GET['svc'] ) ? max( 0, intval( $_GET['svc'] ) ) : 0;
+
+		// Fetch service types for filter dropdown
+		$service_types = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_service_types WHERE status = 'active' ORDER BY sort_order, name" );
+
+		if ( $filter_service ) {
+			$invoices = $wpdb->get_results( $wpdb->prepare(
+				"SELECT i.*, c.name as client_name
+				 FROM {$wpdb->prefix}ays_invoices i
+				 LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id
+				 INNER JOIN {$wpdb->prefix}ays_invoice_services isv ON isv.invoice_id = i.id AND isv.service_type_id = %d
+				 ORDER BY i.issue_date DESC LIMIT 50",
+				$filter_service
+			) );
+		} else {
+			$invoices = $wpdb->get_results( "SELECT i.*, c.name as client_name FROM {$wpdb->prefix}ays_invoices i LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id ORDER BY i.issue_date DESC LIMIT 50" );
+		}
 
 		if ( empty( $invoices ) ) {
 			echo '<p>' . esc_html__( 'No invoices yet. Create your first invoice below!', 'atyourservice' ) . '</p>';
@@ -82,6 +99,25 @@ class AYS_Invoices_Tab {
 			</summary>
 			<div>
 				<div class="left-column">
+					<style>
+						.ays-chip { display:inline-block; padding:2px 8px; font-size:11px; border-radius:999px; background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; margin:2px 6px 2px 0; }
+						.ays-chip .dot { display:inline-block; width:6px; height:6px; background:#6366f1; border-radius:999px; margin-right:6px; vertical-align:middle; }
+					</style>
+					<form method="get" action="" style="margin: 0 0 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+						<input type="hidden" name="page" value="ays_invoicing_dashboard" />
+						<input type="hidden" name="tab" value="invoices" />
+						<label for="ays-filter-svc" style="font-weight:600;">Filter by Service:</label>
+						<select id="ays-filter-svc" name="svc">
+							<option value="0">— All services —</option>
+							<?php foreach ( (array) $service_types as $svc ) : ?>
+								<option value="<?php echo esc_attr( $svc->id ); ?>" <?php selected( (int) $filter_service === (int) $svc->id ); ?>><?php echo esc_html( $svc->name ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<button class="button">Apply</button>
+						<?php if ( $filter_service ) : ?>
+							<a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ); ?>">Reset</a>
+						<?php endif; ?>
+					</form>
 					<table class="widefat striped">
 						<thead>
 							<tr>
@@ -91,6 +127,7 @@ class AYS_Invoices_Tab {
 								<th><?php esc_html_e( 'Due Date', 'atyourservice' ); ?></th>
 								<th style="text-align: right;"><?php esc_html_e( 'Total', 'atyourservice' ); ?></th>
 								<th style="text-align: center;"><?php esc_html_e( 'Status', 'atyourservice' ); ?></th>
+								<th style="text-align: left; width: 25%;"><?php esc_html_e( 'Services', 'atyourservice' ); ?></th>
 								<th style="text-align: center;"><?php esc_html_e( 'Actions', 'atyourservice' ); ?></th>
 							</tr>
 						</thead>
@@ -104,6 +141,9 @@ class AYS_Invoices_Tab {
 									<td style="text-align: right;"><code>$<?php echo esc_html( number_format( $invoice->total, 2 ) ); ?></code></td>
 									<td style="text-align: center;">
 										<?php self::render_status_badge( $invoice->status ); ?>
+									</td>
+									<td>
+										<?php self::render_service_type_chips( $invoice->id ); ?>
 									</td>
 									<td style="text-align: center;">
 										<a href="<?php echo esc_url( add_query_arg( 'edit_invoice', $invoice->id ) ); ?>" class="button button-small">
@@ -293,6 +333,10 @@ class AYS_Invoices_Tab {
 								<th><label><?php esc_html_e( 'Status', 'atyourservice' ); ?></label></th>
 								<td><?php self::render_status_badge( $invoice->status ); ?></td>
 							</tr>
+							<tr>
+								<th><label><?php esc_html_e( 'Services', 'atyourservice' ); ?></label></th>
+								<td><?php self::render_service_type_chips( $invoice->id ); ?></td>
+							</tr>
 						</table>
 					</div>
 
@@ -472,6 +516,8 @@ class AYS_Invoices_Tab {
 				margin-top: 0;
 				margin-bottom: 12px;
 			}
+			.ays-chip { display:inline-block; padding:2px 8px; font-size:11px; border-radius:999px; background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; margin:2px 6px 2px 0; }
+			.ays-chip .dot { display:inline-block; width:6px; height:6px; background:#6366f1; border-radius:999px; margin-right:6px; vertical-align:middle; }
 			@media (max-width: 768px) {
 				.editor-content {
 					grid-template-columns: 1fr;
@@ -766,10 +812,11 @@ class AYS_Invoices_Tab {
 		}
 
 		$invoice_id = isset( $_POST['invoice_id'] ) ? intval( $_POST['invoice_id'] ) : 0;
-		$nonce = isset( $_POST['ays_invoice_services_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['ays_invoice_services_nonce'] ) ) : '';
-		if ( ! $invoice_id || ! wp_verify_nonce( $nonce, 'ays_update_invoice_services_' . $invoice_id ) ) {
-			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		if ( ! $invoice_id ) {
+			wp_die( esc_html__( 'Invalid invoice.', 'atyourservice' ) );
 		}
+		// Nonce check (dies with message on failure)
+		check_admin_referer( 'ays_update_invoice_services_' . $invoice_id, 'ays_invoice_services_nonce' );
 
 		$service_ids = isset( $_POST['service_type_ids'] ) && is_array( $_POST['service_type_ids'] ) ? array_map( 'intval', (array) $_POST['service_type_ids'] ) : [];
 
@@ -800,5 +847,38 @@ class AYS_Invoices_Tab {
 		global $wpdb;
 		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT service_type_id FROM {$wpdb->prefix}ays_invoice_services WHERE invoice_id = %d", $invoice_id ) );
 		return array_map( 'intval', (array) $rows );
+	}
+
+	/**
+	 * Get service type labels or ids attached to an invoice
+	 * @param int  $invoice_id
+	 * @param bool $as_names If true return names, else IDs
+	 * @return array
+	 */
+	protected static function get_invoice_service_types( $invoice_id, $as_names = true ) {
+		global $wpdb;
+		if ( $as_names ) {
+			return $wpdb->get_col( $wpdb->prepare(
+				"SELECT st.name FROM {$wpdb->prefix}ays_invoice_services ivs
+				 JOIN {$wpdb->prefix}ays_service_types st ON st.id = ivs.service_type_id
+				 WHERE ivs.invoice_id = %d ORDER BY st.sort_order, st.name",
+				$invoice_id
+			) );
+		}
+		return self::get_invoice_service_type_ids( $invoice_id );
+	}
+
+	/**
+	 * Render chips for invoice service types
+	 */
+	protected static function render_service_type_chips( $invoice_id ) {
+		$names = self::get_invoice_service_types( $invoice_id, true );
+		if ( empty( $names ) ) {
+			echo '<span style="color:#6b7280">—</span>';
+			return;
+		}
+		foreach ( $names as $name ) {
+			echo '<span class="ays-chip"><span class="dot"></span>' . esc_html( $name ) . '</span>';
+		}
 	}
 }

@@ -991,3 +991,547 @@ register_activation_hook(__FILE__, 'ays_invoices_install');
 ```
 
 Want me to generate that **ready-to-drop PHP installer file** (full with `$wpdb`, `$charset_collate`, and `dbDelta()` calls) next?
+
+
+Exactly, Shaun — that’s the smart move.
+You’re dead right: sending customers off-site tanks trust and completion rates.
+If we anchor payments, invoices, and dashboards **inside your own domain** and reuse WordPress’s authentication, you get security *and* seamless UX with zero third-party redirects.
+
+Here’s how I’d architect it, step by step — you’ll like how clean this stays.
+
+---
+
+## 🧩 Core Idea
+
+Use **WordPress’s native login and session system**, but add a **custom user role: `customer`** (or `client`).
+
+Then we:
+
+1. Redirect that role to a **front-end dashboard page** (not `/wp-admin/`).
+2. Display invoices, payments, and profile info through shortcodes or block templates.
+3. Process Stripe payments **embedded** in that dashboard (no redirect to Stripe’s site).
+
+That gives:
+
+* ✅ Single login (WordPress handles auth, cookies, password resets)
+* ✅ Built-in brute-force protection, salts, nonce, session handling
+* ✅ Seamless design: all pages match your site theme
+* ✅ Simple role separation (no access to admin)
+
+---
+
+## 🧱 1. Create the Customer Role
+
+Put this in your plugin’s activation hook:
+
+```php
+function ays_add_customer_role() {
+    add_role('customer', 'Customer', [
+        'read' => true,
+        'edit_posts' => false,
+        'delete_posts' => false,
+    ]);
+}
+register_activation_hook(__FILE__, 'ays_add_customer_role');
+```
+
+Now your plugin can safely create users when an invoice is generated or manually in the admin.
+
+---
+
+## 🔐 2. Redirect Customers to Their Dashboard
+
+Hook into `login_redirect`:
+
+```php
+add_filter('login_redirect', function ($redirect_to, $request, $user) {
+    if (isset($user->roles) && in_array('customer', $user->roles, true)) {
+        return site_url('/customer-dashboard/');
+    }
+    return $redirect_to;
+}, 10, 3);
+```
+
+💡 You can create `/customer-dashboard/` as a normal WordPress page with your shortcode `[ays_customer_dashboard]`.
+
+---
+
+## 💻 3. The Customer Dashboard Shortcode
+
+Example shortcode to render the dashboard layout:
+
+```php
+add_shortcode('ays_customer_dashboard', function () {
+    if (!is_user_logged_in()) {
+        wp_redirect(wp_login_url());
+        exit;
+    }
+
+    $user_id = get_current_user_id();
+    ob_start();
+    ?>
+    <div class="ays-dashboard container py-4">
+        <h2>Welcome back, <?php echo esc_html(wp_get_current_user()->display_name); ?></h2>
+
+        <div class="row">
+            <div class="col-md-8">
+                <?php ays_render_invoice_table($user_id); ?>
+            </div>
+            <div class="col-md-4">
+                <?php ays_render_profile_card($user_id); ?>
+            </div>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+```
+
+You’d use helper functions like `ays_render_invoice_table()` to pull data from your invoices table by `customer_id`.
+
+---
+
+## 💳 4. Payment Handling (Embedded, No Redirects)
+
+Since you don’t want to bounce off-site, switch from **Stripe Checkout (hosted)** to **Stripe Payment Element** embedded directly on your dashboard page.
+That allows you to:
+
+* Stay on your own domain.
+* Maintain PCI compliance (Stripe.js handles card fields).
+* Offer Apple Pay / Google Pay / saved cards, etc.
+
+High-level flow:
+
+1. Dashboard lists unpaid invoices → “Pay now” button.
+2. AJAX call creates a Payment Intent server-side.
+3. Stripe.js renders card field and completes payment in place.
+4. Webhook confirms → invoice marked as Paid.
+
+It’s identical to Checkout, just embedded instead of hosted.
+
+---
+
+## 🧾 5. Invoice + Payment Display
+
+Within that dashboard, show:
+
+* **Invoices Table** (ID, Amount, Status, Due Date, Pay Button)
+* **Payment History**
+* **Profile Details** (name, email, phone, etc.)
+* Optional “Download Invoice” or “View Receipt”
+
+We can make it mobile-friendly with Bootstrap cards — clean and familiar.
+
+---
+
+## 🛡️ 6. Security & Privacy
+
+| Concern             | Solution                                                                    |
+| ------------------- | --------------------------------------------------------------------------- |
+| Unauthorized access | Only logged-in `customer` role users can view dashboard                     |
+| Cross-user leakage  | Queries always filter by `customer_id` or `user_id`                         |
+| PCI data            | Stripe.js handles card fields; no sensitive data touches your server        |
+| Link sharing        | No tokenized public URLs anymore — full login required                      |
+| Password resets     | Use default `/wp-login.php?action=lostpassword`                             |
+| Brute force / spam  | Use reCAPTCHA or WP’s built-in limits via plugins like Limit Login Attempts |
+
+---
+
+## 🎨 7. Admin Workflow Integration
+
+Inside `wp-admin`:
+
+* When an invoice is created, it can automatically link to a `customer` user ID.
+* If that email doesn’t exist, you can auto-provision an account:
+
+  ```php
+  wp_create_user($email, wp_generate_password(), $email);
+  wp_send_new_user_notifications($user_id, 'both');
+  ```
+* Email the client: “Your invoice is ready — log in here.”
+
+That gives a self-service model — no token links, no exposure.
+
+---
+
+## 🚀 8. Roadmap Order
+
+1. ✅ Add `customer` role + login redirect
+2. ✅ Create `/customer-dashboard/` shortcode
+3. ✅ Display invoices/payments for logged-in user
+4. 🔜 Add embedded Stripe Payment Element
+5. 🔜 Add “View Profile” + update contact info
+6. 🔜 Add download invoice / receipt buttons
+
+---
+
+## ⚙️ Bonus UX Polishes
+
+* Auto-login link when sending first invoice (“Set your password to view your invoice”)
+* Sticky nav or tabs: Invoices | Payments | Profile
+* Small “Mode: Test/Live” badge visible for admins, hidden for customers
+* “Paid” vs “Pending” color badges (green/amber/red)
+
+---
+
+Would you like me to draft the **base `customer-dashboard` shortcode file** next — with the structure (Bootstrap layout, invoice query, and placeholders for Stripe Element integration)?
+That’s the heart of your front-end system, and we can slot in payments later with minimal changes.
+Hey Shaun — solid progress on that Payments tab. The bootstrapping and hardening are clean moves. Let’s break your next phase into **four question frameworks** so you can map the direction cleanly and catch unfinished bits as you go.
+
+---
+
+### 🧾 1. Stripe Integration & Payment Flow (dev + UX)
+
+These guide how the integration behaves for both admin and customers.
+
+**Architecture & UX**
+
+1. How will the Stripe payment modal or checkout session appear — popup, embedded form, or redirect?
+2. Should we show the customer invoice summary *before* or *after* Stripe initialization?
+3. Do we support both test and live keys per environment (dev/prod toggle)?
+4. How are failed payments surfaced — admin notice, dashboard alert, or email?
+5. Should manual payments (cash, EFT) display differently from Stripe ones in the same ledger?
+6. Do we want refund handling (Stripe API vs manual record)?
+7. How do webhooks update invoice statuses (paid, pending, failed)?
+8. What happens if Stripe SDK is missing or outdated — should we auto-disable payment fields or prompt reinstall?
+9. Do we log Stripe API errors or suppress them to avoid noise in production?
+10. Should transactions link to the original lead or invoice object for context?
+
+---
+
+### 💸 2. Invoicing UX (Customer-facing experience)
+
+When a customer views or downloads their invoice.
+
+**Customer Journey**
+
+1. Will customers log into a portal, or receive invoice links via email with secure tokens?
+2. Do invoices show as a styled HTML page, downloadable PDF, or both?
+3. Should unpaid invoices show a “Pay Now” button linked to Stripe?
+4. What branding applies — business logo, Stripe branding, or plain style?
+5. Will customers see their full payment history, or just active invoices?
+6. Should partial payments be supported (deposit + balance)?
+7. Will there be status labels like “Pending”, “Paid”, “Overdue”, and color-coded badges?
+8. Should the invoice auto-refresh after payment or redirect to a success screen?
+9. How will receipts be generated and stored (WordPress media, email attachment, or database record)?
+10. Do we need a webhook endpoint to mark invoices as paid automatically?
+
+---
+
+### 🔍 3. Codebase Audit & Unfinished Code Search
+
+To find stray `TODO`, `FIXME`, or placeholders.
+
+**Inspection Routine**
+
+1. Can we grep or search recursively for keywords like `@todo`, `fixme`, `pending`, `die(`, `var_dump`, or `exit;`?
+2. Are there half-built hooks (e.g., `add_action('ays_...')`) that never fire?
+3. Are any classes stubbed with empty methods or commented-out `return true;` placeholders?
+4. Do any admin forms post to non-existent handlers (`admin_post_...`)?
+5. Are autoloaded class maps missing references (look for failed include paths)?
+6. Any dead code for old payment gateways that can be cleaned up?
+7. Is caching or nonce validation skipped anywhere?
+8. Are transients or options written but never read?
+9. Are you enforcing consistent namespace and prefix (`Ays_`, `ays_`, etc.)?
+10. Could you set up a small internal CLI task like `wp ays:scan` to automate the above checks?
+
+---
+
+### 👥 4. Members / Customers Area (Post-payment experience)
+
+For logged-in customers or repeat users.
+
+**Design & Functionality**
+
+1. Should customers have accounts auto-created on first purchase?
+2. Will login be via standard WordPress auth or custom front-end form?
+3. Should they see invoices, quotes, job history, and payments in one place?
+4. Will the dashboard include status-based filtering (“Pending”, “Completed”, “Cancelled”)?
+5. How will customer data map to your Population system (link by hash, email, or user ID)?
+6. Do we include messaging or document upload (e.g., proof of payment)?
+7. Should customers be able to download tax invoices and receipts from this area?
+8. Are there roles like “Client”, “Manager”, “Staff”, or just “Customer”?
+9. Should admins impersonate a customer to troubleshoot billing?
+10. Do we integrate notifications (e.g., “Invoice paid” → email or dashboard alert)?
+
+---
+
+### 🧩 5. Fix Checklist & Sanity Pass
+
+To guide your cleanup round.
+
+1. Confirm Stripe SDK presence check works both with `autoload.php` and manual path.
+2. Verify all admin_post endpoints are secured with nonces.
+3. Check database schema for invoices and payments: are all fields sanitized?
+4. Confirm invoice PDFs or HTML outputs escape data properly.
+5. Audit capability checks — only admins or authorized roles can view payments.
+6. Check your cron or webhook processor handles retries safely.
+7. Test manual vs Stripe payment logging paths.
+8. Validate that test/live toggles update correctly in the settings page.
+9. Review any hardcoded URLs (should rely on `home_url()` or `admin_url()`).
+10. Review caching/clearing logic if payment status changes.
+
+---
+
+Would you like me to turn this into a **developer checklist template (Markdown or Notion-style)** so you can track each section as you build out Payments + Invoicing? I can include toggles and placeholders for “Status”, “Next Action”, and “Linked File”.
+
+
+I’m going to search for an autoloader and any existing invoice preview/template handlers to integrate a clean renderer, then add a renderer class and wire an admin preview panel into the invoice editor, including a simple print preview.
+
+Searched text for class AYS_Invoice_Renderer|invoice preview|render_invoice|print invoice|ays-invoice-preview|Invoice Preview, 20 results
+Read ays-class-invoice-admin-ui.php, lines 300 to 500
+
+Completed (1/2) Scaffold customer dashboard securely
+
+Searched text for ays-invoice-preview|ays-prev-left|Invoice Preview (**/includes/**), 20 results
+Read ays-class-invoice-admin-ui.php, lines 960 to 1120
+
+Read ays.php, lines 1 to 240
+
+I’m going to add an admin-only invoice preview section to the invoice editor with a print button, using company profile, client, items, totals, and bank transfer info; then I’ll commit and push and run a quick syntax check.
+
+Searched text for <div class="editor-sidebar"> (**/includes/invoices/ays-class-invoices-tab.php), 2 results
+Read ays-class-invoices-tab.php, lines 320 to 420
+
+ays-class-invoices-tab.php+11-0
+ays-class-invoices-tab.php+128-0
+
+php -l "c:\xampp\htdocs\projectstudios\wp-content\plugins\At-Your-Services\includes\invoices\ays-class-invoices-tab.php"
+
+git add includes/invoices/ays-class-invoices-tab.php && git commit -m "admin: add Invoice Preview block to editor with print button; renders company, client, items, totals, and bank transfer details" && git push
+Got it—admin needs a clear invoice preview, while customers see the actual invoice. I added a proper admin-only Invoice Preview panel in the invoice editor, complete with a print button and your bank transfer details.
+
+what I changed
+Invoice editor now includes an “Invoice Preview” section:
+
+Shows company info (from Company Profile), client details, items, subtotal, tax, total.
+Includes your “Bank Transfer” block via AYS_Company_Profile::get_bank_transfer_html($invoice_number).
+Adds a “Print Preview” button that opens a clean print window with the preview contents and minimal styling.
+Customer dashboard stays as-is (actual invoice display on front-end remains to be implemented later), but it also shows the bank transfer panel in the sidebar for clarity.
+
+files touched
+ays-class-invoices-tab.php
+
+Added a new “Invoice Preview” section in render_invoice_editor() main column.
+Implemented render_invoice_preview($invoice, $items, $client) to render the preview.
+Added a small inline script to handle the print preview.
+Kept the existing Bank Transfer card in the sidebar.
+class-ays-shortcode-customer-dashboard.php
+
+Previously added: Bank Transfer Details panel to the customer dashboard sidebar.
+verification
+PHP lint passed on changed files.
+Committed and pushed:
+“admin: add Invoice Preview block to editor with print button; renders company, client, items, totals, and bank transfer details”
+try it
+In wp-admin, open Invoicing → Invoices → Edit an invoice.
+Scroll to the new “Invoice Preview” section; click “Print Preview” to print or save as PDF.
+Bank transfer information appears both in the preview and in the right-hand sidebar.
+next improvements (optional)
+Customer-facing invoice page/PDF:
+Build a front-end “View Invoice” route/template (with capability/token gating).
+Reuse the same renderer for consistent layout and include bank transfer.
+Add invoice logo and address block formatting.
+Currency symbol/source and GST label per settings.
+Mode banner: When Stripe isn’t configured, show “Stripe disabled” and emphasize bank transfer.
+Questions before I wire up the customer-facing invoice page/PDF with this same layout?
+
+
+Yeah, Shaun — spot on.
+You’re thinking exactly like a systems architect now. What you’re sensing is that **the relational backbone is missing** — right now the plugin’s schema behaves like a set of *flat associative tables* (great for MVP speed), but not like a real **relational data model** with many-to-many bridges.
+
+Let’s unpack what’s happening, why it feels off, and how to bring it back into proper balance — without nuking all your code.
+
+---
+
+## 🧠 Why It Feels “Flat”
+
+You’re right — your current design is mostly *one-to-many*, and there’s **no true many-to-many join table** anywhere.
+In relational terms, this means you can’t easily express “a client with multiple invoices for multiple services” in a fully normalized way — everything is chained linearly:
+
+```
+company_profile (1) ──< invoices (∞)
+clients (1) ──< invoices (∞)
+invoices (1) ──< invoice_items (∞)
+```
+
+That’s fine for basic accounting but breaks down when you start mixing:
+
+* multiple service types per invoice
+* shared services or packages across clients
+* reporting by service, not invoice
+
+---
+
+## 🧩 Where the Many-to-Many Should Live
+
+Here are the **logical relationships** you probably want but don’t yet have:
+
+| Relationship        | Type | Bridge Table Needed?        | Why                                                                                |
+| ------------------- | ---- | --------------------------- | ---------------------------------------------------------------------------------- |
+| Clients ↔ Services  | M-M  | ✅ `wp_ays_client_services`  | A client can use multiple service types; a service can belong to multiple clients. |
+| Invoices ↔ Services | M-M  | ✅ `wp_ays_invoice_services` | One invoice may cover several service types.                                       |
+| Clients ↔ Invoices  | 1-M  | No                          | A client can have many invoices, but an invoice belongs to only one client.        |
+| Company ↔ Invoices  | 1-M  | No                          | That’s fine — company issues many invoices.                                        |
+| Invoices ↔ Items    | 1-M  | No                          | Already done (`invoice_id`).                                                       |
+| Invoices ↔ Payments | 1-M  | No                          | One invoice can have multiple payments or partials.                                |
+
+---
+
+## ⚙️ Proposed Core Schema (Balanced Normalization)
+
+### `wp_ays_clients`
+
+Basic client record.
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+hash CHAR(32) NOT NULL UNIQUE,
+name VARCHAR(255),
+email VARCHAR(255),
+phone VARCHAR(50),
+address TEXT,
+status ENUM('active','inactive') DEFAULT 'active',
+created_at DATETIME,
+updated_at DATETIME
+```
+
+---
+
+### `wp_ays_invoices`
+
+Invoice header.
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+hash CHAR(32) UNIQUE,
+company_id INT,
+client_id INT,
+issue_date DATE,
+due_date DATE,
+subtotal DECIMAL(10,2),
+tax_total DECIMAL(10,2),
+total DECIMAL(10,2),
+status ENUM('draft','sent','paid','cancelled') DEFAULT 'draft',
+created_at DATETIME,
+updated_at DATETIME,
+FOREIGN KEY (client_id) REFERENCES wp_ays_clients(id)
+```
+
+---
+
+### `wp_ays_invoice_items`
+
+Invoice lines (already present but keep tight foreign key).
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice_id INT,
+description TEXT,
+qty DECIMAL(10,2),
+rate DECIMAL(10,2),
+line_total DECIMAL(10,2),
+FOREIGN KEY (invoice_id) REFERENCES wp_ays_invoices(id)
+```
+
+---
+
+### `wp_ays_invoice_services` *(NEW bridge table)*
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice_id INT NOT NULL,
+service_type_id INT NOT NULL,
+FOREIGN KEY (invoice_id) REFERENCES wp_ays_invoices(id),
+FOREIGN KEY (service_type_id) REFERENCES wp_ays_service_types(id)
+```
+
+This fixes the “flatness” you’re feeling — invoices can now tag multiple service types for reporting and analytics.
+
+---
+
+### `wp_ays_payments`
+
+To track partial or full payments.
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice_id INT,
+method ENUM('stripe','cash','bank','eftpos'),
+amount DECIMAL(10,2),
+status ENUM('pending','confirmed','failed') DEFAULT 'pending',
+transaction_id VARCHAR(255),
+created_at DATETIME,
+updated_at DATETIME,
+FOREIGN KEY (invoice_id) REFERENCES wp_ays_invoices(id)
+```
+
+---
+
+### `wp_ays_client_services` *(Optional but useful)*
+
+For recurring clients or subscriptions.
+
+```sql
+id INT AUTO_INCREMENT PRIMARY KEY,
+client_id INT,
+service_type_id INT,
+FOREIGN KEY (client_id) REFERENCES wp_ays_clients(id),
+FOREIGN KEY (service_type_id) REFERENCES wp_ays_service_types(id)
+```
+
+---
+
+## 🔁 How Hard Is This To Change?
+
+Not bad at all — it’s mostly **query updates**, not logic rewrites:
+
+* Your `$wpdb->get_results()` for invoices just needs to **JOIN** to the bridge tables.
+* Your existing class methods (`AYS_Invoices`, `AYS_Payments`, etc.) can stay the same, just add optional JOINs or helper methods like:
+
+  ```php
+  AYS_Invoices::get_services($invoice_id);
+  AYS_Clients::get_service_types($client_id);
+  ```
+* Back-end UI only needs one multi-select dropdown for “Services” when creating invoices.
+
+So you’re not losing code — just tightening relationships.
+
+---
+
+## 🧱 About Using WPDB
+
+Yep, we’ll use `$wpdb` directly — no need for a full ORM.
+It’s efficient and integrates with your autoload classes cleanly.
+
+Example pattern for joining with the new bridge:
+
+```php
+$results = $wpdb->get_results("
+  SELECT i.*, s.name AS service_name
+  FROM {$wpdb->prefix}ays_invoices AS i
+  JOIN {$wpdb->prefix}ays_invoice_services AS isr ON i.id = isr.invoice_id
+  JOIN {$wpdb->prefix}ays_service_types AS s ON isr.service_type_id = s.id
+  WHERE i.client_id = {$client_id}
+");
+```
+
+That’s pure `$wpdb` — lightweight and secure.
+
+---
+
+## 🧭 Next Steps
+
+1. ✅ Freeze schema planning — finalize bridge tables (`invoice_services`, `client_services`).
+2. ✅ Write migration functions (`maybe_create_table`) for them.
+3. 🧩 Refactor queries in `AYS_Invoices` class to JOIN those bridges.
+4. 🔜 Populate sample service types to test joins before real data.
+5. 🧪 Hook dashboard to show all related services under each invoice.
+
+---
+
+If you’d like, I can write the **exact SQL + migration PHP functions** (`maybe_create_table_*`) for those two missing bridge tables so you can drop them in your activation hook — no manual phpMyAdmin editing needed.
+
+Would you like me to draft that next?
+
+
