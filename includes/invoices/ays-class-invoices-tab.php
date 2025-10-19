@@ -375,6 +375,12 @@ class AYS_Invoices_Tab {
 							</a>
 						</p>
 					</div>
+					<?php if ( class_exists('AYS_Company_Profile') ) : ?>
+						<div class="sidebar-box">
+							<h4><?php esc_html_e( '🏦 Bank Transfer', 'atyourservice' ); ?></h4>
+							<?php echo AYS_Company_Profile::get_bank_transfer_html( $invoice->invoice_number ); // escaped in renderer ?>
+						</div>
+					<?php endif; ?>
 				</div>
 			</div>
 		</div>

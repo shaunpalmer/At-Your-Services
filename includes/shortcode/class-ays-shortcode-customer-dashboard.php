@@ -41,6 +41,7 @@ class AYS_Shortcode_Customer_Dashboard {
                 </div>
                 <div>
                     <?php $this->render_profile_card($user); ?>
+                    <?php $this->render_bank_transfer_card(); ?>
                 </div>
             </div>
         </div>
@@ -107,6 +108,19 @@ class AYS_Shortcode_Customer_Dashboard {
         echo '<p><strong>Name:</strong> ' . esc_html($user->display_name ?: '—') . '</p>';
         echo '<p><strong>Email:</strong> ' . esc_html($user->user_email ?: '—') . '</p>';
         echo '<p><a class="button" href="' . esc_url(wp_logout_url(home_url('/'))) . '">Log out</a></p>';
+        echo '</div></details>';
+    }
+
+    private function render_bank_transfer_card() {
+        if (!class_exists('AYS_Company_Profile')) {
+            return;
+        }
+        $html = AYS_Company_Profile::get_bank_transfer_html();
+        if (!$html) {
+            return;
+        }
+        echo '<details class="ays-details" open><summary>💳 Bank Transfer Details</summary><div style="padding:12px;">';
+        echo $html; // Already escaped within renderer
         echo '</div></details>';
     }
 }
