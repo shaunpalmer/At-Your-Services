@@ -126,8 +126,7 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
                 $invoice_items_data[] = [
                     'item_id' => $item->id,
                     'quantity' => $quantity,
-                    'price' => $item->rate,
-                    'tax' => $item->taxable ? $line_total * 0.15 : 0,
+                    'rate' => $item->rate,
                 ];
             }
         }
@@ -150,12 +149,12 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
 
         // Add items to the invoice
         foreach ($invoice_items_data as $item_data) {
+            // Insert only columns universally expected by current UI
             $wpdb->insert("{$wpdb->prefix}ays_invoice_items", [
                 'invoice_id' => $invoice_id,
                 'item_id' => $item_data['item_id'],
                 'quantity' => $item_data['quantity'],
-                'price' => $item_data['price'],
-                'tax' => $item_data['tax'],
+                'rate' => $item_data['rate'],
             ]);
         }
 

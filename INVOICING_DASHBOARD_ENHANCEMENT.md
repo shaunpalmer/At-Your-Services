@@ -512,3 +512,5 @@ Security:
 Next small wins:
 - Add color mapping per service type (custom color in `ays_service_types`) and use it to style chips.
 - Add list filters by status + date range to combine with service filter.
+
+> Temporary note (to be generalized): Several naming defaults and examples skew cleaning-specific (e.g., NZ GST 15%, “Super Clean” style fixtures, example items). These are placeholders to ship Super Clean rapidly. We’ll circle back to make them neutral and provider-agnostic so the module fits digital services and productized offerings without renaming.
