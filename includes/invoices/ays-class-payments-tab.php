@@ -13,8 +13,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Include Stripe library
-require_once AYS_PLUGIN_PATH . 'vendor/stripe/init.php';
+// Attempt to load Stripe SDK if present locally. We do not ship vendor/ in git.
+// Try Composer autoload first, then legacy vendor/stripe/init.php. If neither exists, we proceed without Stripe.
+$__ays_stripe_loaded = false;
+$__ays_vendor_autoload = defined('AYS_PLUGIN_PATH') ? AYS_PLUGIN_PATH . 'vendor/autoload.php' : __DIR__ . '/../../../vendor/autoload.php';
+$__ays_stripe_init    = defined('AYS_PLUGIN_PATH') ? AYS_PLUGIN_PATH . 'vendor/stripe/init.php' : __DIR__ . '/../../../vendor/stripe/init.php';
+if ( file_exists( $__ays_vendor_autoload ) ) {
+	require_once $__ays_vendor_autoload;
+	$__ays_stripe_loaded = class_exists( '\\Stripe\\Stripe' );
+} elseif ( file_exists( $__ays_stripe_init ) ) {
+	require_once $__ays_stripe_init;
+	$__ays_stripe_loaded = class_exists( '\\Stripe\\Stripe' );
+}
 
 class AYS_Payments_Tab {
 
@@ -36,6 +46,20 @@ class AYS_Payments_Tab {
 
 		// Display notices
 		self::display_notices();
+
+		// Show a friendly warning if Stripe SDK isn't available locally
+		global $__ays_stripe_loaded;
+		if ( ! $__ays_stripe_loaded ) {
+			echo '<div class="notice notice-warning" style="margin:12px 0;">'
+				. '<p><strong>' . esc_html__( 'Stripe SDK not found locally.', 'atyourservice' ) . '</strong> '
+				. esc_html__( 'Payments can still be recorded manually. To enable Stripe processing, install dependencies:', 'atyourservice' )
+				. '</p>'
+				. '<ol style="margin-left:18px;">'
+				. '<li><code>composer install</code> ' . esc_html__( 'in the plugin root', 'atyourservice' ) . '</li>'
+				. '<li>' . esc_html__( 'Ensure vendor/ is present on the server (it is .gitignored in source control).', 'atyourservice' ) . '</li>'
+				. '</ol>'
+				. '</div>';
+		}
 
 		// Get edit ID if present
 		$edit_id = isset( $_GET['edit_payment'] ) ? intval( $_GET['edit_payment'] ) : 0;

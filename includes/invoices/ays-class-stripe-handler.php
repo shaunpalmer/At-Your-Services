@@ -24,6 +24,11 @@ class AYS_Stripe_Handler {
 			return false;
 		}
 
+		// Ensure Stripe SDK class exists
+		if ( ! class_exists( '\\Stripe\\Stripe' ) ) {
+			return false;
+		}
+
 		// Get active keys (test or live)
 		$keys = AYS_Stripe_Settings::get_active_keys();
 
