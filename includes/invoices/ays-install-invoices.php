@@ -45,7 +45,7 @@ function ays_invoices_install() {
 
     // Version check: only run if version mismatch
     $installed_version = get_option('ays_invoices_db_version', '0.0.0');
-    if (version_compare($installed_version, '1.1', '>=')) {
+    if (version_compare($installed_version, '1.2', '>=') ) {
         return; // Already installed
     }
 
@@ -256,7 +256,7 @@ function ays_invoices_install() {
         KEY idx_method (method),
         KEY idx_status (status),
         KEY idx_created_by_user (created_by_user),
-        FOREIGN KEY fk_invoice (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE
+        CONSTRAINT fk_payments_invoice FOREIGN KEY (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE
     ) $charset_collate;
     ";
     dbDelta($payments_table);
@@ -298,10 +298,49 @@ function ays_invoices_install() {
         KEY idx_invoice_id (invoice_id),
         KEY idx_to_email (to_email),
         KEY idx_status (status),
-        FOREIGN KEY fk_invoice (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE SET NULL
+        CONSTRAINT fk_email_log_invoice FOREIGN KEY (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE SET NULL
     ) $charset_collate;
     ";
     dbDelta($email_log_table);
+
+    // =========================================================================
+    // 10. wp_ays_invoice_services - Many-to-Many: Invoices ↔ Service Types
+    // =========================================================================
+    $invoice_services_table = "
+    CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_invoice_services (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        hash CHAR(32) UNIQUE NOT NULL,
+        invoice_id BIGINT UNSIGNED NOT NULL,
+        service_type_id BIGINT UNSIGNED NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_invoice_service (invoice_id, service_type_id),
+        KEY idx_invoice_id (invoice_id),
+        KEY idx_service_type_id (service_type_id),
+        FOREIGN KEY fk_is_invoice (invoice_id) REFERENCES {$wpdb->prefix}ays_invoices(id) ON DELETE CASCADE,
+        FOREIGN KEY fk_is_service (service_type_id) REFERENCES {$wpdb->prefix}ays_service_types(id) ON DELETE CASCADE
+    ) $charset_collate;
+    ";
+    dbDelta($invoice_services_table);
+
+    // =========================================================================
+    // 11. wp_ays_client_services - Many-to-Many: Clients ↔ Service Types
+    // =========================================================================
+    $client_services_table = "
+    CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ays_client_services (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        hash CHAR(32) UNIQUE NOT NULL,
+        client_id BIGINT UNSIGNED NOT NULL,
+        service_type_id BIGINT UNSIGNED NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_client_service (client_id, service_type_id),
+        KEY idx_client_id (client_id),
+        KEY idx_service_type_id (service_type_id),
+        FOREIGN KEY fk_cs_client (client_id) REFERENCES {$wpdb->prefix}ays_clients(id) ON DELETE CASCADE,
+        FOREIGN KEY fk_cs_service (service_type_id) REFERENCES {$wpdb->prefix}ays_service_types(id) ON DELETE CASCADE
+    ) $charset_collate;
+    ";
+    dbDelta($client_services_table);
 
     // =========================================================================
     // Note: Company profile seeding is handled separately via admin setup wizard
@@ -379,7 +418,7 @@ View and manage invoice: {admin_url}',
     // =========================================================================
     // Mark installation complete
     // =========================================================================
-    update_option('ays_invoices_db_version', '1.1');
+    update_option('ays_invoices_db_version', '1.2');
 }
 
 /**
