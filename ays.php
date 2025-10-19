@@ -59,6 +59,7 @@ require_once AYS_PLUGIN_PATH . 'includes/helpers/AYS_Email_Validator.php';
 require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
 require_once AYS_PLUGIN_PATH . 'admin/settings.php';
 require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
+require_once AYS_PLUGIN_PATH . 'includes/shortcode/class-ays-shortcode-customer-dashboard.php';
 require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-menu.php';
 
 // === Notification System Bootstrap ===
@@ -122,6 +123,14 @@ function ays_notifications_activate() {
 	// This is now handled by ays_check_and_install_db() on admin_init
 }
 register_activation_hook(__FILE__, 'ays_notifications_activate');
+
+// Ensure a basic Customer role exists for front-end dashboard access (read-only)
+function ays_add_customer_role() {
+	if (!get_role('customer')) {
+		add_role('customer', 'Customer', [ 'read' => true ]);
+	}
+}
+register_activation_hook(__FILE__, 'ays_add_customer_role');
 
 /**
  * Checks if the database tables are installed and installs them if not.
