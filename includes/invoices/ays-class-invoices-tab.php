@@ -353,6 +353,33 @@ class AYS_Invoices_Tab {
 						</div>
 					<?php endif; ?>
 
+					<!-- Service Types (Many-to-Many) -->
+					<div class="invoice-section">
+						<h3><?php esc_html_e( 'Service Types', 'atyourservice' ); ?></h3>
+						<?php
+							$all_services = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_service_types WHERE status='active' ORDER BY sort_order, name" );
+							$selected_services = self::get_invoice_service_type_ids( $invoice->id );
+						?>
+						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+							<?php wp_nonce_field( 'ays_update_invoice_services_' . $invoice->id, 'ays_invoice_services_nonce' ); ?>
+							<input type="hidden" name="action" value="ays_update_invoice_services">
+							<input type="hidden" name="invoice_id" value="<?php echo esc_attr( $invoice->id ); ?>">
+							<select name="service_type_ids[]" multiple size="6" style="min-width:260px;">
+								<?php foreach ( $all_services as $svc ) : ?>
+									<option value="<?php echo esc_attr( $svc->id ); ?>" <?php selected( in_array( (int) $svc->id, $selected_services, true ) ); ?>>
+										<?php echo esc_html( $svc->name ); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description" style="margin-top:8px;">
+								<?php esc_html_e( 'Hold Ctrl/Cmd to select multiple service types that this invoice covers.', 'atyourservice' ); ?>
+							</p>
+							<p>
+								<button type="submit" class="button button-primary"><?php esc_html_e( 'Save Services', 'atyourservice' ); ?></button>
+							</p>
+						</form>
+					</div>
+
 					<!-- Admin Invoice Preview -->
 					<div class="invoice-section">
 						<h3 style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -624,6 +651,9 @@ class AYS_Invoices_Tab {
 				case 'invoice_error':
 					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( '✗ An error occurred. Please try again.', 'atyourservice' ) . '</p></div>';
 					break;
+				case 'invoice_services_updated':
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( '✓ Service types updated for this invoice.', 'atyourservice' ) . '</p></div>';
+					break;
 			}
 		}
 	}
@@ -725,5 +755,50 @@ class AYS_Invoices_Tab {
 			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
 		}
 		exit;
+	}
+
+	/**
+	 * Save invoice service type selections (bridge table)
+	 */
+	public static function handle_update_invoice_services() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'atyourservice' ) );
+		}
+
+		$invoice_id = isset( $_POST['invoice_id'] ) ? intval( $_POST['invoice_id'] ) : 0;
+		$nonce = isset( $_POST['ays_invoice_services_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['ays_invoice_services_nonce'] ) ) : '';
+		if ( ! $invoice_id || ! wp_verify_nonce( $nonce, 'ays_update_invoice_services_' . $invoice_id ) ) {
+			wp_die( esc_html__( 'Security check failed', 'atyourservice' ) );
+		}
+
+		$service_ids = isset( $_POST['service_type_ids'] ) && is_array( $_POST['service_type_ids'] ) ? array_map( 'intval', (array) $_POST['service_type_ids'] ) : [];
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'ays_invoice_services';
+		// Clear existing
+		$wpdb->delete( $table, [ 'invoice_id' => $invoice_id ], [ '%d' ] );
+		// Insert new
+		foreach ( $service_ids as $sid ) {
+			$wpdb->insert( $table, [
+				'hash' => md5( uniqid( mt_rand(), true ) ),
+				'invoice_id' => $invoice_id,
+				'service_type_id' => $sid,
+				'sort_order' => 0,
+			], [ '%s', '%d', '%d', '%d' ] );
+		}
+
+		wp_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id, 'ays_notice' => 'invoice_services_updated' ], admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+		exit;
+	}
+
+	/**
+	 * Get service type IDs attached to an invoice
+	 * @param int $invoice_id
+	 * @return int[]
+	 */
+	protected static function get_invoice_service_type_ids( $invoice_id ) {
+		global $wpdb;
+		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT service_type_id FROM {$wpdb->prefix}ays_invoice_services WHERE invoice_id = %d", $invoice_id ) );
+		return array_map( 'intval', (array) $rows );
 	}
 }

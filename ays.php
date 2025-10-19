@@ -317,6 +317,14 @@ add_action('admin_post_ays_delete_invoice', function() {
 	}
 });
 
+add_action('admin_post_ays_update_invoice_services', function() {
+	if (class_exists('AYS_Invoices_Tab')) {
+		AYS_Invoices_Tab::handle_update_invoice_services();
+	} else {
+		wp_die('Invoices class not found');
+	}
+});
+
 // === Payments Tab admin-post handlers ===
 add_action('admin_post_ays_add_payment', function() {
 	if (class_exists('AYS_Payments_Tab')) {
