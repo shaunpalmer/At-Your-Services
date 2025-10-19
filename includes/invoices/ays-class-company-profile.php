@@ -16,6 +16,14 @@
  *   invoice_footer: text,
  *   payment_methods: text,
  *   invoice_terms: text
+ *   bank_transfer_enabled: bool,
+ *   bank_account_name: string,
+ *   bank_bank_name: string,
+ *   bank_account_number: string,
+ *   bank_branch: string,
+ *   bank_swift: string,
+ *   bank_iban: string,
+ *   bank_reference_hint: string
  * }
  *
  * @since 1.0
@@ -164,6 +172,75 @@ class AYS_Company_Profile {
 						<table class="form-table">
 							<tr>
 								<th scope="row">
+									<label for="bank_transfer_enabled"><?php esc_html_e( 'Enable Bank Transfer Instructions', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<label>
+										<input type="checkbox" id="bank_transfer_enabled" name="bank_transfer_enabled" value="1" <?php checked( ! empty( $profile['bank_transfer_enabled'] ) ); ?>>
+										<?php esc_html_e( 'Show bank transfer details on invoices and customer views', 'atyourservice' ); ?>
+									</label>
+									<p class="description"><?php esc_html_e( 'Recommended for NZ customers who pay via bank transfer.', 'atyourservice' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_account_name"><?php esc_html_e( 'Account Name', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_account_name" name="bank_account_name" value="<?php echo esc_attr( $profile['bank_account_name'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Your Company Ltd', 'atyourservice' ); ?>">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_bank_name"><?php esc_html_e( 'Bank Name', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_bank_name" name="bank_bank_name" value="<?php echo esc_attr( $profile['bank_bank_name'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'ANZ / ASB / BNZ / Westpac …', 'atyourservice' ); ?>">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_account_number"><?php esc_html_e( 'Account Number', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_account_number" name="bank_account_number" value="<?php echo esc_attr( $profile['bank_account_number'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( '12-3456-7890123-00', 'atyourservice' ); ?>">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_branch"><?php esc_html_e( 'Branch (optional)', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_branch" name="bank_branch" value="<?php echo esc_attr( $profile['bank_branch'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Christchurch', 'atyourservice' ); ?>">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_swift"><?php esc_html_e( 'SWIFT (optional)', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_swift" name="bank_swift" value="<?php echo esc_attr( $profile['bank_swift'] ); ?>" class="regular-text" placeholder="ABCDEF01">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_iban"><?php esc_html_e( 'IBAN (optional)', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_iban" name="bank_iban" value="<?php echo esc_attr( $profile['bank_iban'] ); ?>" class="regular-text" placeholder="NZ.. (if applicable)">
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
+									<label for="bank_reference_hint"><?php esc_html_e( 'Reference Hint', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<input type="text" id="bank_reference_hint" name="bank_reference_hint" value="<?php echo esc_attr( $profile['bank_reference_hint'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Use your invoice number as the reference', 'atyourservice' ); ?>">
+									<p class="description"><?php esc_html_e( 'Shown to customers; e.g., "Use your invoice number as the reference"', 'atyourservice' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">
 									<label for="payment_methods"><?php esc_html_e( 'Payment Methods', 'atyourservice' ); ?></label>
 								</th>
 								<td>
@@ -258,6 +335,14 @@ class AYS_Company_Profile {
 			'invoice_footer' => $profile['invoice_footer'] ?? '',
 			'payment_methods' => $profile['payment_methods'] ?? '',
 			'invoice_terms' => $profile['invoice_terms'] ?? '',
+			'bank_transfer_enabled' => ! empty( $profile['bank_transfer_enabled'] ),
+			'bank_account_name' => $profile['bank_account_name'] ?? '',
+			'bank_bank_name' => $profile['bank_bank_name'] ?? '',
+			'bank_account_number' => $profile['bank_account_number'] ?? '',
+			'bank_branch' => $profile['bank_branch'] ?? '',
+			'bank_swift' => $profile['bank_swift'] ?? '',
+			'bank_iban' => $profile['bank_iban'] ?? '',
+			'bank_reference_hint' => $profile['bank_reference_hint'] ?? __( 'Use your invoice number as the reference', 'atyourservice' ),
 		];
 	}
 
@@ -289,6 +374,14 @@ class AYS_Company_Profile {
 			'invoice_footer' => isset( $_POST['invoice_footer'] ) ? sanitize_textarea_field( wp_unslash( $_POST['invoice_footer'] ) ) : '',
 			'payment_methods' => isset( $_POST['payment_methods'] ) ? sanitize_textarea_field( wp_unslash( $_POST['payment_methods'] ) ) : '',
 			'invoice_terms' => isset( $_POST['invoice_terms'] ) ? sanitize_textarea_field( wp_unslash( $_POST['invoice_terms'] ) ) : '',
+			'bank_transfer_enabled' => ! empty( $_POST['bank_transfer_enabled'] ) ? 1 : 0,
+			'bank_account_name' => isset( $_POST['bank_account_name'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_account_name'] ) ) : '',
+			'bank_bank_name' => isset( $_POST['bank_bank_name'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_bank_name'] ) ) : '',
+			'bank_account_number' => isset( $_POST['bank_account_number'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_account_number'] ) ) : '',
+			'bank_branch' => isset( $_POST['bank_branch'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_branch'] ) ) : '',
+			'bank_swift' => isset( $_POST['bank_swift'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_swift'] ) ) : '',
+			'bank_iban' => isset( $_POST['bank_iban'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_iban'] ) ) : '',
+			'bank_reference_hint' => isset( $_POST['bank_reference_hint'] ) ? sanitize_text_field( wp_unslash( $_POST['bank_reference_hint'] ) ) : __( 'Use your invoice number as the reference', 'atyourservice' ),
 		];
 
 		if ( ! $profile['company_name'] || ! $profile['company_email'] ) {
@@ -299,6 +392,57 @@ class AYS_Company_Profile {
 
 		wp_redirect( add_query_arg( 'ays_notice', 'company_profile_updated' ) );
 		exit;
+	}
+
+	/**
+	 * Render bank transfer HTML snippet using profile settings.
+	 * Can be embedded in admin/customer views.
+	 *
+	 * @param string|null $invoice_number Optional invoice number for reference hint interpolation.
+	 * @return string HTML
+	 */
+	public static function get_bank_transfer_html( $invoice_number = null ) {
+		$p = self::get_profile();
+		if ( empty( $p['bank_transfer_enabled'] ) ) {
+			return '';
+		}
+
+		$rows = [];
+		if ( $p['bank_account_name'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'Account Name', 'atyourservice' ) . '</th><td>' . esc_html( $p['bank_account_name'] ) . '</td></tr>';
+		}
+		if ( $p['bank_bank_name'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'Bank', 'atyourservice' ) . '</th><td>' . esc_html( $p['bank_bank_name'] ) . '</td></tr>';
+		}
+		if ( $p['bank_account_number'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'Account Number', 'atyourservice' ) . '</th><td><code>' . esc_html( $p['bank_account_number'] ) . '</code></td></tr>';
+		}
+		if ( $p['bank_branch'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'Branch', 'atyourservice' ) . '</th><td>' . esc_html( $p['bank_branch'] ) . '</td></tr>';
+		}
+		if ( $p['bank_swift'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'SWIFT', 'atyourservice' ) . '</th><td>' . esc_html( $p['bank_swift'] ) . '</td></tr>';
+		}
+		if ( $p['bank_iban'] ) {
+			$rows[] = '<tr><th style="text-align:left;">' . esc_html__( 'IBAN', 'atyourservice' ) . '</th><td>' . esc_html( $p['bank_iban'] ) . '</td></tr>';
+		}
+
+		$hint = $p['bank_reference_hint'];
+		if ( $invoice_number ) {
+			// Simple token replacement if the hint contains {invoice}
+			$hint = str_replace( '{invoice}', $invoice_number, $hint );
+		}
+
+		$html  = '<div class="ays-bank-transfer" style="border:1px solid #e5e7eb;border-radius:6px;padding:12px;">';
+		$html .= '<h4 style="margin-top:0;">' . esc_html__( 'Pay by Bank Transfer', 'atyourservice' ) . '</h4>';
+		if ( $rows ) {
+			$html .= '<table style="width:100%;border-collapse:collapse;">' . implode( '', $rows ) . '</table>';
+		}
+		if ( $hint ) {
+			$html .= '<p style="margin-top:8px;color:#374151;">' . esc_html( $hint ) . '</p>';
+		}
+		$html .= '</div>';
+		return $html;
 	}
 
 	/**

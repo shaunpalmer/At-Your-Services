@@ -137,6 +137,7 @@ class AYS_Payments_Tab {
 						<li><?php esc_html_e( 'Bank Transfer (ACH)', 'atyourservice' ); ?></li>
 					</ul>
 					<p><?php esc_html_e( 'All payments are processed securely through Stripe.', 'atyourservice' ); ?></p>
+					<?php if ( class_exists('AYS_Company_Profile') ) { $bt = AYS_Company_Profile::get_bank_transfer_html(); if ($bt) { echo '<div style="margin-top:12px">' . $bt . '</div>'; } } ?>
 				</div>
 			</div>
 		</details>

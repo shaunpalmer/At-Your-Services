@@ -126,6 +126,15 @@ class AYS_Invoices_Tab {
 						<li><?php esc_html_e( 'Track payment status', 'atyourservice' ); ?></li>
 						<li><?php esc_html_e( 'Edit or delete anytime', 'atyourservice' ); ?></li>
 					</ul>
+					<?php 
+					// Show bank transfer block if enabled so admins see what customers will see
+					if ( class_exists('AYS_Company_Profile') ) {
+						$bt = AYS_Company_Profile::get_bank_transfer_html();
+						if ( $bt ) {
+							echo '<div style="margin-top:12px">' . $bt . '</div>';
+						}
+					}
+					?>
 				</div>
 			</div>
 		</details>
