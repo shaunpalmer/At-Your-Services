@@ -74,11 +74,21 @@ class AYS_Client_Dashboard {
             return null;
         }
         $table = $wpdb->prefix . 'ays_clients';
-        // Prefer `email` column, but also check `client_email` if schema varies
+        // 1) Respect explicit mapping if present
+        $mapped_id = (int) get_user_meta($user->ID, 'ays_client_id', true);
+        if ($mapped_id) {
+            $client = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $mapped_id));
+            if ($client) return $client;
+        }
+        // 2) Fallback to email match (supports legacy client_email column if present)
         $client = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table} WHERE email = %s OR client_email = %s LIMIT 1",
             $user->user_email, $user->user_email
         ));
+        // 3) If found by email but no mapping yet, persist the mapping for future lookups
+        if ($client && $client->id) {
+            update_user_meta($user->ID, 'ays_client_id', (int) $client->id);
+        }
         return $client;
     }
 
@@ -144,7 +154,11 @@ class AYS_Client_Dashboard {
         echo '<div class="wrap">';
     echo '<h1>' . esc_html__('My Invoices', 'atyourservice') . '</h1>';
         if (!$client) {
-            echo '<p>' . esc_html__('We could not find a client account associated with your login.', 'atyourservice') . '</p></div>';
+            // Offer a one-click link/create from user profile
+            echo '<p>' . esc_html__('We could not find a client account associated with your login.', 'atyourservice') . '</p>';
+            $link_url = wp_nonce_url(admin_url('admin-post.php?action=ays_link_client_account'), 'ays_link_client_account');
+            echo '<p><a class="button button-primary" href="' . esc_url($link_url) . '">' . esc_html__('Create/Link my client record', 'atyourservice') . '</a></p>';
+            echo '</div>';
             return;
         }
 

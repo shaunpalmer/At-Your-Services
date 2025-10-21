@@ -453,3 +453,40 @@ add_action('admin_post_nopriv_ays_stripe_checkout', function() {
 		wp_die('Stripe handler not found');
 	}
 });
+
+// === Link current WP user to an AYS client record (create if missing) ===
+add_action('admin_post_ays_link_client_account', function() {
+	if (!is_user_logged_in()) {
+		wp_die('Not logged in');
+	}
+	check_admin_referer('ays_link_client_account');
+	$user = wp_get_current_user();
+	if (!$user || empty($user->user_email)) {
+		wp_die('Missing user email');
+	}
+	global $wpdb;
+	$table = $wpdb->prefix . 'ays_clients';
+	// Try find existing by email
+	$client = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE email = %s OR secondary_email = %s LIMIT 1", $user->user_email, $user->user_email));
+	if (!$client) {
+		$insert = [
+			'hash' => md5(uniqid('client_', true)),
+			'name' => $user->display_name ?: $user->user_nicename ?: $user->user_login,
+			'email' => $user->user_email,
+			'status' => 'active',
+			'created_at' => current_time('mysql'),
+			'updated_at' => current_time('mysql'),
+		];
+		$wpdb->insert($table, $insert);
+		$client_id = (int) $wpdb->insert_id;
+	} else {
+		$client_id = (int) $client->id;
+	}
+	if ($client_id) {
+		update_user_meta($user->ID, 'ays_client_id', $client_id);
+		// Redirect back to invoices view
+		wp_safe_redirect(admin_url('admin.php?page=ays-client-invoices&ays_notice=linked'));
+		exit;
+	}
+	wp_die('Unable to link client');
+});
