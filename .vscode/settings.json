@@ -3,7 +3,12 @@
     "servers": {
       "chrome-devtools": {
         "command": "npx",
-        "args": ["-y", "chrome-devtools-mcp@latest"]
+        "args": [
+          "-y",
+          "chrome-devtools-mcp@latest",
+          "--browserUrl",
+          "ws://localhost:9222/devtools/browser"
+        ]
       }
     }
   },
