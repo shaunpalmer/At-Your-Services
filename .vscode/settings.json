@@ -7,7 +7,7 @@
           "-y",
           "chrome-devtools-mcp@latest",
           "--browserUrl",
-          "ws://localhost:9222/devtools/browser"
+          "ws://localhost:9223/devtools/browser"
         ]
       },
       "chrome-devtools-edge": {
