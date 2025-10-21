@@ -55,6 +55,50 @@
 		}
 		,
 		{
+			"label": "Start Edge (Client Invoices, Dedicated)",
+			"type": "shell",
+			"command": "msedge.exe",
+			"args": [
+				"--remote-debugging-port=9223",
+				"--user-data-dir=${workspaceFolder}/.edge-debug",
+				"--new-window",
+				"http://projectstudios.local/wp-admin/admin.php?page=ays-client-invoices"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Start MCP Server (Edge 9223)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"-y",
+				"chrome-devtools-mcp@latest",
+				"--browserUrl",
+				"ws://localhost:9223/devtools/browser"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Start Client Invoices + MCP (Edge)",
+			"type": "shell",
+			"command": "echo",
+			"args": ["Starting Edge (Dedicated) then MCP..."],
+			"dependsOn": [
+				"Start Edge (Client Invoices, Dedicated)",
+				"Start MCP Server (Edge 9223)"
+			],
+			"dependsOrder": "sequence",
+			"group": "build"
+		}
+		,
+		{
 			"label": "Start Client Invoices + MCP (Default Profile)",
 			"type": "shell",
 			"command": "echo",
