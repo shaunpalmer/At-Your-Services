@@ -2,14 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Start Chrome with Debugging",
+			"label": "Start Chrome (Client Invoices, Default Profile)",
 			"type": "shell",
 			"command": "chrome.exe",
 			"args": [
 				"--remote-debugging-port=9222",
-				"--user-data-dir=${workspaceFolder}/.chrome-debug",
 				"--new-window",
-				"http://projectstudios.local/wp-admin/admin.php?page=ays-invoicing"
+				"http://projectstudios.local/wp-admin/admin.php?page=ays-client-invoices"
 			],
 			"group": {
 				"kind": "build",
@@ -24,14 +23,14 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Start MCP Server",
+			"label": "Start Chrome (Client Invoices, Debug Profile)",
 			"type": "shell",
-			"command": "npx",
+			"command": "chrome.exe",
 			"args": [
-				"-y",
-				"chrome-devtools-mcp@latest",
-				"--browserUrl",
-				"ws://localhost:9222/devtools/browser"
+				"--remote-debugging-port=9222",
+				"--user-data-dir=${workspaceFolder}/.chrome-debug",
+				"--new-window",
+				"http://projectstudios.local/wp-admin/admin.php?page=ays-client-invoices"
 			],
 			"group": "build",
 			"presentation": {
@@ -53,18 +52,18 @@
 			],
 			"isBackground": true,
 			"group": "build"
-		},
+		}
+		,
 		{
-			"label": "Start MCP Server",
+			"label": "Start Client Invoices + MCP (Default Profile)",
 			"type": "shell",
-			"command": "npx",
-			"args": [
-				"-y",
-				"chrome-devtools-mcp@latest",
-				"--browserUrl",
-				"ws://localhost:9222/devtools/browser"
+			"command": "echo",
+			"args": ["Starting Chrome (Default Profile) then MCP..."],
+			"dependsOn": [
+				"Start Chrome (Client Invoices, Default Profile)",
+				"Start MCP Server"
 			],
-			"isBackground": true,
+			"dependsOrder": "sequence",
 			"group": "build"
 		}
 	]
