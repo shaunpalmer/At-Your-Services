@@ -83,7 +83,8 @@ class AYS_Invoice_Preview_Page {
         // Verify the invoice belongs to the current client
         global $wpdb;
         $inv_tbl = $wpdb->prefix . 'ays_invoices';
-        $client_id = (int) $wpdb->get_var($wpdb->prepare("SELECT client_id FROM {$inv_tbl} WHERE id = %d", $invoice_id));
+        $inv_row  = $wpdb->get_row($wpdb->prepare("SELECT client_id, status, viewed_at FROM {$inv_tbl} WHERE id = %d", $invoice_id));
+        $client_id = $inv_row ? (int) $inv_row->client_id : 0;
 
         if (!$client_id) {
             echo '<div class="notice notice-error"><p>' . esc_html__('Invoice not found.', 'atyourservice') . '</p></div>';
@@ -107,6 +108,27 @@ class AYS_Invoice_Preview_Page {
 
         if (!$matches_user && !current_user_can('manage_options')) {
             wp_die(__('You cannot view this invoice.', 'atyourservice'));
+        }
+
+        // Mark as viewed (first-view time) and optionally bump status from draft/sent -> viewed
+        // Only update if not already viewed and not paid/void
+        if ($inv_row) {
+            $current_status = isset($inv_row->status) ? strtolower((string) $inv_row->status) : 'draft';
+            $viewed_at_val  = isset($inv_row->viewed_at) ? $inv_row->viewed_at : null;
+            $update = [];
+
+            if (empty($viewed_at_val)) {
+                $update['viewed_at'] = current_time('mysql');
+            }
+
+            if (in_array($current_status, ['draft','sent'], true)) {
+                $update['status'] = 'viewed';
+            }
+
+            if (!empty($update)) {
+                $update['updated_at'] = current_time('mysql');
+                $wpdb->update($inv_tbl, $update, ['id' => $invoice_id], null, ['%d']);
+            }
         }
 
         if (class_exists('AYS_Invoice_Renderer')) {
