@@ -103,9 +103,9 @@ class AYS_Invoices_Tab {
 						.ays-chip { display:inline-block; padding:2px 8px; font-size:11px; border-radius:999px; background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; margin:2px 6px 2px 0; }
 						.ays-chip .dot { display:inline-block; width:6px; height:6px; background:#6366f1; border-radius:999px; margin-right:6px; vertical-align:middle; }
 					</style>
-					<form method="get" action="" style="margin: 0 0 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-						<input type="hidden" name="page" value="ays_invoicing_dashboard" />
-						<input type="hidden" name="tab" value="invoices" />
+						<form method="get" action="" style="margin: 0 0 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+							<input type="hidden" name="page" value="ays-dashboard" />
+							<input type="hidden" name="tab" value="invoices" />
 						<label for="ays-filter-svc" style="font-weight:600;">Filter by Service:</label>
 						<select id="ays-filter-svc" name="svc">
 							<option value="0">— All services —</option>
@@ -115,7 +115,7 @@ class AYS_Invoices_Tab {
 						</select>
 						<button class="button">Apply</button>
 						<?php if ( $filter_service ) : ?>
-							<a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ); ?>">Reset</a>
+								<a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ); ?>">Reset</a>
 						<?php endif; ?>
 					</form>
 					<table class="widefat striped">
@@ -132,9 +132,11 @@ class AYS_Invoices_Tab {
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $invoices as $invoice ) : ?>
+							<?php foreach ( $invoices as $invoice ) : 
+								$invoice_number = !empty($invoice->invoice_number) ? $invoice->invoice_number : (!empty($invoice->inv_number) ? $invoice->inv_number : ('INV-' . (int) $invoice->id));
+							?>
 								<tr>
-									<td><strong><?php echo esc_html( $invoice->invoice_number ); ?></strong></td>
+									<td><strong><?php echo esc_html( $invoice_number ); ?></strong></td>
 									<td><?php echo esc_html( $invoice->client_name ?: '—' ); ?></td>
 									<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->issue_date ) ) ); ?></td>
 									<td><?php echo esc_html( date_i18n( 'M d, Y', strtotime( $invoice->due_date ) ) ); ?></td>
@@ -146,6 +148,9 @@ class AYS_Invoices_Tab {
 										<?php self::render_service_type_chips( $invoice->id ); ?>
 									</td>
 									<td style="text-align: center;">
+										<a href="<?php echo esc_url( admin_url( 'admin.php?page=ays-invoice-preview&invoice_id=' . intval( $invoice->id ) ) ); ?>" class="button button-small">
+											<?php esc_html_e( 'Preview', 'atyourservice' ); ?>
+										</a>
 										<a href="<?php echo esc_url( add_query_arg( 'edit_invoice', $invoice->id ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
 										</a>

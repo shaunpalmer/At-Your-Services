@@ -19,13 +19,21 @@ class AYS_Shortcode_Customer_Dashboard {
      * Render the dashboard for the current logged-in user.
      */
     public function render() {
+        // Require login first
         if (!is_user_logged_in()) {
-            // Send to login and bounce back to the requested page after
-            wp_redirect(wp_login_url(add_query_arg([])));
+            // Redirect back to the current URL after login
+            $redirect_to = (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            wp_redirect(wp_login_url($redirect_to));
             exit;
         }
 
         $user = wp_get_current_user();
+
+        // Gate access by capability to avoid leaking data to basic subscribers
+        if (!user_can($user, 'access_customer_dashboard')) {
+            // Friendly message for logged-in users without access
+            return '<div class="notice notice-warning" style="padding:12px;">' . esc_html__('You do not have access to the customer dashboard.', 'atyourservice') . '</div>';
+        }
 
         ob_start();
         ?>
@@ -82,7 +90,8 @@ class AYS_Shortcode_Customer_Dashboard {
         echo '<th>#</th><th>Date</th><th style="text-align:right;">Total</th><th>Status</th><th>Actions</th>';
         echo '</tr></thead><tbody>';
         foreach ($invoices as $inv) {
-            $inv_num   = !empty($inv->invoice_number) ? $inv->invoice_number : ('INV-' . intval($inv->id));
+            $inv_num_col = !empty($inv->invoice_number) ? 'invoice_number' : (!empty($inv->inv_number) ? 'inv_number' : null);
+            $inv_num   = $inv_num_col ? $inv->$inv_num_col : ('INV-' . intval($inv->id));
             $issue     = !empty($inv->issue_date) ? date_i18n('M d, Y', strtotime($inv->issue_date)) : '—';
             $total_val = isset($inv->total) ? number_format((float)$inv->total, 2) : '0.00';
             $status    = !empty($inv->status) ? ucfirst($inv->status) : 'Pending';

@@ -8,6 +8,18 @@ The format loosely follows Keep a Changelog and versions aim for Semantic Versio
 - Email notifications for leads (planned)
 - Dynamic pricing calculator (planned)
 
+### [1.3.0] - 2025-10-20
+Added
+- Client Area inside wp-admin for roles Customer/Client (Invoices, Payments stub) with capability gating.
+- Dashboard cleanup for client roles and branded "At Your Service – Client Hub" widget.
+- Client invoices table with quick totals and payment actions (Stripe when configured, Bank Transfer details).
+
+Changed
+- Greeting prefers AYS Client name matched by email; falls back to WP display name.
+
+Deprecated
+- Shortcode [ays_customer_dashboard]. It now displays a friendly notice pointing users to the secure Client Area in wp-admin.
+
 ### [0.1.4] - 2025-09-21
 Added
 - Lead CPT (`ays_lead`) for capturing front-end submissions.

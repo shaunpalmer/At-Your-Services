@@ -59,8 +59,9 @@ require_once AYS_PLUGIN_PATH . 'includes/helpers/AYS_Email_Validator.php';
 require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
 require_once AYS_PLUGIN_PATH . 'admin/settings.php';
 require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
-require_once AYS_PLUGIN_PATH . 'includes/shortcode/class-ays-shortcode-customer-dashboard.php';
 require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-menu.php';
+require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-dashboard.php';
+require_once AYS_PLUGIN_PATH . 'includes/client/class-ays-client-dashboard.php';
 
 // === Notification System Bootstrap ===
 require_once AYS_PLUGIN_PATH . 'includes/notifications/AYS_Notification_Settings.php';
@@ -95,11 +96,33 @@ function ays_notifications_bootstrap() {
 		if (class_exists('AYS_AJAX_Tabs')) {
 			AYS_AJAX_Tabs::init();
 		}
+		// Register hidden preview pages (admin + client)
+		if (class_exists('AYS_Invoice_Preview_Page')) {
+			AYS_Invoice_Preview_Page::init();
+		}
 		// Ensure AJAX handler is registered regardless of UI instantiation timing
 		add_action('wp_ajax_ays_load_tab', ['AYS_Invoice_Admin_UI', 'ajax_load_tab']);
 	}
 }
 add_action('plugins_loaded', 'ays_notifications_bootstrap', 5);
+
+/**
+ * Deprecated shortcode: [ays_customer_dashboard]
+ * This shortcode is no longer supported. Direct users to the secure Client Area in wp-admin.
+ */
+add_shortcode('ays_customer_dashboard', function () {
+	if (function_exists('trigger_error')) {
+		// Inform developers in logs that this shortcode is deprecated
+		@trigger_error('[ays_customer_dashboard] shortcode is deprecated. Use the Client Area inside wp-admin.', E_USER_DEPRECATED);
+	}
+	$link = admin_url('admin.php?page=ays-client-dashboard');
+	$message  = '<div style="padding:1rem;border:1px solid #ccc;background:#fff3cd;color:#856404;">';
+	$message .= '<strong>[ays_customer_dashboard]</strong> has been deprecated.';
+	$message .= '<br>Your Client Portal is now located inside your secure WordPress dashboard.';
+	$message .= '<br><a href="' . esc_url($link) . '">Go to Client Area</a>';
+	$message .= '</div>';
+	return $message;
+});
 
 function ays_notifications_activate() {
     // Preflight check: Ensure the site can send emails.
@@ -124,13 +147,77 @@ function ays_notifications_activate() {
 }
 register_activation_hook(__FILE__, 'ays_notifications_activate');
 
-// Ensure a basic Customer role exists for front-end dashboard access (read-only)
-function ays_add_customer_role() {
+// Ensure roles and capabilities for front-end access exist
+function ays_add_roles_and_caps() {
+	// Create or update a basic Customer role with dashboard access
+	$customer_caps = [
+		'read' => true,
+		// Custom capability required to view the front-end customer dashboard
+		'access_customer_dashboard' => true,
+	];
 	if (!get_role('customer')) {
-		add_role('customer', 'Customer', [ 'read' => true ]);
+		add_role('customer', __('Customer', 'atyourservice'), $customer_caps);
+	} else {
+		// Ensure existing role gets our caps
+		$role = get_role('customer');
+		foreach ($customer_caps as $cap => $grant) {
+			if ($grant && $role && !$role->has_cap($cap)) {
+				$role->add_cap($cap);
+			}
+		}
+	}
+
+	// Optional: A separate "Client" role for future portal features
+	$client_caps = [
+		'read' => true,
+		'access_client_portal' => true,
+	];
+	if (!get_role('client')) {
+		add_role('client', __('Client', 'atyourservice'), $client_caps);
+	} else {
+		$role = get_role('client');
+		foreach ($client_caps as $cap => $grant) {
+			if ($grant && $role && !$role->has_cap($cap)) {
+				$role->add_cap($cap);
+			}
+		}
+	}
+
+	// Grant administrators both capabilities by default
+	if ($admin = get_role('administrator')) {
+		$admin->add_cap('access_customer_dashboard');
+		$admin->add_cap('access_client_portal');
 	}
 }
-register_activation_hook(__FILE__, 'ays_add_customer_role');
+register_activation_hook(__FILE__, 'ays_add_roles_and_caps');
+
+// Safety net: ensure capabilities are present even if roles already existed
+add_action('init', function () {
+	// Ensure admin retains caps (in case roles changed outside this plugin)
+	if ($admin = get_role('administrator')) {
+		if (!$admin->has_cap('access_customer_dashboard')) {
+			$admin->add_cap('access_customer_dashboard');
+		}
+		if (!$admin->has_cap('access_client_portal')) {
+			$admin->add_cap('access_client_portal');
+		}
+	}
+	// Ensure customer role has dashboard cap
+	$customer = get_role('customer');
+	if (!$customer) {
+		add_role('customer', __('Customer', 'atyourservice'), [ 'read' => true, 'access_customer_dashboard' => true ]);
+	} else if (!$customer->has_cap('access_customer_dashboard')) {
+		$customer->add_cap('access_customer_dashboard');
+	}
+
+	// Ensure client role exists and has portal cap
+	$client = get_role('client');
+	if (!$client) {
+		add_role('client', __('Client', 'atyourservice'), [ 'read' => true, 'access_client_portal' => true ]);
+	} else if (!$client->has_cap('access_client_portal')) {
+		$client->add_cap('access_client_portal');
+	}
+});
 
 /**
  * Checks if the database tables are installed and installs them if not.

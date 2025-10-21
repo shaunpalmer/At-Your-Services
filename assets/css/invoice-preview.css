@@ -1,0 +1,18 @@
+.ays-invoice-preview-card { background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:16px; box-shadow:0 1px 2px rgba(16,24,40,0.06); }
+.ays-invoice-topbar { display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
+.ays-invoice-header { display:grid; grid-template-columns:1fr auto; gap:16px; padding-bottom:12px; border-bottom:2px solid #f3f4f6; }
+.ays-invoice-header .company { display:flex; gap:12px; align-items:flex-start; }
+.ays-invoice-header .company-logo { width:64px; height:auto; object-fit:contain; }
+.ays-invoice-header .company-meta h2 { margin:0 0 6px; }
+.ays-invoice-header .invoice-meta { text-align:right; }
+.ays-invoice-billto { margin:14px 0; }
+.ays-invoice-items th, .ays-invoice-items td { vertical-align:top; }
+.ays-payment-actions { margin-top:14px; display:grid; gap:12px; }
+.ays-invoice-footer { margin-top:16px; padding-top:12px; border-top:1px solid #e5e7eb; }
+.ays-invoice-legal { margin-top:8px; font-size:12px; color:#6b7280; }
+.muted { color:#6b7280; }
+
+@media print {
+  .ays-invoice-topbar { display:none !important; }
+  .ays-invoice-preview-card { box-shadow:none; border-color:#ddd; }
+}

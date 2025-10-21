@@ -60,7 +60,10 @@ class Ays_Autoloader {
         'AYS_Payments_Tab'          => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-payments-tab.php',
         'AYS_Stripe_Settings'       => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-stripe-settings.php',
         'AYS_Stripe_Handler'        => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-stripe-handler.php',
-        'AYS_AJAX_Tabs'             => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-ajax-tabs.php'
+        'AYS_AJAX_Tabs'             => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-ajax-tabs.php',
+        'AYS_Invoice_Renderer'      => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-invoice-renderer.php',
+        'AYS_Invoice_Preview_Page'  => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-invoice-preview.php',
+        'AYS_Service_Type_Admin'    => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-service-type-admin.php'
     ];
 
     public static function autoload($class_name) {

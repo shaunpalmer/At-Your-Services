@@ -32,10 +32,14 @@ global $wpdb;
 echo "=== AYS Database Tables ===\n\n";
 
 // Optionally run installer to ensure tables exist and are up to date
-if (isset($argv) && in_array('--migrate', $argv, true)) {
+if (isset($argv) && (in_array('--migrate', $argv, true) || in_array('--force-migrate', $argv, true))) {
     if (file_exists(__DIR__ . '/includes/invoices/ays-install-invoices.php')) {
         require_once __DIR__ . '/includes/invoices/ays-install-invoices.php';
         if (function_exists('ays_invoices_install')) {
+            if (in_array('--force-migrate', $argv, true)) {
+                // Reset version so installer re-runs fully
+                delete_option('ays_invoices_db_version');
+            }
             echo "Running invoicing installer (migrations) ...\n";
             ays_invoices_install();
             echo "Done.\n\n";
@@ -62,7 +66,8 @@ if (isset($argv) && in_array('--report', $argv, true)) {
         'invoice_items' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_items"),
         'service_types' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_service_types"),
         'invoice_services' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_services"),
-        'payments' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments"),
+        'payments' => (int) ($wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s", $wpdb->prefix . 'ays_payments'))
+            ? $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments") : 0),
     ];
     printf(
         "Invoices: %d | Clients: %d | Items: %d | Invoice-Items: %d | Service Types: %d | Invoice-Services: %d | Payments: %d\n",
@@ -73,7 +78,11 @@ if (isset($argv) && in_array('--report', $argv, true)) {
     echo "Orphan Checks:\n";
     $orph_invoice_items = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_items ii LEFT JOIN {$wpdb->prefix}ays_invoices i ON ii.invoice_id = i.id WHERE i.id IS NULL");
     $orph_invoice_services = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoice_services ivs LEFT JOIN {$wpdb->prefix}ays_invoices i ON ivs.invoice_id = i.id WHERE i.id IS NULL");
-    $orph_payments = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments p LEFT JOIN {$wpdb->prefix}ays_invoices i ON p.invoice_id = i.id WHERE i.id IS NULL");
+    $orph_payments = 0;
+    $has_payments = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = %s", $wpdb->prefix . 'ays_payments'));
+    if ($has_payments) {
+        $orph_payments = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments p LEFT JOIN {$wpdb->prefix}ays_invoices i ON p.invoice_id = i.id WHERE i.id IS NULL");
+    }
     printf("  - invoice_items without invoice: %d\n", $orph_invoice_items);
     printf("  - invoice_services without invoice: %d\n", $orph_invoice_services);
     printf("  - payments without invoice: %d\n", $orph_payments);
@@ -97,7 +106,8 @@ echo "\n=== Invoices ===\n";
 $invoices = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ays_invoices");
 echo "Total invoices: " . count($invoices) . "\n";
 foreach ($invoices as $invoice) {
-    echo "  - {$invoice->invoice_number} (\${$invoice->total})\n";
+    $num = isset($invoice->invoice_number) && $invoice->invoice_number ? $invoice->invoice_number : (isset($invoice->inv_number) ? $invoice->inv_number : '(no number)');
+    echo "  - {$num} (\${$invoice->total})\n";
 }
 
 echo "\n";

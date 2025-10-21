@@ -1,4 +1,9 @@
- # Dependencies
+# Local Chrome debug profile (used by VS Code task "Start Chrome with Debugging")
+.chrome-debug/
+
+# OS junk
+.DS_Store
+Thumbs.db # Dependencies
  /vendor/
  /mcp-server/node_modules/
  /node_modules/

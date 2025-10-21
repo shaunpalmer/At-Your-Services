@@ -8,13 +8,35 @@
 define('WP_USE_THEMES', false);
 require(dirname(dirname(dirname(dirname(__FILE__)))) . '/wp-load.php');
 
-if (!current_user_can('manage_options')) {
+// Allow CLI execution for local/dev convenience
+$AYS_SEED_IS_CLI = (php_sapi_name() === 'cli');
+
+if (!$AYS_SEED_IS_CLI && !current_user_can('manage_options')) {
     wp_die('Not authorized');
 }
 
 global $wpdb;
 
-echo "<h2>Seeding Sample Data...</h2>";
+if ($AYS_SEED_IS_CLI) {
+    echo "Seeding Sample Data...\n";
+} else {
+    echo "<h2>Seeding Sample Data...</h2>";
+}
+
+// Helper: check if a column exists
+function ays_col_exists($table, $column) {
+    global $wpdb;
+    $table = esc_sql($table);
+    $column = esc_sql($column);
+    return (bool) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $table LIKE %s", $column));
+}
+
+// Helper: make slug
+function ays_slugify($text) {
+    $text = strtolower(trim($text));
+    $text = preg_replace('~[^a-z0-9]+~', '-', $text);
+    return trim($text, '-');
+}
 
 // Service Types (ensure status & sort_order columns when present)
 $service_types = [
@@ -31,8 +53,13 @@ foreach ($service_types as $st) {
     ));
     
     if (!$exists) {
-        $wpdb->insert("{$wpdb->prefix}ays_service_types", $st);
-        echo "<p>✓ Added service type: {$st['name']}</p>";
+        $to_insert = $st;
+        $to_insert['hash'] = md5(uniqid(mt_rand(), true));
+        if (ays_col_exists("{$wpdb->prefix}ays_service_types", 'slug')) {
+            $to_insert['slug'] = ays_slugify($st['name']);
+        }
+    $wpdb->insert("{$wpdb->prefix}ays_service_types", $to_insert);
+    echo $AYS_SEED_IS_CLI ? "✓ Added service type: {$st['name']}\n" : "<p>✓ Added service type: {$st['name']}</p>";
     }
 }
 
@@ -60,8 +87,11 @@ foreach ($items as $item) {
     ));
     
     if (!$exists) {
-        $wpdb->insert("{$wpdb->prefix}ays_items", $item);
-        echo "<p>✓ Added item: {$item['description']}</p>";
+        $to_insert = $item;
+        $to_insert['hash'] = md5(uniqid(mt_rand(), true));
+        if (!isset($to_insert['status'])) { $to_insert['status'] = 'active'; }
+    $wpdb->insert("{$wpdb->prefix}ays_items", $to_insert);
+    echo $AYS_SEED_IS_CLI ? "✓ Added item: {$item['description']}\n" : "<p>✓ Added item: {$item['description']}</p>";
     }
 }
 
@@ -92,22 +122,28 @@ foreach ($clients as $client) {
     
     if (!$exists) {
         $wpdb->insert("{$wpdb->prefix}ays_clients", $client);
-        echo "<p>✓ Added client: {$client['name']}</p>";
+        echo isset($AYS_SEED_IS_CLI) && $AYS_SEED_IS_CLI ? "✓ Added client: {$client['name']}\n" : "<p>✓ Added client: {$client['name']}</p>";
     }
 }
 
 // Invoices
 function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date_modifier, $items_to_add) {
-    global $wpdb;
+    global $wpdb, $AYS_SEED_IS_CLI;
 
     $client_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ays_clients WHERE name = %s", $client_name));
     if (!$client_id) {
-        echo "<p>✗ Could not find client: $client_name</p>";
+        echo $AYS_SEED_IS_CLI ? "✗ Could not find client: $client_name\n" : "<p>✗ Could not find client: $client_name</p>";
         return;
     }
 
-    $invoice_number = date('Y') . '-' . str_pad($wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoices") + 1, 3, '0', STR_PAD_LEFT);
-    $exists = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ays_invoices WHERE invoice_number = %s", $invoice_number));
+    $next_num = str_pad($wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoices") + 1, 3, '0', STR_PAD_LEFT);
+    $invoice_number = date('Y') . '-' . $next_num;
+    // Detect column name for invoice number
+    $col_inv_num = ays_col_exists("{$wpdb->prefix}ays_invoices", 'invoice_number') ? 'invoice_number' : (ays_col_exists("{$wpdb->prefix}ays_invoices", 'inv_number') ? 'inv_number' : null);
+    $exists = null;
+    if ($col_inv_num) {
+        $exists = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ays_invoices WHERE $col_inv_num = %s", $invoice_number));
+    }
 
     if (!$exists) {
         $subtotal = 0;
@@ -132,30 +168,61 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
         }
         $total = $subtotal + $tax_amount;
 
-        $wpdb->insert("{$wpdb->prefix}ays_invoices", [
-            'invoice_number' => $invoice_number,
+        $insert_invoice = [
             'client_id' => $client_id,
             'issue_date' => date('Y-m-d', strtotime($issue_date_modifier)),
             'due_date' => date('Y-m-d', strtotime($due_date_modifier)),
-            'subtotal' => $subtotal,
-            'tax_amount' => $tax_amount,
             'total' => $total,
             'status' => $status,
             'notes' => "Sample invoice for $client_name.",
             'created_at' => current_time('mysql'),
             'updated_at' => current_time('mysql'),
-        ]);
+            'hash' => md5(uniqid(mt_rand(), true)),
+        ];
+        if ($col_inv_num) { $insert_invoice[$col_inv_num] = $invoice_number; }
+        // Handle subtotal/tax naming differences
+        if (ays_col_exists("{$wpdb->prefix}ays_invoices", 'subtotal')) {
+            $insert_invoice['subtotal'] = $subtotal;
+        }
+        if (ays_col_exists("{$wpdb->prefix}ays_invoices", 'tax_amount')) {
+            $insert_invoice['tax_amount'] = $tax_amount;
+        } elseif (ays_col_exists("{$wpdb->prefix}ays_invoices", 'tax_total')) {
+            $insert_invoice['tax_total'] = $tax_amount;
+        }
+        $wpdb->insert("{$wpdb->prefix}ays_invoices", $insert_invoice);
         $invoice_id = $wpdb->insert_id;
 
         // Add items to the invoice
         foreach ($invoice_items_data as $item_data) {
-            // Insert only columns universally expected by current UI
-            $wpdb->insert("{$wpdb->prefix}ays_invoice_items", [
+            $insert_item = [
                 'invoice_id' => $invoice_id,
                 'item_id' => $item_data['item_id'],
-                'quantity' => $item_data['quantity'],
-                'rate' => $item_data['rate'],
-            ]);
+                'hash' => md5(uniqid(mt_rand(), true)),
+            ];
+            // quantity/qty
+            if (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'quantity')) {
+                $insert_item['quantity'] = $item_data['quantity'];
+            } elseif (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'qty')) {
+                $insert_item['qty'] = $item_data['quantity'];
+            }
+            // rate/price
+            if (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'rate')) {
+                $insert_item['rate'] = $item_data['rate'];
+            } elseif (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'price')) {
+                $insert_item['price'] = $item_data['rate'];
+            }
+            // optional computed columns if present
+            $line_total = $item_data['rate'] * $item_data['quantity'];
+            $line_tax = $line_total * 0.15; // keep in sync with above assumption
+            if (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'line_total')) {
+                $insert_item['line_total'] = $line_total;
+            }
+            if (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'line_tax')) {
+                $insert_item['line_tax'] = $line_tax;
+            } elseif (ays_col_exists("{$wpdb->prefix}ays_invoice_items", 'tax')) {
+                $insert_item['tax'] = $line_tax;
+            }
+            $wpdb->insert("{$wpdb->prefix}ays_invoice_items", $insert_item);
         }
 
         // Link invoice to service types via bridge using item->service_type_id
@@ -182,7 +249,7 @@ function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date
                 }
             }
         }
-        echo "<p>✓ Added invoice $invoice_number for $client_name.</p>";
+    echo $AYS_SEED_IS_CLI ? "✓ Added invoice $invoice_number for $client_name.\n" : "<p>✓ Added invoice $invoice_number for $client_name.</p>";
     }
 }
 
@@ -193,6 +260,10 @@ ays_seed_invoice('Charlie Davis', 'draft', 'now', '+30 days', ['Carpet Steam Cle
 ays_seed_invoice('Eva\'s Eatery', 'sent', '-5 days', '+25 days', ['Office Clean (per hour)' => 4, 'Window Cleaning (Exterior)' => 10]);
 ays_seed_invoice('Alice Williams', 'void', '-60 days', '-30 days', ['Deep Clean / Spring Clean' => 1]);
 
-echo "<h3>✓ Done! Refresh the dashboard to see the sample data.</h3>";
-echo "<p><a href='admin.php?page=ays-invoicing'>Go to dashboard</a></p>";
+if ($AYS_SEED_IS_CLI) {
+    echo "✓ Done!\n";
+} else {
+    echo "<h3>✓ Done! Refresh the dashboard to see the sample data.</h3>";
+    echo "<p><a href='admin.php?page=ays-invoicing'>Go to dashboard</a></p>";
+}
 ?>
