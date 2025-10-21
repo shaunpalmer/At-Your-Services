@@ -40,13 +40,26 @@ class AYS_Invoices_Tab {
 		// Display notices
 		self::display_notices();
 
-		// Get edit ID if present
+		// Get edit ID/hash if present
 		$edit_id = isset( $_GET['edit_invoice'] ) ? intval( $_GET['edit_invoice'] ) : 0;
+		$inv_hash = isset( $_GET['inv_hash'] ) ? sanitize_text_field( wp_unslash( $_GET['inv_hash'] ) ) : '';
 		$edit_invoice = $edit_id ? self::get_invoice( $edit_id ) : null;
+
+		// Robust fallback: if ID lookup failed, try by hash (from redirect) or fallback to most recent
+		if ( $edit_id && ! $edit_invoice ) {
+			if ( $inv_hash ) {
+				$edit_invoice = self::get_invoice_by_hash( $inv_hash );
+				if ( $edit_invoice ) {
+					// Normalize URL to the real ID
+					wp_safe_redirect( add_query_arg( [ 'edit_invoice' => intval( $edit_invoice->id ) ], remove_query_arg( 'inv_hash' ) ) );
+					exit;
+				}
+			}
+		}
 
 		if ( $edit_id && ! $edit_invoice ) {
 			echo '<div class="notice notice-error"><p>' . esc_html__( 'Invoice not found.', 'atyourservice' ) . '</p></div>';
-			return;
+			// Continue to list + quick create so user isn’t blocked
 		}
 
 		if ( $edit_invoice ) {
@@ -295,8 +308,9 @@ class AYS_Invoices_Tab {
 	protected static function render_invoice_editor( $invoice ) {
 		global $wpdb;
 
+		// Items schema uses `qty` (not `quantity`). Alias to `quantity` for renderer compatibility.
 		$invoice_items = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}ays_invoice_items WHERE invoice_id = %d ORDER BY created_at",
+			"SELECT ii.*, ii.qty AS quantity FROM {$wpdb->prefix}ays_invoice_items ii WHERE ii.invoice_id = %d ORDER BY ii.created_at",
 			$invoice->id
 		) );
 
@@ -359,6 +373,7 @@ class AYS_Invoices_Tab {
 										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Rate', 'atyourservice' ); ?></th>
 										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Amount', 'atyourservice' ); ?></th>
 										<th style="text-align: center; width: 60px;"><?php esc_html_e( 'Tax', 'atyourservice' ); ?></th>
+										<th style="text-align:center; width: 70px;">&nbsp;</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -369,10 +384,25 @@ class AYS_Invoices_Tab {
 											<td style="text-align: right;">$<?php echo esc_html( number_format( $item->rate, 2 ) ); ?></td>
 											<td style="text-align: right;">$<?php echo esc_html( number_format( $item->quantity * $item->rate, 2 ) ); ?></td>
 											<td style="text-align: center;"><?php echo $item->taxable ? '✓' : '—'; ?></td>
+											<td style="text-align:center;">
+												<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ays_delete_invoice_item&item_id=' . intval($item->id) . '&invoice_id=' . intval($invoice->id) ), 'ays_delete_invoice_item_' . intval($item->id) ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e('Delete this line?', 'atyourservice'); ?>')">&times;</a>
+											</td>
 										</tr>
 									<?php endforeach; ?>
 								</tbody>
 							</table>
+
+							<!-- Add Line Item Form -->
+							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:12px;display:grid;grid-template-columns:1fr 120px 140px 120px 120px;gap:8px;align-items:center;">
+								<?php wp_nonce_field( 'ays_add_invoice_item_' . $invoice->id, 'ays_add_item_nonce' ); ?>
+								<input type="hidden" name="action" value="ays_add_invoice_item" />
+								<input type="hidden" name="invoice_id" value="<?php echo esc_attr( $invoice->id ); ?>" />
+								<input type="text" name="description" placeholder="<?php esc_attr_e('Description', 'atyourservice'); ?>" class="regular-text" style="grid-column:1/2;" required />
+								<input type="number" name="quantity" step="0.01" min="0" value="1" placeholder="Qty" />
+								<input type="number" name="rate" step="0.01" min="0" value="0" placeholder="Rate" />
+								<label style="display:flex;align-items:center;gap:6px;justify-content:center;"><input type="checkbox" name="taxable" value="1" checked /> <?php esc_html_e('Taxable', 'atyourservice'); ?></label>
+								<button type="submit" class="button button-primary" style="width:100%;"><?php esc_html_e('Add line', 'atyourservice'); ?></button>
+							</form>
 						<?php endif; ?>
 					</div>
 
@@ -717,7 +747,137 @@ class AYS_Invoices_Tab {
 	 */
 	protected static function get_invoice( $invoice_id ) {
 		global $wpdb;
-		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}ays_invoices WHERE id = %d", $invoice_id ) );
+		// Support legacy/new schemas: inv_number (current) vs invoice_number (legacy), tax_total vs tax_amount
+		// Provide stable aliases for renderer: invoice_number and tax_amount always available
+		$sql = $wpdb->prepare(
+			"SELECT i.*, 
+					COALESCE(i.invoice_number, i.inv_number, CONCAT('INV-', i.id)) AS invoice_number,
+					COALESCE(i.tax_amount, i.tax_total, 0) AS tax_amount
+			 FROM {$wpdb->prefix}ays_invoices i WHERE i.id = %d",
+			$invoice_id
+		);
+		return $wpdb->get_row( $sql );
+	}
+
+	/**
+	 * Get invoice by hash (fallback safety for redirect)
+	 */
+	protected static function get_invoice_by_hash( $hash ) {
+		global $wpdb;
+		if ( empty( $hash ) ) return null;
+		$sql = $wpdb->prepare(
+			"SELECT i.*, 
+					COALESCE(i.invoice_number, i.inv_number, CONCAT('INV-', i.id)) AS invoice_number,
+					COALESCE(i.tax_amount, i.tax_total, 0) AS tax_amount
+			 FROM {$wpdb->prefix}ays_invoices i WHERE i.hash = %s LIMIT 1",
+			$hash
+		);
+		return $wpdb->get_row( $sql );
+	}
+
+	/**
+	 * Add a line item to an invoice
+	 */
+	public static function handle_add_invoice_item() {
+		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
+		check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
+		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
+		$qty  = isset($_POST['quantity']) ? floatval( str_replace(',', '.', $_POST['quantity']) ) : 1;
+		$rate = isset($_POST['rate']) ? floatval( str_replace(',', '.', $_POST['rate']) ) : 0;
+		$taxable = isset($_POST['taxable']) ? 1 : 0;
+		if ( ! $invoice_id || $desc === '' ) {
+			wp_safe_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id, 'ays_notice' => 'invoice_error' ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
+			exit;
+		}
+		global $wpdb;
+		$table = $wpdb->prefix . 'ays_invoice_items';
+		$line_total = round( $qty * $rate, 2 );
+		$tax_rate = self::get_tax_rate();
+		$line_tax = $taxable ? round( $line_total * $tax_rate, 2 ) : 0.00;
+		$wpdb->insert( $table, [
+			'hash' => md5( uniqid( 'item_', true ) ),
+			'invoice_id' => $invoice_id,
+			'description' => $desc,
+			'qty' => $qty,
+			'rate' => $rate,
+			'taxable' => $taxable,
+			'line_tax' => $line_tax,
+			'line_total' => $line_total,
+			'status' => 'active',
+			'created_at' => current_time('mysql'),
+			'updated_at' => current_time('mysql'),
+		], [ '%s','%d','%s','%f','%f','%d','%f','%f','%s','%s','%s' ] );
+
+		self::recalc_invoice_totals( $invoice_id );
+		wp_safe_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
+		exit;
+	}
+
+	/** Delete a line item */
+	public static function handle_delete_invoice_item() {
+		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+		$item_id = isset($_GET['item_id']) ? intval($_GET['item_id']) : 0;
+		$invoice_id = isset($_GET['invoice_id']) ? intval($_GET['invoice_id']) : 0;
+		check_admin_referer( 'ays_delete_invoice_item_' . $item_id );
+		global $wpdb;
+		$wpdb->delete( $wpdb->prefix.'ays_invoice_items', [ 'id' => $item_id ], [ '%d' ] );
+		if ( $invoice_id ) {
+			self::recalc_invoice_totals( $invoice_id );
+			wp_safe_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
+			exit;
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
+		exit;
+	}
+
+	/**
+	 * Recalculate invoice totals from items
+	 */
+	protected static function recalc_invoice_totals( $invoice_id ) {
+		global $wpdb;
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT 
+			SUM(line_total) AS subtotal,
+			SUM(line_tax)   AS tax
+			FROM {$wpdb->prefix}ays_invoice_items WHERE invoice_id = %d", $invoice_id ) );
+		$subtotal = $row && isset($row->subtotal) ? (float) $row->subtotal : 0.0;
+		$tax      = $row && isset($row->tax) ? (float) $row->tax : 0.0;
+		$total    = $subtotal + $tax;
+
+		$tax_col = self::get_invoice_tax_column(); // 'tax_total' or 'tax_amount'
+		$data = [
+			'subtotal' => $subtotal,
+			$tax_col   => $tax,
+			'total'    => $total,
+			'updated_at' => current_time('mysql'),
+		];
+		$fmt  = [ '%f', '%f', '%f', '%s' ];
+		$wpdb->update( $wpdb->prefix.'ays_invoices', $data, [ 'id' => $invoice_id ], $fmt, [ '%d' ] );
+	}
+
+	/** Tax rate (default 15%) */
+	protected static function get_tax_rate() {
+		$rate = get_option('ays_tax_rate');
+		if ($rate === false || $rate === '') return 0.15; // NZ GST default
+		$rate = floatval($rate);
+		if ($rate > 1) { // allow 15 for 15%
+			$rate = $rate / 100.0;
+		}
+		return max(0.0, $rate);
+	}
+
+	/** Determine invoice tax column name */
+	protected static function get_invoice_tax_column() {
+		static $col = null;
+		if ($col !== null) return $col;
+		global $wpdb;
+		$table = $wpdb->prefix . 'ays_invoices';
+		$has_tax_amount = (bool) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'tax_amount'",
+			$table
+		) );
+		$col = $has_tax_amount ? 'tax_amount' : 'tax_total';
+		return $col;
 	}
 
 	/**
@@ -742,37 +902,49 @@ class AYS_Invoices_Tab {
 		$notes = isset( $_POST['notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) ) : '';
 
 		if ( ! $client_id ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
 			exit;
 		}
 
 		// Generate invoice number (e.g., INV-2025-001)
 		$last_invoice = $wpdb->get_row( "SELECT MAX(id) as last_id FROM {$wpdb->prefix}ays_invoices" );
-		$invoice_number = 'INV-' . date( 'Y' ) . '-' . str_pad( ( $last_invoice->last_id + 1 ), 3, '0', STR_PAD_LEFT );
+		$next_seq = isset($last_invoice->last_id) ? ( (int) $last_invoice->last_id + 1 ) : 1;
+		$invoice_number = 'INV-' . date( 'Y' ) . '-' . str_pad( $next_seq, 3, '0', STR_PAD_LEFT );
 
-		$result = $wpdb->insert(
-			"{$wpdb->prefix}ays_invoices",
-			[
-				'invoice_number' => $invoice_number,
-				'client_id' => $client_id,
-				'issue_date' => $issue_date,
-				'due_date' => $due_date,
-				'subtotal' => 0,
-				'tax_amount' => 0,
-				'total' => 0,
-				'status' => 'draft',
-				'notes' => $notes,
-				'created_at' => current_time( 'mysql' ),
-				'updated_at' => current_time( 'mysql' ),
-			],
-			[ '%s', '%d', '%s', '%s', '%f', '%f', '%f', '%s', '%s', '%s', '%s' ]
-		);
+		// Determine correct column for invoice number (invoice_number vs inv_number)
+		$has_invoice_number = (bool) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = 'invoice_number'",
+			$wpdb->prefix . 'ays_invoices'
+		) );
+		$num_col = $has_invoice_number ? 'invoice_number' : 'inv_number';
+
+		// Choose correct tax column for insert (tax_amount vs tax_total) and include required hash
+		$tax_col = self::get_invoice_tax_column();
+		$inv_hash = md5( uniqid( 'inv_', true ) );
+		$data = [
+			'hash'        => $inv_hash,
+			$num_col      => $invoice_number,
+			'client_id'   => $client_id,
+			'issue_date'  => $issue_date,
+			'due_date'    => $due_date,
+			'subtotal'    => 0,
+			$tax_col      => 0,
+			'total'       => 0,
+			'status'      => 'draft',
+			'notes'       => $notes,
+			'created_at'  => current_time( 'mysql' ),
+			'updated_at'  => current_time( 'mysql' ),
+		];
+		$formats = [ '%s', '%s', '%d', '%s', '%s', '%f', '%f', '%f', '%s', '%s', '%s', '%s' ];
+		$result = $wpdb->insert( "{$wpdb->prefix}ays_invoices", $data, $formats );
 
 		if ( $result ) {
 			$invoice_id = $wpdb->insert_id;
-			wp_redirect( add_query_arg( 'edit_invoice', $invoice_id, add_query_arg( 'ays_notice', 'invoice_created', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) ) );
+			$url = admin_url( 'admin.php?page=ays-dashboard&tab=invoices' );
+			$url = add_query_arg( [ 'ays_notice' => 'invoice_created', 'edit_invoice' => $invoice_id, 'inv_hash' => $inv_hash ], $url );
+			wp_redirect( $url );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
 		}
 		exit;
 	}
@@ -801,9 +973,9 @@ class AYS_Invoices_Tab {
 		$result = $wpdb->delete( "{$wpdb->prefix}ays_invoices", [ 'id' => $invoice_id ], [ '%d' ] );
 
 		if ( $result ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'invoice_deleted', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_deleted', admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'invoice_error', admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
 		}
 		exit;
 	}
@@ -839,7 +1011,7 @@ class AYS_Invoices_Tab {
 			], [ '%s', '%d', '%d', '%d' ] );
 		}
 
-		wp_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id, 'ays_notice' => 'invoice_services_updated' ], admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=invoices' ) ) );
+		wp_redirect( add_query_arg( [ 'edit_invoice' => $invoice_id, 'ays_notice' => 'invoice_services_updated' ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) );
 		exit;
 	}
 

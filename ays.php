@@ -412,6 +412,23 @@ add_action('admin_post_ays_update_invoice_services', function() {
 	}
 });
 
+// Add/Delete invoice line items
+add_action('admin_post_ays_add_invoice_item', function() {
+	if (class_exists('AYS_Invoices_Tab')) {
+		AYS_Invoices_Tab::handle_add_invoice_item();
+	} else {
+		wp_die('Invoices class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_invoice_item', function() {
+	if (class_exists('AYS_Invoices_Tab')) {
+		AYS_Invoices_Tab::handle_delete_invoice_item();
+	} else {
+		wp_die('Invoices class not found');
+	}
+});
+
 // === Payments Tab admin-post handlers ===
 add_action('admin_post_ays_add_payment', function() {
 	if (class_exists('AYS_Payments_Tab')) {
