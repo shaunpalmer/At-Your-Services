@@ -9,6 +9,11 @@ defined('ABSPATH') || exit;
  * Renders Invoices (and a Payments stub) filtered to the logged-in user's client record.
  */
 class AYS_Client_Dashboard {
+    /**
+     * Cache invoice table columns so schema checks stay cheap per request.
+     */
+    private static $invoice_column_cache = null;
+
     public static function init() {
         add_action('admin_menu', [self::class, 'register_menu'], 20);
     }
@@ -65,6 +70,60 @@ class AYS_Client_Dashboard {
     }
 
     /**
+     * Check whether the invoices table exposes a specific column.
+     */
+    private static function invoice_table_has_column($column) {
+        if (self::$invoice_column_cache === null) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'ays_invoices';
+            $columns = $wpdb->get_col("SHOW COLUMNS FROM {$table}");
+            self::$invoice_column_cache = [];
+            if ($columns) {
+                foreach ($columns as $col_name) {
+                    self::$invoice_column_cache[$col_name] = true;
+                }
+            }
+        }
+        return isset(self::$invoice_column_cache[$column]);
+    }
+
+    /**
+     * Build a SELECT fragment for invoice/inv_number that protects missing columns.
+     */
+    private static function invoice_number_select_clause($alias = '') {
+        $prefix = $alias ? rtrim($alias, '.') . '.' : '';
+        $parts = [];
+        if (self::invoice_table_has_column('invoice_number')) {
+            $parts[] = $prefix . 'invoice_number';
+        } else {
+            $parts[] = 'NULL AS invoice_number';
+        }
+
+        if (self::invoice_table_has_column('inv_number')) {
+            $parts[] = $prefix . 'inv_number';
+        } else {
+            $parts[] = 'NULL AS inv_number';
+        }
+        return implode(', ', $parts);
+    }
+
+    /**
+     * Order invoices with graceful fallback if created_at is absent.
+     */
+    private static function invoice_order_clause() {
+        $clauses = [];
+        if (self::invoice_table_has_column('issue_date')) {
+            $clauses[] = 'issue_date DESC';
+        }
+        if (self::invoice_table_has_column('created_at')) {
+            $clauses[] = 'created_at DESC';
+        } else {
+            $clauses[] = 'id DESC';
+        }
+        return implode(', ', $clauses);
+    }
+
+    /**
      * Helper: Get the logged-in user's matching AYS client row by email.
      */
     private static function get_current_client() {
@@ -93,6 +152,46 @@ class AYS_Client_Dashboard {
     }
 
     /**
+     * Render contextual notices for the client portal based on ays_notice query arg.
+     */
+    private static function render_portal_notices() {
+        if (empty($_GET['ays_notice'])) {
+            return;
+        }
+
+        $notice_key = sanitize_key($_GET['ays_notice']);
+        $notices = [
+            'linked' => [
+                'class' => 'notice notice-success is-dismissible',
+                'text'  => __('We linked your login to your client account. You can now view your invoices.', 'atyourservice'),
+            ],
+            'payment_success' => [
+                'class' => 'notice notice-success is-dismissible',
+                'text'  => __('Thanks! Your payment was received successfully.', 'atyourservice'),
+            ],
+            'payment_failed' => [
+                'class' => 'notice notice-error is-dismissible',
+                'text'  => __('We could not process that payment. Please try again or contact support.', 'atyourservice'),
+            ],
+            'payment_pending' => [
+                'class' => 'notice notice-warning is-dismissible',
+                'text'  => __('Your payment is pending confirmation. We will update you shortly.', 'atyourservice'),
+            ],
+            'payment_cancelled' => [
+                'class' => 'notice notice-warning is-dismissible',
+                'text'  => __('It looks like the payment was cancelled before completion.', 'atyourservice'),
+            ],
+        ];
+
+        if (!isset($notices[$notice_key])) {
+            return;
+        }
+
+        $notice = $notices[$notice_key];
+        printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($notice['class']), esc_html($notice['text']));
+    }
+
+    /**
     * Render the top-level Client Portal intro page.
      */
     public static function render_client_dashboard() {
@@ -100,6 +199,7 @@ class AYS_Client_Dashboard {
             echo '<div class="notice notice-warning"><p>' . esc_html__('You do not have access to the client portal.', 'atyourservice') . '</p></div>';
             return;
         }
+        self::render_portal_notices();
         global $wpdb;
         $client = self::get_current_client();
         $name = $client && !empty($client->name) ? $client->name : wp_get_current_user()->display_name;
@@ -136,6 +236,63 @@ class AYS_Client_Dashboard {
                 </div>
             </div>
 
+            <?php if ($client) :
+                $number_select = self::invoice_number_select_clause();
+                $order_clause  = self::invoice_order_clause();
+                $recent = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id, {$number_select}, issue_date, due_date, total, status
+                     FROM {$wpdb->prefix}ays_invoices
+                     WHERE client_id = %d
+                     ORDER BY {$order_clause}
+                     LIMIT 6",
+                    $client->id
+                ));
+            ?>
+                <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:20px;">
+                    <h2 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+                        <span><?php esc_html_e('Recent Invoices', 'atyourservice'); ?></span>
+                        <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=ays-client-invoices')); ?>"><?php esc_html_e('View All', 'atyourservice'); ?></a>
+                    </h2>
+                    <?php if ($recent) : ?>
+                        <table class="widefat striped" style="margin-top:0;">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Invoice #', 'atyourservice'); ?></th>
+                                    <th><?php esc_html_e('Issued', 'atyourservice'); ?></th>
+                                    <th><?php esc_html_e('Due', 'atyourservice'); ?></th>
+                                    <th style="text-align:right;">&nbsp;<?php esc_html_e('Total', 'atyourservice'); ?></th>
+                                    <th><?php esc_html_e('Status', 'atyourservice'); ?></th>
+                                    <th><?php esc_html_e('Actions', 'atyourservice'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent as $row) :
+                                    $number = !empty($row->invoice_number) ? $row->invoice_number : (!empty($row->inv_number) ? $row->inv_number : ('INV-' . (int)$row->id));
+                                    $issued = $row->issue_date ? date_i18n('M j, Y', strtotime($row->issue_date)) : '—';
+                                    $due    = $row->due_date ? date_i18n('M j, Y', strtotime($row->due_date)) : '—';
+                                    $total  = number_format((float)$row->total, 2);
+                                    $status = ucfirst($row->status ?? 'pending');
+                                    $view_url = admin_url('admin.php?page=ays-client-invoice-view&invoice_id=' . intval($row->id));
+                                ?>
+                                    <tr>
+                                        <td><?php echo esc_html($number); ?></td>
+                                        <td><?php echo esc_html($issued); ?></td>
+                                        <td><?php echo esc_html($due); ?></td>
+                                        <td style="text-align:right;">$<?php echo esc_html($total); ?></td>
+                                        <td><?php echo esc_html($status); ?></td>
+                                        <td>
+                                            <a class="button button-small" href="<?php echo esc_url($view_url); ?>" target="_blank" rel="noopener"><?php esc_html_e('View / Print', 'atyourservice'); ?></a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else : ?>
+                        <p style="margin:0; color:#6b7280;"><?php esc_html_e('No invoices yet. As soon as one is issued it will appear here for reference.', 'atyourservice'); ?></p>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
             <p><a class="button" href="<?php echo esc_url(admin_url('profile.php')); ?>"><?php esc_html_e('Update my details', 'atyourservice'); ?></a></p>
         </div>
         <?php
@@ -149,6 +306,7 @@ class AYS_Client_Dashboard {
             echo '<div class="notice notice-warning"><p>' . esc_html__('You do not have access to the client portal.', 'atyourservice') . '</p></div>';
             return;
         }
+        self::render_portal_notices();
         global $wpdb;
         $client = self::get_current_client();
         echo '<div class="wrap">';
@@ -162,11 +320,13 @@ class AYS_Client_Dashboard {
             return;
         }
 
+        $number_select = self::invoice_number_select_clause();
+        $order_clause  = self::invoice_order_clause();
         $invoices = $wpdb->get_results($wpdb->prepare(
-            "SELECT id, invoice_number, inv_number, issue_date, due_date, total, status
+            "SELECT id, {$number_select}, issue_date, due_date, total, status
              FROM {$wpdb->prefix}ays_invoices
              WHERE client_id = %d
-             ORDER BY issue_date DESC, created_at DESC",
+             ORDER BY {$order_clause}",
             $client->id
         ));
 
@@ -217,6 +377,10 @@ class AYS_Client_Dashboard {
             // View link to unified preview
             $view_url = admin_url('admin.php?page=ays-client-invoice-view&invoice_id=' . intval($inv->id));
             echo '<a class="button" style="margin-right:6px;" href="' . esc_url($view_url) . '">' . esc_html__('View', 'atyourservice') . '</a>';
+            
+            // Download PDF (Stub)
+            echo '<a class="button" style="margin-right:6px;" href="#" onclick="alert(\'PDF Download coming soon!\'); return false;">' . esc_html__('Download PDF', 'atyourservice') . '</a>';
+
             // Stripe Pay button
             if ($stripe_enabled && strtolower($inv->status) !== 'paid') {
                 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline-block;margin-right:6px;">';
@@ -257,6 +421,7 @@ class AYS_Client_Dashboard {
             echo '<div class="notice notice-warning"><p>' . esc_html__('You do not have access to the client portal.', 'atyourservice') . '</p></div>';
             return;
         }
+        self::render_portal_notices();
         global $wpdb;
         $client = self::get_current_client();
         echo '<div class="wrap">';
@@ -270,9 +435,10 @@ class AYS_Client_Dashboard {
         $payments_table = $wpdb->prefix . 'ays_payments';
         $has_payments = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $payments_table)) === $payments_table;
         if ($has_payments) {
+            $invoice_numbers = self::invoice_number_select_clause('i');
             $rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT p.id, p.amount, p.method, p.status, p.created_at,
-                        i.invoice_number, i.inv_number
+                        {$invoice_numbers}
                  FROM {$payments_table} p
                  JOIN {$wpdb->prefix}ays_invoices i ON i.id = p.invoice_id
                  WHERE i.client_id = %d

@@ -126,6 +126,80 @@ foreach ($clients as $client) {
     }
 }
 
+// Ensure each seeded client has a matching WordPress user for the portal
+ays_seed_portal_users($clients);
+
+function ays_seed_portal_users($clients) {
+    global $wpdb, $AYS_SEED_IS_CLI;
+
+    if (empty($clients)) {
+        return;
+    }
+
+    $default_password = 'ClientPortal!23';
+    foreach ($clients as $client) {
+        $client_row = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, email, name FROM {$wpdb->prefix}ays_clients WHERE email = %s LIMIT 1",
+            $client['email']
+        ));
+        if (!$client_row) {
+            continue;
+        }
+
+        $user = get_user_by('email', $client_row->email);
+        $created = false;
+        if ($user && strpos($user->user_login, '.') === 0) {
+            require_once ABSPATH . 'wp-admin/includes/user.php';
+            wp_delete_user($user->ID);
+            $user = null;
+        }
+        if (!$user) {
+            $login = sanitize_user(preg_replace('~[^a-z0-9]+~', '.', strtolower($client_row->name)));
+            $login = trim($login, '.-_' );
+            if (!$login) {
+                $login = 'client_' . (int) $client_row->id;
+            }
+            $base_login = $login;
+            $suffix = 1;
+            while (username_exists($login)) {
+                $login = $base_login . $suffix;
+                $suffix++;
+            }
+
+            $user_id = wp_insert_user([
+                'user_login' => $login,
+                'user_pass'  => $default_password,
+                'user_email' => $client_row->email,
+                'display_name' => $client_row->name,
+                'role' => 'customer',
+            ]);
+            if (is_wp_error($user_id)) {
+                $message = '⚠️ Failed to create portal user for ' . $client_row->name . ': ' . $user_id->get_error_message();
+                echo $AYS_SEED_IS_CLI ? $message . "\n" : '<p>' . esc_html($message) . '</p>';
+                continue;
+            }
+            $created = true;
+            $user = get_user_by('id', $user_id);
+        }
+
+        if (!$user) {
+            continue;
+        }
+
+        update_user_meta($user->ID, 'ays_client_id', (int) $client_row->id);
+
+        $wp_user = new WP_User($user->ID);
+        $wp_user->add_cap('access_customer_dashboard');
+        $wp_user->add_cap('access_client_portal');
+
+        $message = ($created ? '✓ Created portal user ' : '• Refreshed portal user ') . $user->user_login . ' for ' . $client_row->name;
+        if ($created) {
+            $message .= " (password: {$default_password})";
+        }
+        echo $AYS_SEED_IS_CLI ? $message . "\n" : '<p>' . esc_html($message) . '</p>';
+    }
+}
+
 // Invoices
 function ays_seed_invoice($client_name, $status, $issue_date_modifier, $due_date_modifier, $items_to_add) {
     global $wpdb, $AYS_SEED_IS_CLI;

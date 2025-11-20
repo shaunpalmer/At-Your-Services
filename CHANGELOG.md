@@ -8,6 +8,11 @@ The format loosely follows Keep a Changelog and versions aim for Semantic Versio
 - Email notifications for leads (planned)
 - Dynamic pricing calculator (planned)
 
+Added
+- Client Portal dashboard now tolerates legacy invoice schemas (missing `invoice_number`/`created_at`) and still renders invoice history.
+- `seed-sample-data.php` provisions portal-ready WordPress accounts for each seeded client and links them automatically.
+- Introduced `test-client-dashboard.php` CLI smoke test to quickly confirm Recent Invoices output after seeding.
+
 ### [1.3.0] - 2025-10-20
 Added
 - Client Area inside wp-admin for roles Customer/Client (Invoices, Payments stub) with capability gating.
