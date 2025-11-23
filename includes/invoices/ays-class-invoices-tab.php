@@ -1099,7 +1099,10 @@ class AYS_Invoices_Tab {
 	 * Add a line item to an invoice
 	 */
 	public static function handle_add_invoice_item() {
-		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
+			exit;
+		}
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
 		check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
@@ -1130,7 +1133,8 @@ class AYS_Invoices_Tab {
 		], [ '%s','%d','%s','%f','%f','%d','%f','%f','%s','%s','%s' ] );
 
 		self::recalc_invoice_totals( $invoice_id );
-		wp_safe_redirect( add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) );
+		// Redirect back to the edit page within the same request
+		wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
 		exit;
 	}
 
@@ -1138,7 +1142,10 @@ class AYS_Invoices_Tab {
 	 * Handle updating a line item
 	 */
 	public static function handle_update_invoice_item() {
-		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
+			exit;
+		}
 		$item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
 		check_admin_referer( 'ays_update_invoice_item_' . $item_id, 'ays_item_nonce' );
@@ -1175,13 +1182,17 @@ class AYS_Invoices_Tab {
 		);
 
 		self::recalc_invoice_totals( $invoice_id );
-		wp_safe_redirect( add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) );
+		// Redirect back to the edit page
+		wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
 		exit;
 	}
 
 	/** Delete a line item */
 	public static function handle_delete_invoice_item() {
-		if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
+			exit;
+		}
 		$item_id = isset($_GET['item_id']) ? intval($_GET['item_id']) : 0;
 		$invoice_id = isset($_GET['invoice_id']) ? intval($_GET['invoice_id']) : 0;
 		check_admin_referer( 'ays_delete_invoice_item_' . $item_id );
@@ -1189,7 +1200,7 @@ class AYS_Invoices_Tab {
 		$wpdb->delete( $wpdb->prefix.'ays_invoice_items', [ 'id' => $item_id ], [ '%d' ] );
 		if ( $invoice_id ) {
 			self::recalc_invoice_totals( $invoice_id );
-			wp_safe_redirect( add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
 			exit;
 		}
 		wp_safe_redirect( add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices' ], admin_url( 'admin.php' ) ) );
