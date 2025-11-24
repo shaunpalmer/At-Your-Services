@@ -1099,11 +1099,20 @@ class AYS_Invoices_Tab {
 	 * Add a line item to an invoice
 	 */
 	public static function handle_add_invoice_item() {
+		// DEBUG: Log entry point
+		error_log( '[AYS_Invoices_Tab::handle_add_invoice_item] Handler called' );
+		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
+		error_log( '[Auth] User ID: ' . get_current_user_id() );
+		error_log( '[Auth] User roles: ' . implode( ', ', wp_get_current_user()->roles ) );
+		
 		if ( ! current_user_can( 'manage_options' ) ) {
+			error_log( '[BLOCKED] Permission denied - redirecting' );
 			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
 			exit;
 		}
+		
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
+		error_log( '[Data] Invoice ID: ' . $invoice_id );
 		check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
 		$qty  = isset($_POST['quantity']) ? floatval( str_replace(',', '.', $_POST['quantity']) ) : 1;
@@ -1142,12 +1151,19 @@ class AYS_Invoices_Tab {
 	 * Handle updating a line item
 	 */
 	public static function handle_update_invoice_item() {
+		// DEBUG: Log entry point
+		error_log( '[AYS_Invoices_Tab::handle_update_invoice_item] Handler called' );
+		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
+		error_log( '[Auth] User ID: ' . get_current_user_id() );
+		
 		if ( ! current_user_can( 'manage_options' ) ) {
+			error_log( '[BLOCKED] Permission denied - redirecting' );
 			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
 			exit;
 		}
 		$item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
+		error_log( '[Data] Item ID: ' . $item_id . ', Invoice ID: ' . $invoice_id );
 		check_admin_referer( 'ays_update_invoice_item_' . $item_id, 'ays_item_nonce' );
 		
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
@@ -1189,7 +1205,13 @@ class AYS_Invoices_Tab {
 
 	/** Delete a line item */
 	public static function handle_delete_invoice_item() {
+		// DEBUG: Log entry point
+		error_log( '[AYS_Invoices_Tab::handle_delete_invoice_item] Handler called' );
+		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
+		error_log( '[Auth] User ID: ' . get_current_user_id() );
+		
 		if ( ! current_user_can( 'manage_options' ) ) {
+			error_log( '[BLOCKED] Permission denied - redirecting' );
 			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
 			exit;
 		}
