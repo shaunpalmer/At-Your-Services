@@ -1099,21 +1099,40 @@ class AYS_Invoices_Tab {
 	 * Add a line item to an invoice
 	 */
 	public static function handle_add_invoice_item() {
-		// DEBUG: Log entry point
-		error_log( '[AYS_Invoices_Tab::handle_add_invoice_item] Handler called' );
-		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
-		error_log( '[Auth] User ID: ' . get_current_user_id() );
-		error_log( '[Auth] User roles: ' . implode( ', ', wp_get_current_user()->roles ) );
+		// DEBUG: Detailed diagnostics
+		error_log( '========== ADD ITEM HANDLER START ==========' );
+		error_log( 'Time: ' . current_time('mysql') );
+		error_log( 'User ID: ' . get_current_user_id() );
+		error_log( 'Is user logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
+		error_log( 'Capabilities: ' . print_r( wp_get_current_user()->caps, true ) );
+		error_log( 'Can manage_options: ' . ( current_user_can( 'manage_options' ) ? 'YES' : 'NO' ) );
+		error_log( 'POST data: ' . print_r( $_POST, true ) );
+		
+		if ( ! is_user_logged_in() ) {
+			error_log( '>>> USER NOT LOGGED IN - Check session/cookies' );
+			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=not_logged_in' ) );
+			exit;
+		}
 		
 		if ( ! current_user_can( 'manage_options' ) ) {
-			error_log( '[BLOCKED] Permission denied - redirecting' );
+			error_log( '>>> PERMISSION DENIED FOR USER ID: ' . get_current_user_id() );
 			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
 			exit;
 		}
 		
+		error_log( '>>> PERMISSION GRANTED - Processing item' );
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
-		error_log( '[Data] Invoice ID: ' . $invoice_id );
-		check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
+		error_log( 'Invoice ID: ' . $invoice_id );
+		
+		try {
+			check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
+			error_log( 'Nonce check passed' );
+		} catch ( Exception $e ) {
+			error_log( 'Nonce check failed: ' . $e->getMessage() );
+			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=nonce_failed' ) );
+			exit;
+		}
+		
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
 		$qty  = isset($_POST['quantity']) ? floatval( str_replace(',', '.', $_POST['quantity']) ) : 1;
 		$rate = isset($_POST['rate']) ? floatval( str_replace(',', '.', $_POST['rate']) ) : 0;
