@@ -37,7 +37,7 @@ class AYS_Invoice_Renderer {
         $client = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$clients_tbl} WHERE id = %d LIMIT 1", (int) $invoice->client_id));
 
         $items = $wpdb->get_results($wpdb->prepare(
-            "SELECT description, quantity, rate, taxable FROM {$items_table} WHERE invoice_id = %d ORDER BY id",
+            "SELECT description, qty AS quantity, rate, taxable FROM {$items_table} WHERE invoice_id = %d ORDER BY id",
             $invoice_id
         ));
 

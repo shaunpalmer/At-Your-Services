@@ -483,12 +483,12 @@ class AYS_Company_Profile {
 						'<p><button type="button" class="button button-small" id="remove_logo_btn">Remove Logo</button></p>';
 					$('#company_logo_preview').html(preview);
 					
-					// Rebind remove button
-					$('#remove_logo_btn').on('click', function(e) {
-						e.preventDefault();
-						$('#company_logo_id').val(0);
-						$('#company_logo_preview').html('<p style="color: #6b7280;"><?php esc_js_e( 'No logo uploaded yet', 'atyourservice' ); ?></p>');
-					});
+				// Rebind remove button
+				$('#remove_logo_btn').on('click', function(e) {
+					e.preventDefault();
+					$('#company_logo_id').val(0);
+					$('#company_logo_preview').html('<p style="color: #6b7280;"><?php echo esc_js( __( 'No logo uploaded yet', 'atyourservice' ) ); ?></p>');
+				});
 				});
 
 				mediaUploader.open();
@@ -498,7 +498,7 @@ class AYS_Company_Profile {
 			$('#remove_logo_btn').on('click', function(e) {
 				e.preventDefault();
 				$('#company_logo_id').val(0);
-				$('#company_logo_preview').html('<p style="color: #6b7280;"><?php esc_js_e( 'No logo uploaded yet', 'atyourservice' ); ?></p>');
+				$('#company_logo_preview').html('<p style="color: #6b7280;"><?php echo esc_js( __( 'No logo uploaded yet', 'atyourservice' ) ); ?></p>');
 			});
 		});
 		</script>

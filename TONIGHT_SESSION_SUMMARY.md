@@ -294,3 +294,11 @@ if ( ! ays_is_premium( 'client_portal_advanced' ) ) {
 ---
 
 **Next session focus:** Permission flow debugging + Premium feature planning
+free-version-clean (PRODUCTION)
+  ├─ For: Free tier users
+  └─ Features: Basic invoicing, leads, client portal
+
+premium (DEVELOPMENT)
+  ├─ For: Premium feature development
+  ├─ License system ✅
+  └─ Ready for: Payments, automation, advanced features
