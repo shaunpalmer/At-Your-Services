@@ -455,6 +455,7 @@ class AYS_Company_Profile {
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
 			let mediaUploader;
+			const noLogoText = <?php echo wp_json_encode( __( 'No logo uploaded yet', 'atyourservice' ) ); ?>;
 
 			$('#upload_logo_btn').on('click', function(e) {
 				e.preventDefault();
@@ -483,23 +484,23 @@ class AYS_Company_Profile {
 						'<p><button type="button" class="button button-small" id="remove_logo_btn">Remove Logo</button></p>';
 					$('#company_logo_preview').html(preview);
 					
-				// Rebind remove button
-				$('#remove_logo_btn').on('click', function(e) {
-					e.preventDefault();
-					$('#company_logo_id').val(0);
-					$('#company_logo_preview').html('<p style="color: #6b7280;"><?php echo esc_js( __( 'No logo uploaded yet', 'atyourservice' ) ); ?></p>');
-				});
+					// Rebind remove button
+					$('#remove_logo_btn').on('click', function(e) {
+						e.preventDefault();
+						$('#company_logo_id').val(0);
+						$('#company_logo_preview').html('<p style="color: #6b7280;">' + noLogoText + '</p>');
+					});
 				});
 
 				mediaUploader.open();
 			});
 
-			// Initial remove button binding
-			$('#remove_logo_btn').on('click', function(e) {
-				e.preventDefault();
-				$('#company_logo_id').val(0);
-				$('#company_logo_preview').html('<p style="color: #6b7280;"><?php echo esc_js( __( 'No logo uploaded yet', 'atyourservice' ) ); ?></p>');
-			});
+		// Initial remove button binding
+		$('#remove_logo_btn').on('click', function(e) {
+			e.preventDefault();
+			$('#company_logo_id').val(0);
+			$('#company_logo_preview').html('<p style="color: #6b7280;">' + noLogoText + '</p>');
+		});
 		});
 		</script>
 		<?php
