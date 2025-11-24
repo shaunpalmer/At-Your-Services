@@ -300,6 +300,22 @@ class AYS_Invoices_Tab {
 			return;
 		}
 
+		// Display feedback messages
+		$notice = isset( $_GET['ays_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['ays_notice'] ) ) : '';
+		if ( $notice ) {
+			$messages = [
+				'item_added' => __( '✓ Line item added successfully.', 'atyourservice' ),
+				'item_updated' => __( '✓ Line item updated successfully.', 'atyourservice' ),
+				'item_deleted' => __( '✓ Line item deleted successfully.', 'atyourservice' ),
+				'permission_denied' => __( '✗ Permission denied. Please contact administrator.', 'atyourservice' ),
+				'invoice_error' => __( '✗ Invoice error. Please try again.', 'atyourservice' ),
+			];
+			if ( isset( $messages[ $notice ] ) ) {
+				$notice_class = strpos( $notice, 'deleted' ) || strpos( $notice, 'updated' ) || strpos( $notice, 'added' ) ? 'notice-success' : 'notice-error';
+				echo '<div class="notice ' . esc_attr( $notice_class ) . ' is-dismissible"><p>' . wp_kses_post( $messages[ $notice ] ) . '</p></div>';
+			}
+		}
+
 		// Items schema uses `qty` (not `quantity`). Query both and alias.
 		$invoice_items = $wpdb->get_results( $wpdb->prepare(
 			"SELECT ii.* FROM {$wpdb->prefix}ays_invoice_items ii WHERE ii.invoice_id = %d ORDER BY ii.id ASC",
@@ -541,7 +557,7 @@ class AYS_Invoices_Tab {
 										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Rate', 'atyourservice' ); ?></th>
 										<th style="text-align: right; width: 120px;"><?php esc_html_e( 'Amount', 'atyourservice' ); ?></th>
 										<th style="text-align: center; width: 60px;"><?php esc_html_e( 'Tax', 'atyourservice' ); ?></th>
-										<th style="text-align:center; width: 70px;">&nbsp;</th>
+										<th style="text-align:center; width: 100px;"><?php esc_html_e( 'Actions', 'atyourservice' ); ?></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -552,21 +568,20 @@ class AYS_Invoices_Tab {
 												<input type="hidden" name="action" value="ays_update_invoice_item" />
 												<input type="hidden" name="item_id" value="<?php echo esc_attr( $item->id ); ?>" />
 												<input type="hidden" name="invoice_id" value="<?php echo esc_attr( $invoice->id ); ?>" />
-												<td><input type="text" name="description" value="<?php echo esc_attr( $item->description ); ?>" class="regular-text" style="width:100%;" /></td>
-												<td style="text-align: right;"><input type="number" name="quantity" step="0.01" min="0" value="<?php echo esc_attr( $item->quantity ); ?>" style="width:100%;text-align:right;" /></td>
-												<td style="text-align: right;"><input type="number" name="rate" step="0.01" min="0" value="<?php echo esc_attr( $item->rate ); ?>" style="width:100%;text-align:right;" /></td>
-												<td style="text-align: right;"><code>$<?php echo esc_html( number_format( $item->quantity * $item->rate, 2 ) ); ?></code></td>
-												<td style="text-align: center;"><input type="checkbox" name="taxable" value="1" <?php checked( $item->taxable, 1 ); ?> /></td>
-												<td style="text-align:center;display:flex;gap:4px;justify-content:center;">
-													<button type="submit" class="button button-small" title="<?php esc_attr_e('Update', 'atyourservice'); ?>" style="padding:4px 8px;">💾</button>
-													<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ays_delete_invoice_item&item_id=' . intval($item->id) . '&invoice_id=' . intval($invoice->id) ), 'ays_delete_invoice_item_' . intval($item->id) ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e('Delete this line?', 'atyourservice'); ?>')" style="padding:4px 8px;">🗑️</a>
+												<td style="padding: 8px;"><input type="text" name="description" value="<?php echo esc_attr( $item->description ); ?>" class="regular-text" style="width:100%; padding: 6px;" /></td>
+												<td style="text-align: right; padding: 8px;"><input type="number" name="quantity" step="0.01" min="0" value="<?php echo esc_attr( $item->quantity ); ?>" style="width:100%;text-align:right; padding: 6px;" /></td>
+												<td style="text-align: right; padding: 8px;"><input type="number" name="rate" step="0.01" min="0" value="<?php echo esc_attr( $item->rate ); ?>" style="width:100%;text-align:right; padding: 6px;" /></td>
+												<td style="text-align: right; padding: 8px;"><code>$<?php echo esc_html( number_format( $item->quantity * $item->rate, 2 ) ); ?></code></td>
+												<td style="text-align: center; padding: 8px;"><input type="checkbox" name="taxable" value="1" <?php checked( $item->taxable, 1 ); ?> /></td>
+												<td style="text-align:center;display:flex;gap:4px;justify-content:center;align-items:center;padding:8px;">
+													<button type="submit" class="button button-small button-primary" title="<?php esc_attr_e('Save changes', 'atyourservice'); ?>" style="padding:6px 12px; white-space:nowrap;">💾 Save</button>
+													<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ays_delete_invoice_item&item_id=' . intval($item->id) . '&invoice_id=' . intval($invoice->id) ), 'ays_delete_invoice_item_' . intval($item->id) ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e('Delete this line?', 'atyourservice'); ?>')" style="padding:6px 12px; white-space:nowrap;">🗑️ Delete</a>
 												</td>
 											</form>
 										</tr>
 									<?php endforeach; ?>
 								</tbody>
 							</table>
-
 							<!-- Add Line Item Form -->
 							<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:12px;display:grid;grid-template-columns:1fr 120px 140px 120px 120px;gap:8px;align-items:center;">
 								<?php wp_nonce_field( 'ays_add_invoice_item_' . $invoice->id, 'ays_add_item_nonce' ); ?>
@@ -1099,39 +1114,13 @@ class AYS_Invoices_Tab {
 	 * Add a line item to an invoice
 	 */
 	public static function handle_add_invoice_item() {
-		// DEBUG: Detailed diagnostics
-		error_log( '========== ADD ITEM HANDLER START ==========' );
-		error_log( 'Time: ' . current_time('mysql') );
-		error_log( 'User ID: ' . get_current_user_id() );
-		error_log( 'Is user logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
-		error_log( 'Capabilities: ' . print_r( wp_get_current_user()->caps, true ) );
-		error_log( 'Can manage_options: ' . ( current_user_can( 'manage_options' ) ? 'YES' : 'NO' ) );
-		error_log( 'POST data: ' . print_r( $_POST, true ) );
-		
-		if ( ! is_user_logged_in() ) {
-			error_log( '>>> USER NOT LOGGED IN - Check session/cookies' );
-			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=not_logged_in' ) );
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( add_query_arg( [ 'ays_notice' => 'permission_denied' ], wp_unslash( $_SERVER['HTTP_REFERER'] ?? admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) ) );
 			exit;
 		}
 		
-		if ( ! current_user_can( 'manage_options' ) ) {
-			error_log( '>>> PERMISSION DENIED FOR USER ID: ' . get_current_user_id() );
-			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
-			exit;
-		}
-		
-		error_log( '>>> PERMISSION GRANTED - Processing item' );
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
-		error_log( 'Invoice ID: ' . $invoice_id );
-		
-		try {
-			check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
-			error_log( 'Nonce check passed' );
-		} catch ( Exception $e ) {
-			error_log( 'Nonce check failed: ' . $e->getMessage() );
-			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=nonce_failed' ) );
-			exit;
-		}
+		check_admin_referer( 'ays_add_invoice_item_' . $invoice_id, 'ays_add_item_nonce' );
 		
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
 		$qty  = isset($_POST['quantity']) ? floatval( str_replace(',', '.', $_POST['quantity']) ) : 1;
@@ -1161,8 +1150,8 @@ class AYS_Invoices_Tab {
 		], [ '%s','%d','%s','%f','%f','%d','%f','%f','%s','%s','%s' ] );
 
 		self::recalc_invoice_totals( $invoice_id );
-		// Redirect back to the edit page within the same request
-		wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
+		$redirect_url = add_query_arg( [ 'ays_notice' => 'item_added', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
+		wp_safe_redirect( $redirect_url );
 		exit;
 	}
 
@@ -1170,19 +1159,13 @@ class AYS_Invoices_Tab {
 	 * Handle updating a line item
 	 */
 	public static function handle_update_invoice_item() {
-		// DEBUG: Log entry point
-		error_log( '[AYS_Invoices_Tab::handle_update_invoice_item] Handler called' );
-		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
-		error_log( '[Auth] User ID: ' . get_current_user_id() );
-		
-		if ( ! current_user_can( 'manage_options' ) ) {
-			error_log( '[BLOCKED] Permission denied - redirecting' );
-			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( add_query_arg( [ 'ays_notice' => 'permission_denied' ], wp_unslash( $_SERVER['HTTP_REFERER'] ?? admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) ) );
 			exit;
 		}
+		
 		$item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
 		$invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
-		error_log( '[Data] Item ID: ' . $item_id . ', Invoice ID: ' . $invoice_id );
 		check_admin_referer( 'ays_update_invoice_item_' . $item_id, 'ays_item_nonce' );
 		
 		$desc = isset($_POST['description']) ? sanitize_text_field( wp_unslash($_POST['description']) ) : '';
@@ -1217,21 +1200,15 @@ class AYS_Invoices_Tab {
 		);
 
 		self::recalc_invoice_totals( $invoice_id );
-		// Redirect back to the edit page
-		wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
+		$redirect_url = add_query_arg( [ 'ays_notice' => 'item_updated', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
+		wp_safe_redirect( $redirect_url );
 		exit;
 	}
 
 	/** Delete a line item */
 	public static function handle_delete_invoice_item() {
-		// DEBUG: Log entry point
-		error_log( '[AYS_Invoices_Tab::handle_delete_invoice_item] Handler called' );
-		error_log( '[Permission] current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'TRUE' : 'FALSE' ) );
-		error_log( '[Auth] User ID: ' . get_current_user_id() );
-		
-		if ( ! current_user_can( 'manage_options' ) ) {
-			error_log( '[BLOCKED] Permission denied - redirecting' );
-			wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices&ays_notice=permission_denied' ) );
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( add_query_arg( [ 'ays_notice' => 'permission_denied' ], wp_unslash( $_SERVER['HTTP_REFERER'] ?? admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ) ) );
 			exit;
 		}
 		$item_id = isset($_GET['item_id']) ? intval($_GET['item_id']) : 0;
@@ -1241,10 +1218,11 @@ class AYS_Invoices_Tab {
 		$wpdb->delete( $wpdb->prefix.'ays_invoice_items', [ 'id' => $item_id ], [ '%d' ] );
 		if ( $invoice_id ) {
 			self::recalc_invoice_totals( $invoice_id );
-			wp_safe_redirect( wp_unslash( $_SERVER['HTTP_REFERER'] ?? add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php' ) ) ) );
+			$redirect_url = add_query_arg( [ 'ays_notice' => 'item_deleted', 'edit_invoice' => $invoice_id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
+			wp_safe_redirect( $redirect_url );
 			exit;
 		}
-		wp_safe_redirect( add_query_arg( [ 'page' => 'ays-dashboard', 'tab' => 'invoices' ], admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) );
 		exit;
 	}
 
