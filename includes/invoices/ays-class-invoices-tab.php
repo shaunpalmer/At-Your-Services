@@ -294,6 +294,9 @@ class AYS_Invoices_Tab {
 	protected static function render_invoice_editor( $invoice ) {
 		global $wpdb;
 
+		// DEBUG: Make sure this is being rendered
+		error_log( '[AYS] Rendering invoice editor for ID: ' . $invoice->id );
+
 		// Ensure invoice has required fields
 		if ( ! isset( $invoice->id ) ) {
 			echo '<div class="notice notice-error"><p>' . esc_html__( 'Invalid invoice data.', 'atyourservice' ) . '</p></div>';
@@ -409,6 +412,12 @@ class AYS_Invoices_Tab {
 
 		?>
 		<div class="ays-invoice-editor" style="--ays-invoice-accent: <?php echo esc_attr( $primary_color ); ?>; --ays-invoice-muted: <?php echo esc_attr( $secondary_color ); ?>;">
+			<!-- DEBUG BANNER -->
+			<div style="background: #ecfdf5; border: 2px solid #10b981; padding: 12px; margin-bottom: 12px; border-radius: 4px;">
+				<strong style="color: #059669;">✓ EDITOR LOADED - Invoice #<?php echo esc_html( $invoice->id ); ?></strong>
+			</div>
+			<!-- END DEBUG BANNER -->
+			
 			<div class="editor-header" style="display:flex;align-items:center;gap:12px;justify-content:space-between;">
 				<h2 style="margin:0;">
 					<?php echo esc_html__( 'Invoice', 'atyourservice' ) . ' #' . esc_html( $invoice->invoice_number ); ?>
