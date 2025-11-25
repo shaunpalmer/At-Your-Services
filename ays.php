@@ -362,6 +362,31 @@ add_action('admin_post_ays_delete_item', function() {
 	}
 });
 
+// === Service Types Tab admin-post handlers ===
+add_action('admin_post_ays_add_service_type', function() {
+	if (class_exists('AYS_Service_Types_Tab')) {
+		AYS_Service_Types_Tab::handle_add_service_type();
+	} else {
+		wp_die('Service Types class not found');
+	}
+});
+
+add_action('admin_post_ays_update_service_type', function() {
+	if (class_exists('AYS_Service_Types_Tab')) {
+		AYS_Service_Types_Tab::handle_update_service_type();
+	} else {
+		wp_die('Service Types class not found');
+	}
+});
+
+add_action('admin_post_ays_delete_service_type', function() {
+	if (class_exists('AYS_Service_Types_Tab')) {
+		AYS_Service_Types_Tab::handle_delete_service_type();
+	} else {
+		wp_die('Service Types class not found');
+	}
+});
+
 // === Clients Tab admin-post handlers ===
 add_action('admin_post_ays_add_client', function() {
 	if (class_exists('AYS_Clients_Tab')) {

@@ -91,7 +91,19 @@ class AYS_Clients_Tab {
 	 */
 	protected static function render_clients_table() {
 		global $wpdb;
-		$clients = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}ays_clients WHERE status != 'deleted' ORDER BY created_at DESC" );
+
+		// Get total count for pagination
+		$total_clients = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}ays_clients WHERE status != 'deleted'" );
+
+		// Create paginator (20 items per page)
+		$paginator = new AYS_Pagination( $total_clients, 20, 'clients_page' );
+
+		// Enqueue smooth scroll script for pagination
+		AYS_Pagination::enqueue_smooth_scroll();
+
+		// Build and execute paginated query
+		$query = "SELECT * FROM {$wpdb->prefix}ays_clients WHERE status != 'deleted' ORDER BY created_at DESC";
+		$clients = $wpdb->get_results( $paginator->get_query_sql( $query ) );
 
 		if ( empty( $clients ) ) {
 			echo '<p>' . esc_html__( 'No clients yet. Create your first client below!', 'atyourservice' ) . '</p>';
@@ -126,10 +138,10 @@ class AYS_Clients_Tab {
 							?>
 						</td>
 						<td style="text-align: center;">
-							<a href="<?php echo esc_url( add_query_arg( 'edit_client', $client->id ) ); ?>" class="button button-small">
+							<a href="<?php echo esc_url( add_query_arg( [ 'edit_client' => $client->id, 'tab' => 'clients' ], admin_url( 'admin.php?page=ays-dashboard' ) ) ); ?>" class="button button-small">
 								<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
 							</a>
-							<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_client', 'client_id' => $client->id ] ), 'ays_delete_client_' . $client->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Are you sure?', 'atyourservice' ); ?>')">
+							<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_client', 'client_id' => $client->id ], admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ), 'ays_delete_client_' . $client->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Are you sure?', 'atyourservice' ); ?>')">
 								<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
 							</a>
 						</td>
@@ -137,6 +149,24 @@ class AYS_Clients_Tab {
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+
+		<!-- Render pagination controls -->
+		<?php $paginator->render_simple_pagination(); ?>
+		<script>
+			(function() {
+				// Smooth scroll to table when pagination link is clicked
+				document.addEventListener('click', function(e) {
+					if (e.target.closest('.pagination a, .pagination-nav a')) {
+						setTimeout(function() {
+							const table = document.querySelector('table.widefat');
+							if (table) {
+								table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+							}
+						}, 100);
+					}
+				});
+			})();
+		</script>
 		<?php
 	}
 

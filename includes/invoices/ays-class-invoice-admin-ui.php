@@ -687,7 +687,7 @@ class AYS_Invoice_Admin_UI {
         $tab_name = sanitize_text_field($_POST['tab'] ?? '');
 
         // Validate tab name
-        $allowed_tabs = ['invoices', 'clients', 'items', 'payments', 'reports', 'settings'];
+        $allowed_tabs = ['invoices', 'clients', 'items', 'service-types', 'payments', 'reports', 'settings'];
         if (!in_array($tab_name, $allowed_tabs, true)) {
             wp_send_json_error('Invalid tab');
         }
@@ -708,6 +708,9 @@ class AYS_Invoice_Admin_UI {
                     break;
                 case 'items':
                     (new self())->render_items_tab();
+                    break;
+                case 'service-types':
+                    (new self())->render_service_types_tab();
                     break;
                 case 'payments':
                     (new self())->render_payments_tab();
@@ -790,6 +793,9 @@ class AYS_Invoice_Admin_UI {
                 <a href="?page=ays-dashboard&tab=items" class="ays-invoicing-tab <?php echo $current_tab === 'items' ? 'active' : ''; ?>" data-tab="items">
                     <?php esc_html_e('Items', 'ays'); ?>
                 </a>
+                <a href="?page=ays-dashboard&tab=service-types" class="ays-invoicing-tab <?php echo $current_tab === 'service-types' ? 'active' : ''; ?>" data-tab="service-types">
+                    <?php esc_html_e('Service Types', 'ays'); ?>
+                </a>
                 <a href="?page=ays-dashboard&tab=payments" class="ays-invoicing-tab <?php echo $current_tab === 'payments' ? 'active' : ''; ?>" data-tab="payments">
                     <?php esc_html_e('Payments', 'ays'); ?>
                 </a>
@@ -811,6 +817,9 @@ class AYS_Invoice_Admin_UI {
                         break;
                     case 'items':
                         $this->render_items_tab();
+                        break;
+                    case 'service-types':
+                        $this->render_service_types_tab();
                         break;
                     case 'payments':
                         $this->render_payments_tab();
@@ -862,6 +871,17 @@ class AYS_Invoice_Admin_UI {
             AYS_Items_Tab::render();
         } else {
             echo '<p style="color: #dc3545;">' . esc_html__( 'Items module not loaded.', 'atyourservice' ) . '</p>';
+        }
+    }
+
+    /**
+     * Render Service Types tab
+     */
+    protected function render_service_types_tab() {
+        if ( class_exists( 'AYS_Service_Types_Tab' ) ) {
+            AYS_Service_Types_Tab::render();
+        } else {
+            echo '<p style="color: #dc3545;">' . esc_html__( 'Service Types module not loaded.', 'atyourservice' ) . '</p>';
         }
     }
 

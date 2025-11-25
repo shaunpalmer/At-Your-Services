@@ -193,13 +193,25 @@ class AYS_Payments_Tab {
 	 */
 	protected static function render_payments_table() {
 		global $wpdb;
-		$payments = $wpdb->get_results(
-			"SELECT p.*, i.invoice_number, c.name as client_name 
-			FROM {$wpdb->prefix}ays_payments p 
-			LEFT JOIN {$wpdb->prefix}ays_invoices i ON p.invoice_id = i.id 
-			LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id 
-			ORDER BY p.created_at DESC LIMIT 100"
+
+		// Get total count for pagination
+		$total_payments = $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->prefix}ays_payments"
 		);
+
+		// Create paginator (20 items per page)
+		$paginator = new AYS_Pagination( $total_payments, 20, 'payments_page' );
+
+		// Enqueue smooth scroll script for pagination
+		AYS_Pagination::enqueue_smooth_scroll();
+
+		// Build and execute paginated query
+		$query = "SELECT p.*, i.invoice_number, c.name as client_name 
+				FROM {$wpdb->prefix}ays_payments p 
+				LEFT JOIN {$wpdb->prefix}ays_invoices i ON p.invoice_id = i.id 
+				LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id 
+				ORDER BY p.created_at DESC";
+		$payments = $wpdb->get_results( $paginator->get_query_sql( $query ) );
 
 		if ( empty( $payments ) ) {
 			echo '<p>' . esc_html__( 'No payments recorded yet.', 'atyourservice' ) . '</p>';
@@ -231,10 +243,10 @@ class AYS_Payments_Tab {
 							<?php self::render_status_badge( $payment->status ); ?>
 						</td>
 						<td style="text-align: center;">
-							<a href="<?php echo esc_url( add_query_arg( 'edit_payment', $payment->id ) ); ?>" class="button button-small">
+							<a href="<?php echo esc_url( add_query_arg( [ 'edit_payment' => $payment->id, 'tab' => 'payments' ], admin_url( 'admin.php?page=ays-dashboard' ) ) ); ?>" class="button button-small">
 								<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
 							</a>
-							<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_payment', 'payment_id' => $payment->id ] ), 'ays_delete_payment_' . $payment->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this payment?', 'atyourservice' ); ?>')">
+							<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_payment', 'payment_id' => $payment->id ], admin_url( 'admin.php?page=ays-dashboard&tab=payments' ) ), 'ays_delete_payment_' . $payment->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this payment?', 'atyourservice' ); ?>')">
 								<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
 							</a>
 						</td>
@@ -242,6 +254,9 @@ class AYS_Payments_Tab {
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+
+		<!-- Render pagination controls -->
+		<?php $paginator->render_simple_pagination(); ?>
 		<?php
 	}
 

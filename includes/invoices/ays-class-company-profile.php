@@ -145,22 +145,22 @@ class AYS_Company_Profile {
 									<label for="company_logo"><?php esc_html_e( 'Company Logo', 'atyourservice' ); ?></label>
 								</th>
 								<td>
-									<div id="company_logo_preview">
+									<div id="company_logo_preview" style="margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; background: #f3f4f6; border-radius: 6px; padding: 20px;">
 										<?php if ( $profile['company_logo_id'] ) : ?>
-											<?php echo wp_get_attachment_image( $profile['company_logo_id'], array( 150, 150 ) ); ?>
-											<p>
-												<button type="button" class="button button-small" id="remove_logo_btn">
-													<?php esc_html_e( 'Remove Logo', 'atyourservice' ); ?>
-												</button>
-											</p>
+											<?php echo wp_get_attachment_image( $profile['company_logo_id'], array( 200, 200 ), false, [ 'style' => 'max-width: 200px; height: auto; display: block; margin: 0 auto;' ] ); ?>
 										<?php else : ?>
-											<p style="color: #6b7280;"><?php esc_html_e( 'No logo uploaded yet', 'atyourservice' ); ?></p>
+											<p style="color: #6b7280; margin: 0;"><?php esc_html_e( 'No logo uploaded yet', 'atyourservice' ); ?></p>
 										<?php endif; ?>
 									</div>
 									<p>
 										<button type="button" class="button" id="upload_logo_btn">
 											<?php esc_html_e( 'Upload Logo', 'atyourservice' ); ?>
 										</button>
+										<?php if ( $profile['company_logo_id'] ) : ?>
+											<button type="button" class="button button-link-delete" id="remove_logo_btn" style="margin-left: 10px;">
+												<?php esc_html_e( 'Remove', 'atyourservice' ); ?>
+											</button>
+										<?php endif; ?>
 									</p>
 									<input type="hidden" id="company_logo_id" name="company_logo_id" value="<?php echo esc_attr( $profile['company_logo_id'] ); ?>">
 								</td>
@@ -480,27 +480,49 @@ class AYS_Company_Profile {
 					const attachment = mediaUploader.state().get('selection').first().toJSON();
 					$('#company_logo_id').val(attachment.id);
 					
-					const preview = '<img src="' + attachment.sizes.thumbnail.url + '" style="max-width: 150px; height: auto;" />' +
-						'<p><button type="button" class="button button-small" id="remove_logo_btn">Remove Logo</button></p>';
+					// Use medium size if available, fall back to full size
+					const imageUrl = (attachment.sizes && attachment.sizes.medium) 
+						? attachment.sizes.medium.url 
+						: attachment.url;
+					
+					// Create preview HTML with proper styling
+					const preview = '<img src="' + imageUrl + '" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" alt="' + attachment.alt + '" />';
 					$('#company_logo_preview').html(preview);
+					
+					// Update button to show remove option
+					const removeBtn = '<button type="button" class="button button-link-delete" id="remove_logo_btn" style="margin-left: 10px;">' + 
+						<?php echo wp_json_encode( __( 'Remove', 'atyourservice' ) ); ?> + 
+						'</button>';
+					
+					if ($('#remove_logo_btn').length === 0) {
+						$('#upload_logo_btn').after(removeBtn);
+					}
 					
 					// Rebind remove button
 					$('#remove_logo_btn').on('click', function(e) {
 						e.preventDefault();
-						$('#company_logo_id').val(0);
-						$('#company_logo_preview').html('<p style="color: #6b7280;">' + noLogoText + '</p>');
+						removeLogo();
 					});
 				});
 
 				mediaUploader.open();
 			});
 
-		// Initial remove button binding
-		$('#remove_logo_btn').on('click', function(e) {
-			e.preventDefault();
-			$('#company_logo_id').val(0);
-			$('#company_logo_preview').html('<p style="color: #6b7280;">' + noLogoText + '</p>');
-		});
+			// Remove logo function
+			function removeLogo() {
+				$('#company_logo_id').val(0);
+				$('#company_logo_preview').html('<p style="color: #6b7280; margin: 0;">' + noLogoText + '</p>');
+				const $removeBtn = $('#remove_logo_btn');
+				if ($removeBtn.length) {
+					$removeBtn.remove();
+				}
+			}
+
+			// Initial remove button binding
+			$('#remove_logo_btn').on('click', function(e) {
+				e.preventDefault();
+				removeLogo();
+			});
 		});
 		</script>
 		<?php

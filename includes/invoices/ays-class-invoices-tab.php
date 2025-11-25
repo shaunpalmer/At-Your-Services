@@ -86,18 +86,40 @@ class AYS_Invoices_Tab {
 		// Fetch service types for filter dropdown
 		$service_types = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}ays_service_types WHERE status = 'active' ORDER BY sort_order, name" );
 
+		// Get total count for pagination
 		if ( $filter_service ) {
-			$invoices = $wpdb->get_results( $wpdb->prepare(
+			$total_invoices = $wpdb->get_var( $wpdb->prepare(
+				"SELECT COUNT(DISTINCT i.id)
+				 FROM {$wpdb->prefix}ays_invoices i
+				 INNER JOIN {$wpdb->prefix}ays_invoice_services isv ON isv.invoice_id = i.id AND isv.service_type_id = %d",
+				$filter_service
+			) );
+		} else {
+			$total_invoices = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}ays_invoices" );
+		}
+
+		// Create paginator (20 items per page)
+		$paginator = new AYS_Pagination( $total_invoices, 20, 'invoices_page' );
+
+		// Enqueue smooth scroll script for pagination
+		AYS_Pagination::enqueue_smooth_scroll();
+
+		// Build and execute paginated query
+		if ( $filter_service ) {
+			$query = $wpdb->prepare(
 				"SELECT i.*, c.name as client_name
 				 FROM {$wpdb->prefix}ays_invoices i
 				 LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id
 				 INNER JOIN {$wpdb->prefix}ays_invoice_services isv ON isv.invoice_id = i.id AND isv.service_type_id = %d
-				 ORDER BY i.issue_date DESC LIMIT 50",
+				 GROUP BY i.id
+				 ORDER BY i.issue_date DESC",
 				$filter_service
-			) );
+			);
 		} else {
-			$invoices = $wpdb->get_results( "SELECT i.*, c.name as client_name FROM {$wpdb->prefix}ays_invoices i LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id ORDER BY i.issue_date DESC LIMIT 50" );
+			$query = "SELECT i.*, c.name as client_name FROM {$wpdb->prefix}ays_invoices i LEFT JOIN {$wpdb->prefix}ays_clients c ON i.client_id = c.id ORDER BY i.issue_date DESC";
 		}
+
+		$invoices = $wpdb->get_results( $paginator->get_query_sql( $query ) );
 
 		if ( empty( $invoices ) ) {
 			echo '<p>' . esc_html__( 'No invoices yet. Create your first invoice below!', 'atyourservice' ) . '</p>';
@@ -108,7 +130,7 @@ class AYS_Invoices_Tab {
 		<details class="ays-details" open>
 			<summary>
 				📋 <?php esc_html_e( 'Invoices List', 'atyourservice' ); ?>
-				<span class="ays-badge"><?php echo esc_html( count( $invoices ) . ' invoices' ); ?></span>
+				<span class="ays-badge"><?php echo esc_html( $paginator->get_total_items() . ' invoices' ); ?></span>
 			</summary>
 			<div>
 				<div class="left-column">
@@ -164,10 +186,10 @@ class AYS_Invoices_Tab {
 										<a href="<?php echo esc_url( admin_url( 'admin.php?page=ays-invoice-preview&invoice_id=' . intval( $invoice->id ) ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'Preview', 'atyourservice' ); ?>
 										</a>
-										<a href="<?php echo esc_url( add_query_arg( 'edit_invoice', $invoice->id ) ); ?>" class="button button-small">
+										<a href="<?php echo esc_url( add_query_arg( [ 'edit_invoice' => $invoice->id, 'tab' => 'invoices' ], admin_url( 'admin.php?page=ays-dashboard' ) ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
 										</a>
-										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_invoice', 'invoice_id' => $invoice->id ] ), 'ays_delete_invoice_' . $invoice->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this invoice?', 'atyourservice' ); ?>')">
+										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_invoice', 'invoice_id' => $invoice->id ], admin_url( 'admin.php?page=ays-dashboard&tab=invoices' ) ), 'ays_delete_invoice_' . $invoice->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Delete this invoice?', 'atyourservice' ); ?>')">
 											<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
 										</a>
 									</td>
@@ -175,6 +197,24 @@ class AYS_Invoices_Tab {
 							<?php endforeach; ?>
 						</tbody>
 					</table>
+
+					<!-- Render pagination controls -->
+					<?php $paginator->render_simple_pagination(); ?>
+					<script>
+						(function() {
+							// Smooth scroll to table when pagination link is clicked
+							document.addEventListener('click', function(e) {
+								if (e.target.closest('.pagination a, .pagination-nav a')) {
+									setTimeout(function() {
+										const table = document.querySelector('table.widefat');
+										if (table) {
+											table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+										}
+									}, 100);
+								}
+							});
+						})();
+					</script>
 				</div>
 				<div class="right-column">
 					<h4><?php esc_html_e( '📌 Quick Tips', 'atyourservice' ); ?></h4>

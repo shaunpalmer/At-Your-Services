@@ -82,6 +82,22 @@ class AYS_Items_Tab {
 			</div>
 		</details>
 		<?php
+		
+		// If editing, add smooth scroll to form
+		if ( $edit_id ) {
+			?>
+			<script>
+				document.addEventListener('DOMContentLoaded', function() {
+					const formElement = document.getElementById('ays-item-form');
+					if (formElement) {
+						setTimeout(function() {
+							formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						}, 100);
+					}
+				});
+			</script>
+			<?php
+		}
 	}
 
 	/**
@@ -91,7 +107,19 @@ class AYS_Items_Tab {
 	 */
 	protected static function render_items_table() {
 		global $wpdb;
-		$items = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}ays_items ORDER BY created_at DESC" );
+
+		// Get total count for pagination
+		$total_items = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}ays_items" );
+
+		// Create paginator (20 items per page)
+		$paginator = new AYS_Pagination( $total_items, 20, 'items_page' );
+
+		// Enqueue smooth scroll script for pagination
+		AYS_Pagination::enqueue_smooth_scroll();
+
+		// Build and execute paginated query
+		$query = "SELECT * FROM {$wpdb->prefix}ays_items ORDER BY created_at DESC";
+		$items = $wpdb->get_results( $paginator->get_query_sql( $query ) );
 
 		if ( empty( $items ) ) {
 			echo '<p>' . esc_html__( 'No items yet. Create your first item below!', 'atyourservice' ) . '</p>';
@@ -120,18 +148,21 @@ class AYS_Items_Tab {
 						<td style="text-align: center;">
 							<?php echo $item->taxable ? '✓ Yes' : '○ No'; ?>
 						</td>
-						<td style="text-align: center;">
-							<a href="<?php echo esc_url( add_query_arg( 'edit_item', $item->id ) ); ?>" class="button button-small">
-								<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
-							</a>
-							<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_item', 'item_id' => $item->id ] ), 'ays_delete_item_' . $item->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Are you sure?', 'atyourservice' ); ?>')">
-								<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
-							</a>
-						</td>
+					<td style="text-align: center;">
+						<a href="<?php echo esc_url( add_query_arg( [ 'edit_item' => $item->id, 'tab' => 'items' ], admin_url( 'admin.php?page=ays-dashboard' ) ) . '#ays-item-form' ); ?>" class="button button-small">
+							<?php esc_html_e( 'Edit', 'atyourservice' ); ?>
+						</a>
+						<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'ays_delete_item', 'item_id' => $item->id ], admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ), 'ays_delete_item_' . $item->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Are you sure?', 'atyourservice' ); ?>')">
+							<?php esc_html_e( 'Delete', 'atyourservice' ); ?>
+						</a>
+					</td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+
+		<!-- Render pagination controls -->
+		<?php $paginator->render_simple_pagination(); ?>
 		<?php
 	}
 
@@ -151,7 +182,8 @@ class AYS_Items_Tab {
 		$action = $item ? 'ays_update_item' : 'ays_add_item';
 
 		?>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ays-item-form">
+		<div id="ays-item-form">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ays-item-form">
 			<?php wp_nonce_field( $nonce_action, 'ays_item_nonce' ); ?>
 			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">
 			<?php if ( $item ) : ?>
@@ -193,6 +225,9 @@ class AYS_Items_Tab {
 				<tr>
 					<th scope="row">
 						<label for="service_type_id"><?php esc_html_e( 'Service Type', 'atyourservice' ); ?></label>
+						<p style="margin: 5px 0 0 0; font-size: 12px; color: #666; font-weight: normal;">
+							<?php esc_html_e( 'Organize items into categories (optional)', 'atyourservice' ); ?>
+						</p>
 					</th>
 					<td>
 						<select id="service_type_id" name="service_type_id" class="regular-text">
@@ -250,7 +285,8 @@ class AYS_Items_Tab {
 					</a>
 				<?php endif; ?>
 			</p>
-		</form>
+			</form>
+		</div>
 		<?php
 	}
 
@@ -309,11 +345,12 @@ class AYS_Items_Tab {
 		$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 		$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
 		$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
+		$service_type_id = $service_type_id > 0 ? $service_type_id : null; // Convert 0 to NULL for foreign key
 		$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
 		$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
 
 		if ( ! $description || ! $rate ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 			exit;
 		}
 
@@ -332,9 +369,9 @@ class AYS_Items_Tab {
 		);
 
 		if ( $result ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_added', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_added', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		}
 		exit;
 	}
@@ -360,11 +397,12 @@ class AYS_Items_Tab {
 		$description = isset( $_POST['description'] ) ? sanitize_text_field( wp_unslash( $_POST['description'] ) ) : '';
 		$details = isset( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
 		$service_type_id = isset( $_POST['service_type_id'] ) ? intval( $_POST['service_type_id'] ) : 0;
+		$service_type_id = $service_type_id > 0 ? $service_type_id : null; // Convert 0 to NULL for foreign key
 		$rate = isset( $_POST['rate'] ) ? floatval( $_POST['rate'] ) : 0;
 		$taxable = isset( $_POST['taxable'] ) ? 1 : 0;
 
 		if ( ! $description || ! $rate ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 			exit;
 		}
 
@@ -384,9 +422,9 @@ class AYS_Items_Tab {
 		);
 
 		if ( $result !== false ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_updated', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_updated', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		}
 		exit;
 	}
