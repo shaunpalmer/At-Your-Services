@@ -100,6 +100,10 @@ function ays_notifications_bootstrap() {
 		if (class_exists('AYS_Invoice_Preview_Page')) {
 			AYS_Invoice_Preview_Page::init();
 		}
+		// Initialize License Management
+		if (class_exists('AYS_License_Page')) {
+			AYS_License_Page::init();
+		}
 		// Ensure AJAX handler is registered regardless of UI instantiation timing
 		add_action('wp_ajax_ays_load_tab', ['AYS_Invoice_Admin_UI', 'ajax_load_tab']);
 	}

@@ -468,14 +468,14 @@ class AYS_Clients_Tab {
 		$status = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : 'active';
 
 		if ( ! $name || ! $email ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 			exit;
 		}
 
 		// Check if email already exists
 		$email_exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}ays_clients WHERE email = %s AND status != 'deleted'", $email ) );
 		if ( $email_exists ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'email_exists', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'email_exists', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 			exit;
 		}
 
@@ -504,9 +504,9 @@ class AYS_Clients_Tab {
 		);
 
 		if ( $result ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_added', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_added', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		}
 		exit;
 	}
@@ -543,14 +543,14 @@ class AYS_Clients_Tab {
 		$status = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : 'active';
 
 		if ( ! $name || ! $email ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 			exit;
 		}
 
 		// Check if new email already exists (different client)
 		$email_exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}ays_clients WHERE email = %s AND status != 'deleted' AND id != %d", $email, $client_id ) );
 		if ( $email_exists ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'email_exists', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'email_exists', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 			exit;
 		}
 
@@ -577,9 +577,9 @@ class AYS_Clients_Tab {
 		);
 
 		if ( $result !== false ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_updated', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_updated', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		}
 		exit;
 	}
@@ -615,9 +615,9 @@ class AYS_Clients_Tab {
 		);
 
 		if ( $result !== false ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_deleted', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_deleted', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=clients' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'client_error', admin_url( 'admin.php?page=ays-dashboard&tab=clients' ) ) );
 		}
 		exit;
 	}

@@ -450,9 +450,9 @@ class AYS_Items_Tab {
 		$result = $wpdb->delete( "{$wpdb->prefix}ays_items", [ 'id' => $item_id ], [ '%d' ] );
 
 		if ( $result ) {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_deleted', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_deleted', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		} else {
-			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays_invoicing_dashboard&tab=items' ) ) );
+			wp_redirect( add_query_arg( 'ays_notice', 'item_error', admin_url( 'admin.php?page=ays-dashboard&tab=items' ) ) );
 		}
 		exit;
 	}

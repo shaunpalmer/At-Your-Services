@@ -65,7 +65,11 @@ class Ays_Autoloader {
         'AYS_Invoice_Renderer'      => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-invoice-renderer.php',
         'AYS_Invoice_Preview_Page'  => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-invoice-preview.php',
         'AYS_Service_Type_Admin'    => AYS_PLUGIN_PATH . 'includes/invoices/ays-class-service-type-admin.php',
-        'AYS_Pagination'            => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-pagination.php'
+        'AYS_Pagination'            => AYS_PLUGIN_PATH . 'includes/invoices/class-ays-pagination.php',
+        
+        // License Management
+        'AYS_License'               => AYS_PLUGIN_PATH . 'includes/helpers/class-ays-license.php',
+        'AYS_License_Page'          => AYS_PLUGIN_PATH . 'includes/admin/class-ays-license-page.php'
     ];
 
     public static function autoload($class_name) {

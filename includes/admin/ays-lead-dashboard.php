@@ -42,17 +42,24 @@ if (trim($buffer) !== '' && strpos($buffer, 'Lead Form Dashboard') === false) {
     </section>
     <section id="export" class="ays-tabpanel" data-ays-panel>
         <?php
-        // Modular: render the Export tab using the existing export class
-        if (file_exists(AYS_PLUGIN_PATH . 'admin/class-ays-leads-export.php')) {
-            require_once AYS_PLUGIN_PATH . 'admin/class-ays-leads-export.php';
-            if (class_exists('Ays_Leads_Export_Page')) {
-                $export = new Ays_Leads_Export_Page();
-                if (method_exists($export, 'render_page')) {
-                    $export->render_page();
-                }
+        // Check for premium license before showing export functionality
+        if ( function_exists( 'ays_is_premium' ) && ! ays_is_premium( 'export_functionality' ) ) {
+            if ( function_exists( 'ays_show_premium_cta' ) ) {
+                ays_show_premium_cta( 'Export Functionality' );
             }
         } else {
-            echo '<div class="notice notice-error"><p>Export tab file missing.</p></div>';
+            // Modular: render the Export tab using the existing export class
+            if (file_exists(AYS_PLUGIN_PATH . 'admin/class-ays-leads-export.php')) {
+                require_once AYS_PLUGIN_PATH . 'admin/class-ays-leads-export.php';
+                if (class_exists('Ays_Leads_Export_Page')) {
+                    $export = new Ays_Leads_Export_Page();
+                    if (method_exists($export, 'render_page')) {
+                        $export->render_page();
+                    }
+                }
+            } else {
+                echo '<div class="notice notice-error"><p>Export tab file missing.</p></div>';
+            }
         }
         ?>
     </section>
