@@ -72,3 +72,39 @@ coverage/
 
 # Assets source maps
 *.map
+
+# Development documentation (internal use only, not for public release)
+**/ADMIN_MENU*.md
+**/INVOICING*.md
+**/EMAIL_SYSTEM*.md
+**/PERMISSION*.md
+**/PHASE*.md
+**/SESSION*.md
+**/TONIGHT*.md
+**/DOCUMENTATION_*.md
+**/PREMIUM*.md
+IMPROVEMENTS.md
+Coding style guide.md
+BUG_REPORT.md
+Implementing*.md
+WordPress*.md
+
+# Test and development files
+test-*.php
+check-*.php
+seed-*.php
+manual-*.php
+temp-*.php
+create-*.php
+install-database.php
+bootstrap.php
+mercury-smtp-config.php
+phpunit.xml
+
+# Agent memory and session files
+.agent-memory/
+SESSION_CONFIG.php
+
+# Template files with example/hardcoded data
+**/lead-landing.txt
+**/lead-landing.md
