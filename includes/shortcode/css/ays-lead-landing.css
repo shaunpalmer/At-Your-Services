@@ -98,8 +98,80 @@ ol {
   color: var(--ays-text-color);
 }
 
-/* Responsive text with media queries */
+/* Layout Classes - Replacing Bootstrap Grid */
+.ays-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--ays-spacing-md);
+}
+
+.ays-container-fluid {
+  width: 100%;
+  padding: 0;
+}
+
+.ays-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 calc(var(--ays-spacing-sm) * -1);
+}
+
+.ays-col {
+  flex: 1;
+  padding: var(--ays-spacing-sm);
+}
+
+.ays-col-full {
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding: var(--ays-spacing-sm);
+}
+
+.ays-col-half {
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding: var(--ays-spacing-sm);
+}
+
+/* Lead Landing Specific Styles */
+.ays-lead-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: var(--ays-spacing-xl) 0;
+}
+
+.ays-lead-content {
+  width: 100%;
+}
+
+.ays-lead-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ays-lead-form-section {
+  background-color: var(--ays-secondary-color);
+  padding: var(--ays-spacing-lg);
+  border-radius: var(--ays-border-radius-md);
+  color: var(--ays-text-color);
+}
+
+.ays-lead-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: var(--ays-spacing-md);
+}
+
+/* Responsive Layout */
 @media (min-width: 768px) {
+  .ays-col-half {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  
   h2 {
     font-size: var(--ays-font-size-2xl);
   }
