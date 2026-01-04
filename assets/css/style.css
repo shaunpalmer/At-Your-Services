@@ -1,5 +1,41 @@
-/* Custom Styles */
+/**
+ * At Your Service - Main Stylesheet
+ * CSS Variables for consistent theming
+ */
 
+:root {
+  /* Color Palette */
+  --ays-primary-color: #007bff;
+  --ays-secondary-color: #dadcdd;
+  --ays-text-color: #000000;
+  --ays-background-color: #ffffff;
+  --ays-border-color: #dee2e6;
+  
+  /* Typography */
+  --ays-font-family: Arial, sans-serif;
+  --ays-font-size-base: 1rem;
+  --ays-font-size-lg: 1.25rem;
+  --ays-font-size-xl: 1.75rem;
+  --ays-line-height-base: 1.5;
+  
+  /* Spacing */
+  --ays-spacing-xs: 0.3125rem;  /* 5px */
+  --ays-spacing-sm: 0.625rem;   /* 10px */
+  --ays-spacing-md: 1.25rem;    /* 20px */
+  --ays-spacing-lg: 1.875rem;   /* 30px */
+  --ays-spacing-xl: 2.5rem;     /* 40px */
+  
+  /* Border Radius */
+  --ays-border-radius-sm: 0.25rem;
+  --ays-border-radius-md: 0.5rem;
+  --ays-border-radius-lg: 1rem;
+}
+
+/* Global Styles */
 body {
-  font-family: Arial, sans-serif;
+  font-family: var(--ays-font-family);
+  color: var(--ays-text-color);
+  background-color: var(--ays-background-color);
+  font-size: var(--ays-font-size-base);
+  line-height: var(--ays-line-height-base);
 }

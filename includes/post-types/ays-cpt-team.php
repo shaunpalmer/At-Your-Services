@@ -18,7 +18,7 @@ class Ays_CPT_Team {
      * Constructor: Hooks into 'init' to register the post type.
      */
     public function __construct() {
-        add_action( 'init', array( $this, 'ays_register_team_post_type' ) );
+        add_action( 'init', array( $this, 'register_post_type' ) );
     }
 
     /**
@@ -26,39 +26,39 @@ class Ays_CPT_Team {
      *
      * @return void
      */
-    public function ays_register_team_post_type() {
+    public function register_post_type() {
         $labels = array(
-            'name'                  => __( 'Teams', 'ays' ),
-            'singular_name'         => __( 'Team', 'ays' ),
-            'menu_name'             => __( 'Teams', 'ays' ),
-            'name_admin_bar'        => __( 'Team', 'ays' ),
-            'add_new'               => __( 'Add New', 'ays' ),
-            'add_new_item'          => __( 'Add New Team', 'ays' ),
-            'new_item'              => __( 'New Team', 'ays' ),
-            'edit_item'             => __( 'Edit Team', 'ays' ),
-            'view_item'             => __( 'View Team', 'ays' ),
-            'all_items'             => __( 'All Teams', 'ays' ),
-            'search_items'          => __( 'Search Teams', 'ays' ),
-            'parent_item_colon'     => __( 'Parent Team:', 'ays' ),
-            'not_found'             => __( 'No teams found.', 'ays' ),
-            'not_found_in_trash'    => __( 'No teams found in Trash.', 'ays' ),
-            'featured_image'        => __( 'Team Image', 'ays' ),
-            'set_featured_image'    => __( 'Set featured image', 'ays' ),
-            'remove_featured_image' => __( 'Remove featured image', 'ays' ),
-            'use_featured_image'    => __( 'Use as featured image', 'ays' ),
-            'archives'              => __( 'Team Archives', 'ays' ),
-            'insert_into_item'      => __( 'Insert into team', 'ays' ),
-            'uploaded_to_this_item' => __( 'Uploaded to this team', 'ays' ),
-            'filter_items_list'     => __( 'Filter teams list', 'ays' ),
-            'items_list_navigation' => __( 'Teams list navigation', 'ays' ),
-            'items_list'            => __( 'Teams list', 'ays' ),
-            'attributes'            => __( 'Team Attributes', 'ays' ),
+            'name'                  => __( 'Teams', 'atyourservice' ),
+            'singular_name'         => __( 'Team', 'atyourservice' ),
+            'menu_name'             => __( 'Teams', 'atyourservice' ),
+            'name_admin_bar'        => __( 'Team', 'atyourservice' ),
+            'add_new'               => __( 'Add New', 'atyourservice' ),
+            'add_new_item'          => __( 'Add New Team', 'atyourservice' ),
+            'new_item'              => __( 'New Team', 'atyourservice' ),
+            'edit_item'             => __( 'Edit Team', 'atyourservice' ),
+            'view_item'             => __( 'View Team', 'atyourservice' ),
+            'all_items'             => __( 'All Teams', 'atyourservice' ),
+            'search_items'          => __( 'Search Teams', 'atyourservice' ),
+            'parent_item_colon'     => __( 'Parent Team:', 'atyourservice' ),
+            'not_found'             => __( 'No teams found.', 'atyourservice' ),
+            'not_found_in_trash'    => __( 'No teams found in Trash.', 'atyourservice' ),
+            'featured_image'        => __( 'Team Image', 'atyourservice' ),
+            'set_featured_image'    => __( 'Set featured image', 'atyourservice' ),
+            'remove_featured_image' => __( 'Remove featured image', 'atyourservice' ),
+            'use_featured_image'    => __( 'Use as featured image', 'atyourservice' ),
+            'archives'              => __( 'Team Archives', 'atyourservice' ),
+            'insert_into_item'      => __( 'Insert into team', 'atyourservice' ),
+            'uploaded_to_this_item' => __( 'Uploaded to this team', 'atyourservice' ),
+            'filter_items_list'     => __( 'Filter teams list', 'atyourservice' ),
+            'items_list_navigation' => __( 'Teams list navigation', 'atyourservice' ),
+            'items_list'            => __( 'Teams list', 'atyourservice' ),
+            'attributes'            => __( 'Team Attributes', 'atyourservice' ),
         );
 
         $args = array(
-            'label'                 => __( 'Teams', 'ays' ),
+            'label'                 => __( 'Teams', 'atyourservice' ),
             'labels'                => $labels,
-            'description'           => __( 'Different teams in our organization', 'ays' ),
+            'description'           => __( 'Teams within the organization.', 'atyourservice' ),
             'public'                => true,
             'publicly_queryable'    => true,
             'show_ui'               => true,
@@ -85,17 +85,9 @@ class Ays_CPT_Team {
         );
 
         register_post_type( 'team', $args );
-
-        /**
-         * Captain's Log: 'team' post type registered successfully.
-         * Our crew is ready for their missions.
-         */
     }
 }
 
 // Initialize the class
 new Ays_CPT_Team();
-
-// Why do programmers prefer dark mode?
-// Because light attracts bugs! 🐛💻
 

@@ -1,18 +1,41 @@
 /**
- * All of the CSS for your public-facing functionality should be
- * included in this file.
+ * At Your Service - Lead Landing Page Styles
+ * Uses consistent CSS variables defined in main stylesheet
  */
 :root {
-  --primary-color: #007bff; /* Default Bootstrap primary color */
-  --secondary-color: #dadcdd; /* Default Bootstrap secondary color */
-  --Text-color: #000000; /* Default Bootstrap Text-color */
-  --background-color: #ffffff; /* Default white background */
-  --text-decoration: var(--has-link-decoration, none);
-  --list-style-type: none; /* Custom list style type */
-  --spacing-xs: 0.3125rem; /* 5px */
-  --spacing-sm: 0.625rem; /* 10px */
-  --spacing-md: 1.25rem; /* 20px */
-  --spacing-lg: 1.875rem; /* 30px */
+  /* Color Palette - Consistent with main stylesheet */
+  --ays-primary-color: #007bff;
+  --ays-secondary-color: #dadcdd;
+  --ays-text-color: #000000;
+  --ays-background-color: #ffffff;
+  --ays-border-color: #dee2e6;
+  
+  /* Typography */
+  --ays-font-family: Arial, sans-serif;
+  --ays-font-size-base: 1rem;
+  --ays-font-size-md: 1.1rem;
+  --ays-font-size-lg: 1.25rem;
+  --ays-font-size-xl: 1.75rem;
+  --ays-font-size-2xl: 2rem;
+  --ays-font-size-3xl: 2.5rem;
+  --ays-line-height-base: 1.5;
+  
+  /* Spacing */
+  --ays-spacing-xs: 0.3125rem;  /* 5px */
+  --ays-spacing-sm: 0.625rem;   /* 10px */
+  --ays-spacing-md: 1.25rem;    /* 20px */
+  --ays-spacing-lg: 1.875rem;   /* 30px */
+  --ays-spacing-xl: 2.5rem;     /* 40px */
+  
+  /* Border Radius */
+  --ays-border-radius-sm: 0.25rem;
+  --ays-border-radius-md: 0.5rem;
+  --ays-border-radius-lg: 1rem;
+  
+  /* Other */
+  --ays-text-decoration: var(--has-link-decoration, none);
+  --ays-list-style-type: none;
+  --ays-image-max-width: 21.875rem; /* 350px */
 }
 
 /* Global box-sizing reset */
@@ -23,23 +46,23 @@
 }
 
 body {
-  background-color: var(--background-color);
+  background-color: var(--ays-background-color);
 }
 
 .container {
-  padding: var(--spacing-lg); /* Uses --spacing-lg which is 1.875rem */
+  padding: var(--ays-spacing-lg);
 }
 
 h2 {
-  color: var(--primary-color);
-  font-size: 1.75rem;
-  margin-bottom: 1.25rem; /* Converted from 20px */
+  color: var(--ays-primary-color);
+  font-size: var(--ays-font-size-xl);
+  margin-bottom: var(--ays-spacing-md);
 }
 
 p {
-  color: var(--Text-color);
-  font-size: 1rem;
-  margin-bottom: 1.875rem; /* Converted from 30px */
+  color: var(--ays-text-color);
+  font-size: var(--ays-font-size-base);
+  margin-bottom: var(--ays-spacing-lg);
   /* Clamp paragraph text to 6 lines */
   display: -webkit-box;
   -webkit-line-clamp: 6;
@@ -50,39 +73,39 @@ p {
 
 /* Restrict image size to 350px max width */
 picture img {
-  max-width: 21.875rem; /* Converted from 350px */
+  max-width: var(--ays-image-max-width);
   width: 100%;
   height: auto;
 }
 
 ul,
 ol {
-  list-style-type: var(--list-style-type);
-  padding: 0.3125rem; /* Equivalent to 5px on all sides */
+  list-style-type: var(--ays-list-style-type);
+  padding: var(--ays-spacing-xs);
 }
 
 .form-section {
-  background-color: var(--secondary-color);
-  padding: 1.5625rem; /* Increased padding for extra space */
-  border-radius: 0.5rem; /* Soft corners for the form section */
-  color: var(--Text-color);
+  background-color: var(--ays-secondary-color);
+  padding: var(--ays-spacing-lg);
+  border-radius: var(--ays-border-radius-md);
+  color: var(--ays-text-color);
 }
 
 /* Responsive text with media queries */
 @media (min-width: 768px) {
   h2 {
-    font-size: 2rem;
+    font-size: var(--ays-font-size-2xl);
   }
   p {
-    font-size: 1.1rem;
+    font-size: var(--ays-font-size-md);
   }
 }
 
 @media (min-width: 1200px) {
   h2 {
-    font-size: 2.5rem;
+    font-size: var(--ays-font-size-3xl);
   }
   p {
-    font-size: 1.25rem;
+    font-size: var(--ays-font-size-lg);
   }
 }
