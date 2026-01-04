@@ -3,12 +3,19 @@
  * Uses consistent CSS variables defined in main stylesheet
  */
 :root {
-  /* Color Palette - Consistent with main stylesheet */
-  --ays-primary-color: #007bff;
-  --ays-secondary-color: #dadcdd;
-  --ays-text-color: #000000;
+  /* Color Palette - WordPress-inspired colors (matches main stylesheet) */
+  --ays-primary-color: #2271b1;        /* WordPress admin blue */
+  --ays-primary-hover: #135e96;        /* Darker blue for hovers */
+  --ays-secondary-color: #f0f0f1;      /* WordPress light gray background */
+  --ays-secondary-dark: #dcdcde;       /* WordPress medium gray */
+  --ays-text-color: #1d2327;           /* WordPress dark text */
+  --ays-text-light: #50575e;           /* WordPress light text */
   --ays-background-color: #ffffff;
-  --ays-border-color: #dee2e6;
+  --ays-border-color: #c3c4c7;         /* WordPress border gray */
+  --ays-success-color: #00a32a;        /* WordPress green */
+  --ays-warning-color: #dba617;        /* WordPress yellow */
+  --ays-error-color: #d63638;          /* WordPress red */
+  --ays-info-color: #72aee6;           /* WordPress light blue */
   
   /* Typography */
   --ays-font-family: Arial, sans-serif;
