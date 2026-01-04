@@ -1,61 +1,79 @@
 <?php
-// Custom Post Type: Review
+/**
+ * Custom Post Type: Review
+ *
+ * Registers the 'review' custom post type for the At Your Service plugin.
+ *
+ * @package AtYourService
+ * @since 1.0.0
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+/**
+ * Class Ays_CPT_Review
+ *
+ * Handles registration of the Review custom post type.
+ */
 class Ays_CPT_Review {
 
+    /**
+     * Constructor: Hooks into 'init' to register the post type.
+     */
     public function __construct() {
-        add_action( 'init', array( $this, 'register_Review_post_type' ) );
-   
+        add_action( 'init', array( $this, 'register_post_type' ) );
     }
 
-    public function register_Review_post_type() {
+    /**
+     * Registers the 'review' custom post type.
+     *
+     * @return void
+     */
+    public function register_post_type() {
 
-    $labels = array(
-            'name'                  => __( 'review','ays' ),
-            'singular_name'         => __( 'review','ays' ),
-            'menu_name'             => __( 'review','ays' ),
-            'name_admin_bar'        => __( 'review','ays' ),
-            'add_new'               => __( 'Add New', 'ays' ),
-            'add_new_item'          => __( 'Add New review', 'ays' ),
-            'new_item'              => __( 'New review', 'ays' ),
-            'edit_item'             => __( 'Edit review', 'ays' ),
-            'view_item'             => __( 'View review', 'ays' ),
-            'all_items'             => __( 'All review', 'ays' ),
-            'search_items'          => __( 'Search review', 'ays' ),
-            'parent_item_colon'     => __( 'Parent review:', 'ays' ),
-            'not_found'             => __( 'No review found.', 'ays' ),
-            'not_found_in_trash'    => __( 'No review found in Trash.', 'ays' ),
-            'featured_image'        => __( 'review Image', 'ays' ),
-            'set_featured_image'    => __( 'Set featured image', 'ays' ),
-            'remove_featured_image' => __( 'Remove featured image', 'ays' ),
-            'use_featured_image'    => __( 'Use as featured image', 'ays' ),
-            'archives'              => __( 'review Archives', 'ays' ),
-            'insert_into_item'      => __( 'Insert into review', 'ays' ),
-            'uploaded_to_this_item' => __( 'Uploaded to this review', 'ays' ),
-            'filter_items_list'     => __( 'Filter review list', 'ays' ),
-            'items_list_navigation' => __( 'review list navigation', 'ays' ),
-            'items_list'            => __( 'review list', 'ays' ),
+        $labels = array(
+            'name'                  => __( 'Reviews', 'atyourservice' ),
+            'singular_name'         => __( 'Review', 'atyourservice' ),
+            'menu_name'             => __( 'Reviews', 'atyourservice' ),
+            'name_admin_bar'        => __( 'Review', 'atyourservice' ),
+            'add_new'               => __( 'Add New', 'atyourservice' ),
+            'add_new_item'          => __( 'Add New Review', 'atyourservice' ),
+            'new_item'              => __( 'New Review', 'atyourservice' ),
+            'edit_item'             => __( 'Edit Review', 'atyourservice' ),
+            'view_item'             => __( 'View Review', 'atyourservice' ),
+            'all_items'             => __( 'All Reviews', 'atyourservice' ),
+            'search_items'          => __( 'Search Reviews', 'atyourservice' ),
+            'parent_item_colon'     => __( 'Parent Review:', 'atyourservice' ),
+            'not_found'             => __( 'No reviews found.', 'atyourservice' ),
+            'not_found_in_trash'    => __( 'No reviews found in Trash.', 'atyourservice' ),
+            'featured_image'        => __( 'Review Image', 'atyourservice' ),
+            'set_featured_image'    => __( 'Set featured image', 'atyourservice' ),
+            'remove_featured_image' => __( 'Remove featured image', 'atyourservice' ),
+            'use_featured_image'    => __( 'Use as featured image', 'atyourservice' ),
+            'archives'              => __( 'Review Archives', 'atyourservice' ),
+            'insert_into_item'      => __( 'Insert into review', 'atyourservice' ),
+            'uploaded_to_this_item' => __( 'Uploaded to this review', 'atyourservice' ),
+            'filter_items_list'     => __( 'Filter reviews list', 'atyourservice' ),
+            'items_list_navigation' => __( 'Reviews list navigation', 'atyourservice' ),
+            'items_list'            => __( 'Reviews list', 'atyourservice' ),
         );
 
-
         $args = array(
-            'label'                 => __( 'review', 'ays' ),
+            'label'                 => __( 'Review', 'atyourservice' ),
             'labels'                => $labels,
-            'description'           => __( 'Different kinds of review', 'ays' ),
+            'description'           => __( 'Customer reviews and testimonials.', 'atyourservice' ),
             'public'                => true,
             'publicly_queryable'    => true,
             'show_ui'               => true,
-            'show_in_rest'          => true, // Enables Gutenberg editor support
+            'show_in_rest'          => true,
             'rest_base'             => 'review',
             'has_archive'           => false,
-            'show_in_menu'          => true, // Ensure it shows in Appearance > Menus
+            'show_in_menu'          => true,
             'menu_position'         => 5,
-            'menu_icon'             => 'dashicons-star-half',
-            "supports" => array( "title", "editor", "thumbnail", "excerpt", "custom-fields", "revisions", "page-attributes","post-formats" ),
+            'menu_icon'             => 'dashicons-star-filled',
+            'supports'              => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'revisions', 'page-attributes', 'post-formats' ),
             'taxonomies'            => array( 'category', 'post_tag', 'service_type', 'location' ),
             'rewrite'               => array( 'slug' => 'review', 'with_front' => true ),
             'hierarchical'          => true,
@@ -65,19 +83,8 @@ class Ays_CPT_Review {
         );
 
         register_post_type( 'review', $args );
-
-        /**
-         * Captain's Log: 'review' post type registered. Ready for new missions.
-         */
     }
 }
+
 // Initialize the class
 new Ays_CPT_Review();
-
-
-
-// While we're venturing through the coding galaxy, it's important to keep our code as clear as possible to avoid any clashes with the "Klingons" of syntax errors. By following best practices and keeping our code well-organized, we'll ensure a smooth voyage through the development universe.
-
-// As Captain Picard would say: "Let's make sure everything is shipshape before we engage."
-
-// If you have any further questions or need assistance with other parts of your plugin, please let me know. I'm here to help ensure your plugin is ready to boldly go where no plugin has gone before! 🖖

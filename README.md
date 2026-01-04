@@ -1,8 +1,8 @@
 # At Your Service WordPress Plugin
 
-A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
+A comprehensive WordPress plugin designed specifically for running service-based businesses like **cleaning services, gardeners, plumbers, electricians, HVAC technicians, painters, contractors,** and more. This plugin provides everything you need to manage your service business including lead generation, job tracking, invoicing, custom post types, and more—all built on WordPress.
 
-At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
+At Your Service is a flexible, feature-rich WordPress plugin specifically designed for service-based businesses. It offers lead generation forms, job management capabilities, invoicing tools, and custom post types for services, team members, FAQs, reviews, and locations. **Shortcode support** allows users to easily display professional lead generation forms. The plugin is built on modern PHP practices with WordPress coding standards, ensuring scalability and maintainability. The architecture is **extensible**, making it easy to customize. It is **mobile-optimized** and supports **internationalization** with built-in translation readiness.
 
 ## Minimum Requirements
 
@@ -32,16 +32,57 @@ This shortcode is designed to be mobile-optimized, ensuring it looks great acros
 
 ## Features
 
-- **Lead Generation**: Collect and manage leads with a built-in cost calculator, quote generator, and Gutenberg service blocks.
-- **Shortcodes for Non-Gutenberg Users**: Shortcodes are available for integrating lead generation forms into landing page.
-- **Job Management**: Organize and track jobs through various stages of the business process.
-- **Invoicing System**: Create, send, and manage invoices, with customer status tracking like credit, bad debt, and payment history.
-- **OOP-Based Architecture**: Leverages modern PHP practices like singletons and the State pattern to ensure maintainability and scalability.
-- **Custom Post Types**: Use multiple custom post types like 'services' to organize data for service businesses.
-- **Live Pricing Calculations**: Dynamic service pricing based on user inputs, designed to provide instant quotes.
-- **Extensible Architecture**: Easy to add new features and blocks via a well-organized structure that keeps logic and presentation separate.
-- **Internationalization Ready**: Built-in support for translations with a `.pot` file included.
-- **Mobile-Optimized**: Focused on performance for mobile users, ensuring the plugin is SEO-friendly.
+### Business Management Tools
+
+- **Lead Generation**: Capture and manage customer inquiries with professional shortcode-based forms, complete with service selection, contact fields, and responsive design
+- **Job Management**: Organize and track jobs through various stages of your business process, from inquiry to completion
+- **Invoicing System**: Create, send, and manage invoices with customer status tracking including payment history and account management
+- **Custom Post Types**: Organize your business content effectively
+  - **Services** - Showcase the services you offer with detailed descriptions and pricing
+  - **Team Members** - Display your team, their expertise, and credentials
+  - **FAQs** - Answer common customer questions to reduce support burden
+  - **Reviews** - Display customer testimonials to build trust
+  - **Locations** - Showcase your service areas and coverage zones
+- **Taxonomies**: Powerful categorization system
+  - **Service Types** - Categorize by service category (cleaning, plumbing, electrical, etc.)
+  - **Price Ranges** - Organize services by pricing tiers
+  - **Neighbourhoods** - Target specific geographic service areas
+
+### Design & Technical
+
+- **WordPress Native Design**: Styled with WordPress-native colors (#2271b1 admin blue) for a cohesive, professional appearance that matches the WordPress admin
+- **Modern CSS Architecture**: Uses CSS variables (--ays-* namespace) for easy customization and theming
+- **No Bootstrap Dependency**: Custom lightweight CSS for better performance and faster load times
+- **Mobile-Optimized**: Fully responsive design ensures great UX across all devices (phone, tablet, desktop)
+- **Internationalization Ready**: Built-in support for translations with proper i18n implementation
+- **Developer Friendly**: Clean OOP architecture, proper escaping, sanitization, and WordPress coding standards
+- **Extensible**: Easy to customize and extend through WordPress hooks and filters
+
+### Professional Lead Capture
+
+The included shortcode `[ays_service_lead]` creates a conversion-optimized lead form with:
+
+- Responsive two-column layout perfect for landing pages
+- Dynamic customizable headline and subheadline
+- Visual content area for images or videos
+- Service pitch section with concise messaging
+- Full contact form (name, email, phone, service selection)
+- Professional "Book In" call-to-action button
+- Mobile-optimized for all screen sizes
+
+## Premium Version
+
+Looking for even more advanced features? The premium version includes:
+
+- **Advanced CRM**: Comprehensive customer relationship management
+- **Automated Email Notifications**: Customer and admin notifications
+- **Online Booking System**: Let customers schedule services 24/7
+- **Payment Integration**: Accept online payments directly
+- **Business Analytics**: Detailed reporting and dashboards
+- **Priority Support**: Get dedicated assistance when you need it
+- **Advanced Workflow Automation**: Streamline your business processes
+
+[Learn more about At Your Service Premium](https://project-studios.nz/atyourservice)
 
 ## Installation
 

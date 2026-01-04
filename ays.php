@@ -32,16 +32,44 @@
  */
 
 // Exit if accessed directly
-if(!defined('ABSPATH')){
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define plugin version constant
-define('AYS_PLUGIN_VERSION', '1.2.3');
+// Check WordPress version compatibility
+global $wp_version;
+if ( version_compare( $wp_version, '5.0', '<' ) ) {
+	add_action( 'admin_notices', 'ays_wordpress_version_notice' );
+	return;
+}
 
-// Define plugin path constant if not already defined.
+/**
+ * Display admin notice for incompatible WordPress version.
+ *
+ * @return void
+ */
+function ays_wordpress_version_notice() {
+	?>
+	<div class="notice notice-error">
+		<p>
+			<?php
+			printf(
+				/* translators: %s: Required WordPress version */
+				esc_html__( 'At Your Service requires WordPress version %s or higher. Please update WordPress to use this plugin.', 'atyourservice' ),
+				'5.0'
+			);
+			?>
+		</p>
+	</div>
+	<?php
+}
+
+// Define plugin version constant
+define( 'AYS_PLUGIN_VERSION', '1.2.3' );
+
+// Define plugin path constant if not already defined
 if ( ! defined( 'AYS_PLUGIN_PATH' ) ) {
-    define( 'AYS_PLUGIN_PATH', wp_normalize_path( plugin_dir_path( __FILE__ ) ) );
+	define( 'AYS_PLUGIN_PATH', wp_normalize_path( plugin_dir_path( __FILE__ ) ) );
 }
 
 // Load the autoloader

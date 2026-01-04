@@ -1,51 +1,69 @@
 <?php
-// Custom Post Type: Service
+/**
+ * Custom Post Type: Service
+ *
+ * Registers the 'service' custom post type for the At Your Service plugin.
+ *
+ * @package AtYourService
+ * @since 1.0.0
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+/**
+ * Class Ays_CPT_Service
+ *
+ * Handles registration of the Service custom post type.
+ */
 class Ays_CPT_Service {
 
+    /**
+     * Constructor: Hooks into 'init' to register the post type.
+     */
     public function __construct() {
-        add_action( 'init', array( $this, 'register_service_post_type' ) );
-        // Removed 'register_taxonomies' action
+        add_action( 'init', array( $this, 'register_post_type' ) );
     }
 
-    public function register_service_post_type() {
+    /**
+     * Registers the 'service' custom post type.
+     *
+     * @return void
+     */
+    public function register_post_type() {
 
-    $labels = array(
-            'name'                  => __( 'Services', 'ays' ),
-            'singular_name'         => __( 'Service', 'ays' ),
-            'menu_name'             => __( 'Services', 'ays' ),
-            'name_admin_bar'        => __( 'Service', 'ays' ),
-            'add_new'               => __( 'Add New', 'ays' ),
-            'add_new_item'          => __( 'Add New Service', 'ays' ),
-            'new_item'              => __( 'New Service', 'ays' ),
-            'edit_item'             => __( 'Edit Service', 'ays' ),
-            'view_item'             => __( 'View Service', 'ays' ),
-            'all_items'             => __( 'All Services', 'ays' ),
-            'search_items'          => __( 'Search Services', 'ays' ),
-            'parent_item_colon'     => __( 'Parent Service:', 'ays' ),
-            'not_found'             => __( 'No services found.', 'ays' ),
-            'not_found_in_trash'    => __( 'No services found in Trash.', 'ays' ),
-            'featured_image'        => __( 'Service Image', 'ays' ),
-            'set_featured_image'    => __( 'Set featured image', 'ays' ),
-            'remove_featured_image' => __( 'Remove featured image', 'ays' ),
-            'use_featured_image'    => __( 'Use as featured image', 'ays' ),
-            'archives'              => __( 'Service Archives', 'ays' ),
-            'insert_into_item'      => __( 'Insert into service', 'ays' ),
-            'uploaded_to_this_item' => __( 'Uploaded to this service', 'ays' ),
-            'filter_items_list'     => __( 'Filter services list', 'ays' ),
-            'items_list_navigation' => __( 'Services list navigation', 'ays' ),
-            'items_list'            => __( 'Services list', 'ays' ),
+        $labels = array(
+            'name'                  => __( 'Services', 'atyourservice' ),
+            'singular_name'         => __( 'Service', 'atyourservice' ),
+            'menu_name'             => __( 'Services', 'atyourservice' ),
+            'name_admin_bar'        => __( 'Service', 'atyourservice' ),
+            'add_new'               => __( 'Add New', 'atyourservice' ),
+            'add_new_item'          => __( 'Add New Service', 'atyourservice' ),
+            'new_item'              => __( 'New Service', 'atyourservice' ),
+            'edit_item'             => __( 'Edit Service', 'atyourservice' ),
+            'view_item'             => __( 'View Service', 'atyourservice' ),
+            'all_items'             => __( 'All Services', 'atyourservice' ),
+            'search_items'          => __( 'Search Services', 'atyourservice' ),
+            'parent_item_colon'     => __( 'Parent Service:', 'atyourservice' ),
+            'not_found'             => __( 'No services found.', 'atyourservice' ),
+            'not_found_in_trash'    => __( 'No services found in Trash.', 'atyourservice' ),
+            'featured_image'        => __( 'Service Image', 'atyourservice' ),
+            'set_featured_image'    => __( 'Set featured image', 'atyourservice' ),
+            'remove_featured_image' => __( 'Remove featured image', 'atyourservice' ),
+            'use_featured_image'    => __( 'Use as featured image', 'atyourservice' ),
+            'archives'              => __( 'Service Archives', 'atyourservice' ),
+            'insert_into_item'      => __( 'Insert into service', 'atyourservice' ),
+            'uploaded_to_this_item' => __( 'Uploaded to this service', 'atyourservice' ),
+            'filter_items_list'     => __( 'Filter services list', 'atyourservice' ),
+            'items_list_navigation' => __( 'Services list navigation', 'atyourservice' ),
+            'items_list'            => __( 'Services list', 'atyourservice' ),
         );
 
-
         $args = array(
-            'label'                 => __( 'Services', 'ays' ),
+            'label'                 => __( 'Services', 'atyourservice' ),
             'labels'                => $labels,
-            'description'           => __( 'Different kinds of services', 'ays' ),
+            'description'           => __( 'Different kinds of services offered by the business.', 'atyourservice' ),
             'public'                => true,
             'publicly_queryable'    => true,
             'show_ui'               => true,
@@ -55,7 +73,7 @@ class Ays_CPT_Service {
             'show_in_menu'          => true,
             'menu_position'         => 5,
             'menu_icon'             => 'dashicons-admin-users',
-            "supports" => array( "title", "editor", "thumbnail", "excerpt", "custom-fields", "revisions", "page-attributes","post-formats" ),
+            'supports'              => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields', 'revisions', 'page-attributes', 'post-formats' ),
             'taxonomies'            => array( 'category', 'post_tag', 'service_type', 'price_range', 'location' ),
             'rewrite'               => array( 'slug' => 'services', 'with_front' => true ),
             'hierarchical'          => true,
@@ -65,18 +83,9 @@ class Ays_CPT_Service {
         );
 
         register_post_type( 'service', $args );
-
-        /**
-         * Captain's Log: 'service' post type registered. Ready for new missions.
-         */
     }
 }
+
 // Initialize the class
 new Ays_CPT_Service();
-
-// While we're venturing through the coding galaxy, it's important to keep our code as clear as possible to avoid any clashes with the "Klingons" of syntax errors. By following best practices and keeping our code well-organized, we'll ensure a smooth voyage through the development universe.
-
-// As Captain Picard would say: "Let's make sure everything is shipshape before we engage."
-
-// If you have any further questions or need assistance with other parts of your plugin, please let me know. I'm here to help ensure your plugin is ready to boldly go where no plugin has gone before! 🖖
 

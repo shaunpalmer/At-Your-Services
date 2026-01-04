@@ -8,47 +8,46 @@
  * @license GNU General Public License 2.0+
  */
 
-
-
-
-
-// Define the shortcode function for the service form
-// Define the shortcode function for the service form without styling
-# ays_render_service_form
+/**
+ * Shortcode function for the service lead generation form.
+ * Displays a two-column layout with service information and a contact form.
+ *
+ * @return string HTML output for the shortcode
+ */
 function ays_service_form_shortcode() {
     ob_start();
     ?>
-    <div class="container-fluid">
-        <div class="container d-flex align-items-center" style="min-height: 100vh">
-            <div class="row w-100 card-body">
+    <div class="ays-container-fluid">
+        <div class="ays-container ays-lead-wrapper">
+            <div class="ays-row ays-lead-content">
                 <!-- Left Column: Headline and Image -->
-                <div class="col-md-6 d-flex flex-column justify-content-center">
+                <div class="ays-col-half ays-lead-column">
                     <h1>Christchurch top cleaning service<br>book online in minutes</h1>
                     <picture>
-                        <source media="(min-width: 1200px)" srcset="<?php echo plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png'; ?>" />
-                        <source media="(min-width: 768px)" srcset="<?php echo plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png'; ?>" />
-                        <img src="<?php echo plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png'; ?>" alt="At-Your-Service" class="img-fluid mb-3" />
+                        <source media="(min-width: 1200px)" srcset="<?php echo esc_url( plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png' ); ?>" />
+                        <source media="(min-width: 768px)" srcset="<?php echo esc_url( plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png' ); ?>" />
+                        <img src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'public/partials/Images/cleaning-service.png' ); ?>" alt="At-Your-Service" class="ays-lead-image" />
                     </picture>
                     <h2>Effortless Cleaning, Just a Click Away</h2>
                     <p>Book your cleaning today—carpet, windows, and more, done for you, while you enjoy a spotless home.</p>
                 </div>
                 <!-- Right Column: Form -->
-                <div class="col-md-6 form-section">
+                <div class="ays-col-half ays-lead-form-section">
                     <h3>Let's talk about your service needs</h3>
-                    <form class="card-body">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" placeholder="Enter your name" />
+                    <form class="ays-card-body">
+                        <div class="ays-form-group">
+                            <label for="name" class="ays-form-label">Name</label>
+                            <input type="text" class="ays-form-control" id="name" placeholder="Enter your name" />
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" placeholder="Enter Your E-mail" />
+                        <div class="ays-form-group">
+                            <label for="email" class="ays-form-label">Email</label>
+                            <input type="email" class="ays-form-control" id="email" placeholder="Enter Your E-mail" />
                         </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Telephone Number</label>
-                            <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" />
+                        <div class="ays-form-group">
+                            <label for="phone" class="ays-form-label">Telephone Number</label>
+                            <input type="tel" class="ays-form-control" id="phone" placeholder="Enter your phone number" />
                         </div>
-                        <button type="submit" class="btn btn-light mw-100">Book In</button>
+                        <button type="submit" class="ays-btn ays-btn-primary">Book In</button>
                     </form>
                 </div>
             </div>
