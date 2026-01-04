@@ -1,8 +1,8 @@
-# At Your Service WordPress Plugin
+# At Your Service WordPress Plugin (Free Version)
 
-A feature-rich, scalable, and customizable plugin designed for service-based businesses like **cleaning services, gardeners, plumbers,** and more. This plugin offers lead generation, job management, invoicing, and much more, all built on top of WordPress's flexible architecture.
+A professional WordPress plugin designed for service-based businesses like **cleaning services, gardeners, plumbers, electricians,** and more. This free version provides essential custom post types, taxonomies, and a lead generation form to showcase your services and capture customer inquiries.
 
-At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers lead generation, job management, invoicing, and custom post types. **Gutenberg service blocks** and **shortcode support** allow users to easily create and manage forms. The plugin is built on modern PHP practices, ensuring scalability and maintainability. It includes **dynamic pricing calculations**, ideal for providing instant quotes. The architecture is **extensible**, allowing for seamless integration of additional features such as CRM and subscription services. It is **mobile-optimized** and supports **internationalization** with built-in translation files.
+At Your Service is a flexible WordPress plugin specifically designed for service-based businesses. It offers custom post types for services, team members, FAQs, reviews, and locations, along with powerful taxonomies for categorization. **Shortcode support** allows users to easily display a professional lead generation form. The plugin is built on modern PHP practices with WordPress coding standards, ensuring scalability and maintainability. The architecture is **extensible**, making it easy to customize. It is **mobile-optimized** and supports **internationalization** with built-in translation readiness.
 
 ## Minimum Requirements
 
@@ -30,18 +30,40 @@ The At Your Service Plugin includes the following files and features:
 
 This shortcode is designed to be mobile-optimized, ensuring it looks great across all devices, whether on mobile or desktop. It's the perfect way to capture leads while presenting your service professionally.
 
-## Features
+## Features (Free Version)
 
-- **Lead Generation**: Collect and manage leads with a built-in cost calculator, quote generator, and Gutenberg service blocks.
-- **Shortcodes for Non-Gutenberg Users**: Shortcodes are available for integrating lead generation forms into landing page.
-- **Job Management**: Organize and track jobs through various stages of the business process.
-- **Invoicing System**: Create, send, and manage invoices, with customer status tracking like credit, bad debt, and payment history.
-- **OOP-Based Architecture**: Leverages modern PHP practices like singletons and the State pattern to ensure maintainability and scalability.
-- **Custom Post Types**: Use multiple custom post types like 'services' to organize data for service businesses.
-- **Live Pricing Calculations**: Dynamic service pricing based on user inputs, designed to provide instant quotes.
-- **Extensible Architecture**: Easy to add new features and blocks via a well-organized structure that keeps logic and presentation separate.
-- **Internationalization Ready**: Built-in support for translations with a `.pot` file included.
-- **Mobile-Optimized**: Focused on performance for mobile users, ensuring the plugin is SEO-friendly.
+- **Custom Post Types**: Organize your business content
+  - Services - Showcase what you offer
+  - Team Members - Display your team and their expertise
+  - FAQs - Answer common customer questions
+  - Reviews - Display customer testimonials  
+  - Locations - Showcase service areas
+- **Taxonomies**: Categorize your content
+  - Service Types
+  - Price Ranges
+  - Neighbourhoods
+- **Lead Generation Form**: Professional shortcode-based form to capture customer inquiries
+- **WordPress Native Design**: Styled with WordPress-native colors for a cohesive, professional appearance
+- **Mobile-Optimized**: Fully responsive design ensures great UX across all devices
+- **Internationalization Ready**: Built-in support for translations with proper i18n implementation
+- **Modern CSS**: Uses CSS variables (--ays-* namespace) for easy customization
+- **No Bootstrap Dependency**: Custom lightweight CSS for better performance
+- **Developer Friendly**: Clean OOP architecture, proper escaping, sanitization, and WordPress coding standards
+
+## Premium Version Features
+
+Looking for more? The premium version includes:
+
+- **Invoicing System**: Create, send, and manage invoices
+- **Job Management**: Organize and track jobs through completion
+- **Booking System**: Allow customers to schedule services online
+- **CRM Features**: Advanced customer relationship management
+- **Email Notifications**: Automated customer and admin notifications
+- **Admin Dashboards**: Business analytics and reporting
+- **Payment Integration**: Accept online payments
+- **Priority Support**: Get dedicated assistance when you need it
+
+[Learn more about At Your Service Premium](https://project-studios.nz/atyourservice)
 
 ## Installation
 
