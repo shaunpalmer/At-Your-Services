@@ -1,6 +1,6 @@
 === At Your Service ===
 Contributors: shaunpalmer
-Tags: service-business, custom-post-types, lead-generation, business-management, service-providers
+Tags: service-business, invoicing, job-management, lead-generation, booking, crm
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
@@ -8,53 +8,55 @@ Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Manage your service business with custom post types for services, teams, FAQs, reviews, and locations with a lead generation form.
+Complete business management for service providers: lead generation, job tracking, invoicing, and more for cleaning, plumbing, electrical businesses.
 
 == Description ==
 
-At Your Service is a WordPress plugin specifically designed for service-based businesses like cleaning services, gardeners, plumbers, electricians, and other service providers. It provides a professional foundation for showcasing your services and team while capturing leads.
+**At Your Service** is a comprehensive WordPress plugin designed specifically for running service-based businesses. Whether you're a cleaning service, gardener, plumber, electrician, HVAC technician, painter, or contractor, this plugin provides the tools you need to manage your entire operation from within WordPress.
 
-= Free Version Features =
+= What is At Your Service For? =
 
-* **Custom Post Types** - Organize your business content:
-  * Services - Showcase the services you offer
-  * Team Members - Display your team and their expertise
-  * FAQs - Answer common customer questions
-  * Reviews - Display customer testimonials
-  * Locations - Showcase service areas
-* **Taxonomies** - Categorize your content:
-  * Service Types
-  * Price Ranges
-  * Neighbourhoods
-* **Lead Generation Form** - Capture customer inquiries with a responsive shortcode-based form
-* **WordPress Native Design** - Styled to match WordPress admin for a cohesive look
-* **Mobile Optimized** - Fully responsive design for all devices
-* **Translation Ready** - Internationalization (i18n) support built-in
-* **Modern CSS** - Uses CSS variables for easy customization
+At Your Service is built for **service business owners** who want to:
 
-= Perfect For =
+* Manage customer inquiries and leads
+* Track jobs from start to finish
+* Create and send professional invoices
+* Showcase their services and team
+* Build trust with customer reviews
+* Organize business content efficiently
 
-* Cleaning Services
-* Gardeners & Landscapers
-* Plumbers
-* Electricians
-* Handyman Services
-* HVAC Technicians
-* Painters
-* Contractors
-* Any service-based business
+Perfect for cleaning services, plumbers, electricians, gardeners, landscapers, HVAC technicians, painters, handyman services, contractors, and any service-based business.
+
+= Core Features =
+
+**Business Management Tools:**
+
+* **Lead Generation** - Professional forms to capture customer inquiries with service selection, contact fields, and responsive design
+* **Job Management** - Organize and track jobs through various stages from inquiry to completion
+* **Invoicing System** - Create, send, and manage invoices with customer payment tracking and account management
+* **Custom Post Types** - Services, Team Members, FAQs, Reviews, and Locations to organize your business content
+* **Taxonomies** - Categorize by Service Types, Price Ranges, and Neighbourhoods
+
+**Design & Technical:**
+
+* **WordPress Native Design** - Matches WordPress admin colors for professional, cohesive appearance
+* **Modern CSS** - Uses CSS variables (--ays-* namespace) for easy customization
+* **No Bootstrap Dependency** - Lightweight custom CSS for better performance
+* **Mobile Optimized** - Fully responsive on all devices
+* **Translation Ready** - Full internationalization (i18n) support
+* **Developer Friendly** - Clean OOP code, proper escaping, WordPress coding standards
 
 = Lead Generation Form =
 
-The included shortcode `[ays_service_lead]` creates a professional lead capture form with:
+The shortcode `[ays_service_lead]` creates a professional lead capture form with:
 
 * Responsive two-column layout
-* Customizable headline and subheadline
+* Customizable headlines
 * Service selection checkboxes
 * Contact information fields (name, email, phone)
-* Optional visual content area
+* Visual content area
 * Mobile-optimized design
-* WordPress color scheme integration
+* "Book In" call-to-action button
 
 = Developer Friendly =
 
@@ -62,21 +64,22 @@ The included shortcode `[ays_service_lead]` creates a professional lead capture 
 * Object-oriented PHP architecture
 * WordPress coding standards compliant
 * Proper escaping and sanitization
-* Namespaced CSS classes
+* Namespaced CSS classes (--ays-*)
 * Extensible through WordPress hooks and filters
 
 = Premium Version =
 
-Looking for more features? The premium version includes:
+Looking for advanced features? The premium version includes:
 
-* **Invoicing System** - Create and manage invoices
-* **Job Management** - Track jobs through completion
-* **Booking System** - Allow customers to book services
-* **CRM Features** - Advanced customer relationship management
-* **Email Notifications** - Automated customer communications
-* **Admin Dashboards** - Business analytics and reporting
-* **Payment Integration** - Accept online payments
+* **Advanced CRM** - Comprehensive customer relationship management
+* **Automated Email Notifications** - Customer and admin notifications
+* **Online Booking System** - Let customers schedule services 24/7
+* **Payment Integration** - Accept online payments directly
+* **Business Analytics** - Detailed reporting and dashboards
 * **Priority Support** - Get help when you need it
+* **Workflow Automation** - Streamline business processes
+
+[Learn more about At Your Service Premium](https://project-studios.nz/atyourservice)
 
 [Learn more about At Your Service Premium](https://project-studios.nz/atyourservice)
 
