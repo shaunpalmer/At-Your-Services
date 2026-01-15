@@ -1,0 +1,54 @@
+name: Generate Plugin Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers whenever you push a tag starting with 'v' (e.g., v0.1.4)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Create plugin zip
+        run: |
+          # Create a zip, excluding development and git files
+          zip -r at-your-services.zip . \
+            -x "*.git*" \
+            -x ".github/*" \
+            -x "tests/*" \
+            -x "phpunit.xml" \
+            -x ".vscode/*" \
+            -x "*.md" \
+            -x "node_modules/*" \
+            -x "*.log" \
+            -x "test-*.php" \
+            -x "check-*.php" \
+            -x "manual-*.php" \
+            -x "seed-*.php" \
+            -x "temp-*.php" \
+            -x "bootstrap.php" \
+            -x ".agent-memory/*"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: at-your-services.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,9 +4,8 @@
 # OS junk
 .DS_Store
 Thumbs.db # Dependencies
- /vendor/
- /mcp-server/node_modules/
- /node_modules/
+/mcp-server/node_modules/
+/node_modules/
  
  # Build artifacts
  /dist/
