@@ -7,11 +7,12 @@ namespace Composer\Autoload;
 class ComposerStaticInite63962def1544ef7d3ddccf9585ee5c4
 {
     public static $files = array (
+        'f6d4f6bcee7247df6b777884c3e22f98' => __DIR__ . '/..' . '/yahnis-elsts/plugin-update-checker/load-v5p6.php',
         '6d233c29cab4b8b32a70b70b1943ae66' => __DIR__ . '/../..' . '/includes/helpers/functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (
-        'A' => 
+        'A' =>
         array (
             'AYS\\Taxonomies\\' => 15,
             'AYS\\Shortcode\\' => 14,
@@ -26,39 +27,39 @@ class ComposerStaticInite63962def1544ef7d3ddccf9585ee5c4
     );
 
     public static $prefixDirsPsr4 = array (
-        'AYS\\Taxonomies\\' => 
+        'AYS\\Taxonomies\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/taxonomies',
         ),
-        'AYS\\Shortcode\\' => 
+        'AYS\\Shortcode\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/shortcode',
         ),
-        'AYS\\PostTypes\\' => 
+        'AYS\\PostTypes\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/post-types',
         ),
-        'AYS\\Notifications\\Transport\\' => 
+        'AYS\\Notifications\\Transport\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/notifications/transport',
         ),
-        'AYS\\Notifications\\Adapters\\' => 
+        'AYS\\Notifications\\Adapters\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/notifications/adapters',
         ),
-        'AYS\\Notifications\\' => 
+        'AYS\\Notifications\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/notifications',
         ),
-        'AYS\\Helpers\\' => 
+        'AYS\\Helpers\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes/helpers',
         ),
-        'AYS\\Admin\\' => 
+        'AYS\\Admin\\' =>
         array (
             0 => __DIR__ . '/../..' . '/admin',
         ),
-        'AYS\\' => 
+        'AYS\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes',
         ),

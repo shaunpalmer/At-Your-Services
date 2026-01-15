@@ -46,6 +46,14 @@ if ( ! defined( 'AYS_PLUGIN_BASENAME' ) ) {
 	define( 'AYS_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 }
 
+// Define constants for GitHub auto-updater
+if ( ! defined( 'AYS_GITHUB_REPO' ) ) {
+	define( 'AYS_GITHUB_REPO', 'https://github.com/shaunpalmer/At-Your-Services/' );
+}
+if ( ! defined( 'AYS_PLUGIN_SLUG' ) ) {
+	define( 'AYS_PLUGIN_SLUG', 'at-your-services' );
+}
+
 // Use custom autoloader (classes not yet namespaced for PSR-4)
 require_once AYS_PLUGIN_PATH . 'includes/helpers/autoloader.php';
 Ays_Autoloader::register();
@@ -53,11 +61,23 @@ Ays_Autoloader::register();
 // Manually include helpers that are not class-based or need to be loaded early
 require_once AYS_PLUGIN_PATH . 'includes/helpers/AYS_Email_Validator.php';
 
+// === GitHub Auto-Updater ===
+// Initialize the GitHub Update Manager for automatic plugin updates
+add_action( 'plugins_loaded', function() {
+	require_once AYS_PLUGIN_PATH . 'includes/helpers/class-ays-github-update-manager.php';
+	
+	\AYS\Helpers\AYS_GitHub_Update_Manager::get_instance(
+		AYS_GITHUB_REPO,
+		__FILE__,
+		AYS_PLUGIN_SLUG
+	);
+}, 1 );
 
 
 //  Include the enqueue.php file
 require_once AYS_PLUGIN_PATH . 'admin/enqueue.php';
 require_once AYS_PLUGIN_PATH . 'admin/settings.php';
+require_once AYS_PLUGIN_PATH . 'admin/class-ays-update-settings.php';
 require_once AYS_PLUGIN_PATH . 'includes/shortcode/ays_shortcodes.php';
 require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-menu.php';
 require_once AYS_PLUGIN_PATH . 'includes/admin/ays-admin-dashboard.php';
