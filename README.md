@@ -462,6 +462,31 @@ Project Studios is planning to submit the plugin to WordPress.org. Please ensure
 - **WP scripts**: For task automation such as minifying CSS/JS or linting.
 - **Npm init automation**: For additional task automation if needed.
 
+## 🚀 GitHub Auto-Updater
+
+This plugin includes a professional GitHub-based auto-updater system that bypasses the WordPress.org review queue, enabling faster deployment of updates.
+
+### Features:
+- ✅ Automatic update checks every 12 hours
+- ✅ Manual update checks via admin interface (Leads > Updates)
+- ✅ Automated release creation via GitHub Actions
+- ✅ Version comparison with GitHub releases
+- ✅ One-command deployments for developers
+
+### For Administrators:
+Navigate to **Leads > Updates** in your WordPress admin to view update status and force manual checks.
+
+### For Developers:
+See [GITHUB_UPDATER.md](GITHUB_UPDATER.md) for complete documentation on releasing updates.
+
+**Quick Release Process:**
+```bash
+# Update version in ays.php, then:
+git tag v0.1.4
+git push origin main --tags
+# GitHub Actions automatically creates the release!
+```
+
 ## License
 
 The At Your Service Plugin is licensed under **GPL v2 or later**.
