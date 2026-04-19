@@ -15,7 +15,7 @@
  * @package At Your Service
  * @author  Shaun Palmer
  * @since 0.1.3
- * Requires PHP:7.2
+ * Requires PHP:7.4
  * Copyright 2024-2030 SHAUN PALMER (email: shaun@projectstudios.nz OR shaun.palmer@gmail.com)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -235,7 +235,12 @@ function ays_check_and_install_db() {
     }
 
     // Add a trigger to run the seeder script
-    if (isset($_GET['ays_action']) && $_GET['ays_action'] === 'seed_data' && current_user_can('manage_options')) {
+    $ays_action = isset($_GET['ays_action']) ? sanitize_key(wp_unslash($_GET['ays_action'])) : '';
+    if ($ays_action === 'seed_data') {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Unauthorized', 'atyourservice'));
+        }
+        check_admin_referer('ays_seed_data');
         require_once AYS_PLUGIN_PATH . 'seed-sample-data.php';
         // Redirect to avoid re-seeding on refresh
         wp_redirect(admin_url('admin.php?page=ays-invoicing&ays_notice=seeded'));

@@ -51,6 +51,7 @@ class AYS_Invoice_Renderer {
         $company_logo    = $company_logo_id ? wp_get_attachment_image_url($company_logo_id, 'medium') : '';
         $invoice_terms   = $company['invoice_terms'] ?? '';
         $invoice_footer  = $company['invoice_footer'] ?? '';
+        $show_powered_by = array_key_exists('show_powered_by', $company) ? !empty($company['show_powered_by']) : true;
 
         // Stripe flag (show pay button for non-paid invoices if configured)
         $stripe_enabled = class_exists('AYS_Stripe_Settings') && method_exists('AYS_Stripe_Settings', 'is_configured') && AYS_Stripe_Settings::is_configured();
@@ -98,6 +99,7 @@ class AYS_Invoice_Renderer {
             'client_address' => $client_address,
             'invoice_terms'  => $invoice_terms,
             'invoice_footer' => $invoice_footer,
+            'show_powered_by'=> $show_powered_by,
             'stripe_enabled' => $stripe_enabled,
         ];
 

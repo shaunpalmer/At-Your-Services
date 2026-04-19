@@ -14,6 +14,7 @@
  *   company_website: url,
  *   company_logo_id: media ID,
  *   invoice_footer: text,
+ *   show_powered_by: bool,
  *   payment_methods: text,
  *   invoice_terms: text
  *   bank_transfer_enabled: bool,
@@ -284,6 +285,18 @@ class AYS_Company_Profile {
 									<p class="description"><?php esc_html_e( 'Footer text at very bottom of invoice', 'atyourservice' ); ?></p>
 								</td>
 							</tr>
+							<tr>
+								<th scope="row">
+									<label for="show_powered_by"><?php esc_html_e( 'Attribution Link', 'atyourservice' ); ?></label>
+								</th>
+								<td>
+									<label>
+										<input type="checkbox" id="show_powered_by" name="show_powered_by" value="1" <?php checked( ! empty( $profile['show_powered_by'] ) ); ?>>
+										<?php esc_html_e( 'Show a small “Powered by At Your Service” link on invoices', 'atyourservice' ); ?>
+									</label>
+									<p class="description"><?php esc_html_e( 'Enabled by default for the free version. You can turn this off at any time.', 'atyourservice' ); ?></p>
+								</td>
+							</tr>
 						</table>
 
 						<p class="submit">
@@ -333,6 +346,7 @@ class AYS_Company_Profile {
 			'company_website' => $profile['company_website'] ?? '',
 			'company_logo_id' => $profile['company_logo_id'] ?? 0,
 			'invoice_footer' => $profile['invoice_footer'] ?? '',
+			'show_powered_by' => array_key_exists( 'show_powered_by', $profile ) ? ! empty( $profile['show_powered_by'] ) : true,
 			'payment_methods' => $profile['payment_methods'] ?? '',
 			'invoice_terms' => $profile['invoice_terms'] ?? '',
 			'bank_transfer_enabled' => ! empty( $profile['bank_transfer_enabled'] ),
@@ -372,6 +386,7 @@ class AYS_Company_Profile {
 			'company_website' => isset( $_POST['company_website'] ) ? esc_url_raw( wp_unslash( $_POST['company_website'] ) ) : '',
 			'company_logo_id' => isset( $_POST['company_logo_id'] ) ? intval( $_POST['company_logo_id'] ) : 0,
 			'invoice_footer' => isset( $_POST['invoice_footer'] ) ? sanitize_textarea_field( wp_unslash( $_POST['invoice_footer'] ) ) : '',
+			'show_powered_by' => ! empty( $_POST['show_powered_by'] ) ? 1 : 0,
 			'payment_methods' => isset( $_POST['payment_methods'] ) ? sanitize_textarea_field( wp_unslash( $_POST['payment_methods'] ) ) : '',
 			'invoice_terms' => isset( $_POST['invoice_terms'] ) ? sanitize_textarea_field( wp_unslash( $_POST['invoice_terms'] ) ) : '',
 			'bank_transfer_enabled' => ! empty( $_POST['bank_transfer_enabled'] ) ? 1 : 0,

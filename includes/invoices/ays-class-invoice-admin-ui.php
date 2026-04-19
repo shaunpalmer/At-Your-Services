@@ -684,7 +684,8 @@ class AYS_Invoice_Admin_UI {
             wp_send_json_error('Unauthorized');
         }
 
-        $tab_name = sanitize_text_field($_POST['tab'] ?? '');
+        $tab_name = isset($_POST['tab']) ? sanitize_text_field(wp_unslash($_POST['tab'])) : '';
+        $response_format = isset($_POST['format']) ? sanitize_key(wp_unslash($_POST['format'])) : '';
 
         // Validate tab name
         $allowed_tabs = ['invoices', 'clients', 'items', 'service-types', 'payments', 'reports', 'settings'];
@@ -730,7 +731,7 @@ class AYS_Invoice_Admin_UI {
             }
             $error_html = '<div class="notice notice-error" style="padding:10px;"><strong>Render error:</strong> '
                 . esc_html($e->getMessage()) . ' <em>(' . esc_html($e->getFile()) . ':' . intval($e->getLine()) . ')</em></div>';
-            if (isset($_POST['format']) && $_POST['format'] === 'html') {
+            if ($response_format === 'html') {
                 echo $error_html;
                 wp_die();
             }
@@ -738,7 +739,7 @@ class AYS_Invoice_Admin_UI {
         }
 
         // If front-end requested HTML directly, return raw markup
-        if (isset($_POST['format']) && $_POST['format'] === 'html') {
+        if ($response_format === 'html') {
             echo $content;
             wp_die();
         }
@@ -774,7 +775,7 @@ class AYS_Invoice_Admin_UI {
             wp_die(esc_html__('You do not have permission to access this page.', 'ays'));
         }
 
-        $current_tab = sanitize_text_field($_GET['tab'] ?? 'invoices');
+        $current_tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'invoices';
         $nonce = wp_create_nonce('ays_invoicing_nonce');
 
         ?>

@@ -4,7 +4,7 @@
 // $items, $subtotal, $tax_total, $total,
 // $company_logo, $company_name, $company_address, $company_email, $company_phone,
 // $client_name, $client_email, $client_phone, $client_address,
-// $invoice_terms, $invoice_footer, $stripe_enabled
+// $invoice_terms, $invoice_footer, $show_powered_by, $stripe_enabled
 
 defined('ABSPATH') || exit;
 
@@ -117,6 +117,14 @@ $bank_html = class_exists('AYS_Company_Profile') ? AYS_Company_Profile::get_bank
   <?php if (!empty($invoice_footer)) : ?>
     <div class="ays-invoice-legal muted">
       <?php echo wpautop(esc_html($invoice_footer)); ?>
+    </div>
+  <?php endif; ?>
+  <?php if (!empty($show_powered_by)) : ?>
+    <div class="ays-invoice-powered-by muted">
+      <?php esc_html_e('Powered by', 'atyourservice'); ?>
+      <a href="<?php echo esc_url('https://project-studios.nz/atyourservice'); ?>" target="_blank" rel="noopener noreferrer">
+        <?php esc_html_e('At Your Service', 'atyourservice'); ?>
+      </a>
     </div>
   <?php endif; ?>
 </div>
