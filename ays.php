@@ -224,6 +224,18 @@ add_action('init', function () {
 });
 
 /**
+ * Build a nonce-protected URL for seed data action.
+ *
+ * @return string
+ */
+function ays_get_seed_data_url() {
+    return wp_nonce_url(
+        admin_url('admin.php?page=ays-invoicing&ays_action=seed_data'),
+        'ays_seed_data'
+    );
+}
+
+/**
  * Checks if the database tables are installed and installs them if not.
  * This is a more reliable way to ensure DB tables are created, especially during development.
  */
@@ -240,7 +252,19 @@ function ays_check_and_install_db() {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('Unauthorized', 'atyourservice'));
         }
-        check_admin_referer('ays_seed_data');
+        if (!check_admin_referer('ays_seed_data', '_wpnonce', false)) {
+            $secure_url = ays_get_seed_data_url();
+            wp_die(
+                wp_kses(
+                    sprintf(
+                        /* translators: %s: secure nonce-protected URL */
+                        __('Invalid or missing nonce. Use this secure URL: <a href="%s">Run seed data</a>', 'atyourservice'),
+                        esc_url($secure_url)
+                    ),
+                    ['a' => ['href' => []]]
+                )
+            );
+        }
         require_once AYS_PLUGIN_PATH . 'seed-sample-data.php';
         // Redirect to avoid re-seeding on refresh
         wp_redirect(admin_url('admin.php?page=ays-invoicing&ays_notice=seeded'));

@@ -105,7 +105,7 @@ class AYS_Invoice_Email {
 
         $message  = '<p>' . esc_html(sprintf(__('Hi %s,', 'atyourservice'), $client_name)) . '</p>';
         $message .= '<p>' . esc_html(sprintf(__('Your invoice %s is now available.', 'atyourservice'), $invoice_number)) . '</p>';
-        $message .= '<p><strong>' . esc_html__('Total:', 'atyourservice') . '</strong> ' . esc_html(number_format($total, 2) . ' ' . $currency) . '<br>';
+        $message .= '<p><strong>' . esc_html__('Total:', 'atyourservice') . '</strong> ' . esc_html(number_format($total, 2)) . ' ' . esc_html($currency) . '<br>';
         $message .= '<strong>' . esc_html__('Due Date:', 'atyourservice') . '</strong> ' . esc_html($due_date) . '</p>';
         $message .= '<p>' . esc_html__('Please sign in to your client area to view and pay this invoice.', 'atyourservice') . '</p>';
 
