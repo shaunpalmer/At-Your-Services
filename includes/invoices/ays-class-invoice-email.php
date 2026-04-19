@@ -79,7 +79,7 @@ class AYS_Invoice_Email {
         $invoice_number = !empty($invoice['inv_number']) ? $invoice['inv_number'] : ('INV-' . $invoice_id);
 
         $subject = sprintf(__('Invoice %s notification', 'atyourservice'), $invoice_number);
-        $body = $this->build_message_body($invoice, is_array($client) ? $client : [], $invoice_number);
+        $body = $this->build_message_body($invoice, (array) $client, $invoice_number);
 
         return (bool) wp_mail(
             sanitize_email($admin_email),
