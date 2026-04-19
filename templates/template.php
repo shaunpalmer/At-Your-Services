@@ -1,8 +1,12 @@
 <?php
-// Template File
+/**
+ * Generic template placeholder.
+ *
+ * @package At Your Service
+ */
 
-{% comment %} get_header(); {% endcomment %}
+defined( 'ABSPATH' ) || exit;
 
-// Custom content goes here
-
-{% comment %} get_footer(); {% endcomment %}
+// get_header();
+// Custom content goes here.
+// get_footer();

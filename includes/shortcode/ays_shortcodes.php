@@ -8,12 +8,7 @@
  * @license GNU General Public License 2.0+
  */
 
-
-
-
-
-/* Lead form shortcode with submission handling 
-We're gonna refactor the following function for outputting the dashboard for customising the left hand panel it needs to it can't be just the way it is the phone looks terrible there's no control from the user bad user experience and so this whole function below called ays leave short form yes it still needs to be two column but the first column needs to be customizable*/
+/* Lead form shortcode with submission handling */
 function ays_lead_form_shortcode( $atts = [] ) {
     $saved = get_option( 'ays_lead_form_options', [] );
     // Provide safe defaults if options are blank
@@ -26,6 +21,7 @@ function ays_lead_form_shortcode( $atts = [] ) {
     $right_bg = isset( $saved['right_bg'] ) && $saved['right_bg'] ? $saved['right_bg'] : '#ffffff';
     $field_bg = isset( $saved['field_bg'] ) && $saved['field_bg'] ? $saved['field_bg'] : '';
     $show_notes = isset( $saved['show_notes'] ) ? (int) $saved['show_notes'] : 1;
+
     // Allow shortcode attribute overrides
     $atts = shortcode_atts( [
         'headline' => $headline,
@@ -34,11 +30,13 @@ function ays_lead_form_shortcode( $atts = [] ) {
 
     $errors = [];
     $success = false;
+
     if ( 'POST' === $_SERVER['REQUEST_METHOD'] && isset( $_POST['ays_lead_form_submitted'] ) ) {
         // Basic honeypot
         if ( ! empty( $_POST['ays_hp'] ) ) {
             return '<div class="alert alert-warning">' . esc_html__( 'Submission blocked.', 'ays' ) . '</div>';
         }
+
         if ( ! isset( $_POST['ays_lead_nonce'] ) || ! wp_verify_nonce( $_POST['ays_lead_nonce'], 'ays_lead_submit' ) ) {
             $errors[] = __( 'Security check failed. Please refresh and try again.', 'ays' );
         } else {
@@ -49,11 +47,15 @@ function ays_lead_form_shortcode( $atts = [] ) {
             $booking_date = isset( $_POST['ays_booking_date'] ) ? sanitize_text_field( wp_unslash( $_POST['ays_booking_date'] ) ) : '';
             $booking_time = isset( $_POST['ays_booking_time'] ) ? sanitize_text_field( wp_unslash( $_POST['ays_booking_time'] ) ) : '';
 
-            if ( empty( $name ) ) { $errors[] = __( 'Name is required.', 'ays' ); }
-            if ( empty( $email ) || ! is_email( $email ) ) { 
-                $errors[] = __( 'A valid email address is required.', 'ays' ); 
+            if ( empty( $name ) ) {
+                $errors[] = __( 'Name is required.', 'ays' );
             }
-            if ( empty( $phone ) ) { $errors[] = __( 'Phone is required.', 'ays' ); }
+            if ( empty( $email ) || ! is_email( $email ) ) {
+                $errors[] = __( 'A valid email address is required.', 'ays' );
+            }
+            if ( empty( $phone ) ) {
+                $errors[] = __( 'Phone is required.', 'ays' );
+            }
 
             if ( empty( $errors ) ) {
                 $lead_data = [
@@ -85,9 +87,9 @@ function ays_lead_form_shortcode( $atts = [] ) {
                         'booking_date' => $booking_date,
                         'booking_time' => $booking_time,
                         'page_url' => get_permalink(),
-                        'timestamp' => current_time('mysql'),
+                        'timestamp' => current_time( 'mysql' ),
                     ];
-                    do_action('ays_lead_created', $post_id, $raw_lead_data);
+                    do_action( 'ays_lead_created', $post_id, $raw_lead_data );
                     $success = true;
                 }
             }
@@ -149,6 +151,9 @@ function ays_lead_form_shortcode( $atts = [] ) {
                         <?php endif; ?>
                         <button type="submit" class="btn btn-primary" style="width:100%;max-width:100%;"><?php esc_html_e( 'Send Request', 'ays' ); ?></button>
                     </form>
+                    <p style="margin:12px 0 0;font-size:12px;opacity:.75;text-align:right;">
+                        <a href="https://project-studios.nz/atyourservice" target="_blank" rel="noopener noreferrer nofollow">Powered by At-Your-Services</a>
+                    </p>
             </div>
         <?php endif; ?>
     </div>
