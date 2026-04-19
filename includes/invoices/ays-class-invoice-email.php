@@ -103,16 +103,11 @@ class AYS_Invoice_Email {
         $currency = !empty($invoice['currency']) ? $invoice['currency'] : 'NZD';
         $due_date = !empty($invoice['due_date']) ? $invoice['due_date'] : __('Not set', 'atyourservice');
 
-        $preview_url = add_query_arg(
-            ['page' => 'ays-invoice-preview', 'invoice_id' => (int) $invoice['id']],
-            admin_url('admin.php')
-        );
-
         $message  = '<p>' . esc_html(sprintf(__('Hi %s,', 'atyourservice'), $client_name)) . '</p>';
         $message .= '<p>' . esc_html(sprintf(__('Your invoice %s is now available.', 'atyourservice'), $invoice_number)) . '</p>';
         $message .= '<p><strong>' . esc_html__('Total:', 'atyourservice') . '</strong> ' . esc_html(number_format($total, 2) . ' ' . $currency) . '<br>';
         $message .= '<strong>' . esc_html__('Due Date:', 'atyourservice') . '</strong> ' . esc_html($due_date) . '</p>';
-        $message .= '<p><a href="' . esc_url($preview_url) . '">' . esc_html__('View invoice in dashboard', 'atyourservice') . '</a></p>';
+        $message .= '<p>' . esc_html__('Please sign in to your client area to view and pay this invoice.', 'atyourservice') . '</p>';
 
         return $message;
     }

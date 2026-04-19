@@ -1,0 +1,18 @@
+# Exclude local/manual scripts from distribution archives
+check-cron.php export-ignore
+check-tables.php export-ignore
+create-log-table.php export-ignore
+create-notification-log-table.php export-ignore
+install-database.php export-ignore
+manual-test-permissions.php export-ignore
+manual-validate.php export-ignore
+seed-leads.php export-ignore
+seed-sample-data.php export-ignore
+temp-remote-ays.php export-ignore
+test-client-dashboard.php export-ignore
+test-email-debug.php export-ignore
+test-email-validation.php export-ignore
+test-form-submission.php export-ignore
+test-invoice-directly.php export-ignore
+test-settings.php export-ignore
+test-single-email.php export-ignore

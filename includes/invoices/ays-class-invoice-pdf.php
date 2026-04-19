@@ -86,7 +86,7 @@ class AYS_Invoice_PDF {
         // Fallback: return printable HTML if DOMPDF isn't installed.
         nocache_headers();
         header('Content-Type: text/html; charset=' . get_bloginfo('charset'));
-        echo $content;
+        echo wp_kses_post($content);
         exit;
     }
 
